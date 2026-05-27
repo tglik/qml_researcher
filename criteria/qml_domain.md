@@ -242,3 +242,115 @@ Skip papers in these directions unless they present fundamentally new evidence:
 - Quantum advantage on MNIST, iris, or breast cancer datasets
 - "Quantum neural network" papers with hardware-efficient ansatz on non-quantum data
 - Variational quantum eigensolver (VQE) for chemistry without noise analysis and classical baseline (CCSD(T), DMRG)
+
+---
+
+## Expanded Scope: QML-Adjacent Papers
+
+Direct QML papers are the primary target, but the team also needs signal from adjacent quantum
+computing areas where results have direct implications for QML methods, hardware, or approaches.
+
+**A paper is in scope for triage if it falls into any adjacent category below.**
+Apply the 5 core criteria with appropriate N/A markings, plus the QML Transfer Value gate.
+
+---
+
+### Adjacent Category A — Quantum Circuit Primitives for QML
+
+Papers about state preparation, circuit optimization, gate design, barren plateau mitigation,
+or entanglement structure that directly enable or constrain QML circuits.
+
+**Examples:** shallow circuit encoding of MPS states, local vs global cost functions for VQC
+training, entanglement-efficient circuit architectures, tensor-network-based circuit design.
+
+**Why in scope:** QML methods are built on these primitives. An improvement in circuit encoding
+depth or a solution to barren plateaus directly unlocks better QML training.
+
+**What makes it PASS/TRIAGE (not SKIP):**
+- Proposes a specific, novel technique (not just a survey)
+- Claims are demonstrated experimentally or proved theoretically (sound evidence)
+- The technique generalizes beyond a single narrow use case
+- QML Transfer Value is HIGH: directly applicable to QML circuit design or training
+
+**What keeps it SKIP:**
+- General technique already covered by existing literature (e.g., standard VQE barren plateau papers)
+- Hardware platform incompatible with neutral-atom regime with no adaptation path
+- Technique only applies to toy circuit sizes (n ≤ 4 qubits)
+
+---
+
+### Adjacent Category B — Quantum Optimization with Graph/ML Connections
+
+Papers about quantum algorithms for graph problems, combinatorial optimization, or quantum
+sampling where results intersect with graph-structured QML or data-efficient learning.
+
+**Examples:** quantum MaxCut variants, graph isomorphism, quantum sampling for structured data,
+QAOA-style approaches on graph problems with ML-relevant structure.
+
+**Why in scope:** Graph optimization methods inform quantum graph kernel design; quantum sampling
+approaches may feed into data augmentation or Boltzmann machine-style generative models.
+
+**What makes it PASS/TRIAGE (not SKIP):**
+- Demonstrates genuine (non-trivially-simulable) quantum advantage on a graph problem
+- Identifies a graph structure where quantum circuits outperform classical GNNs or spectral methods
+- QML Transfer Value is HIGH or MEDIUM: the graph approach is adaptable to learning tasks
+
+**What keeps it SKIP:**
+- Explicitly classically simulable (circuit is tractable classically, paper acknowledges it)
+- No quantum advantage claimed or demonstrated on the target graph problem
+- Graph problem is not connected to any learning task or data representation the team cares about
+
+---
+
+### Adjacent Category C — Hardware Architecture / NISQ Constraints Relevant to QML
+
+Papers about neutral-atom hardware capabilities, gate fidelity, error mitigation, fault-tolerant
+design, or QEC overhead that affect what QML circuits are realistic to deploy.
+
+**Examples:** full-stack neutral atom quantum processor design, LDPC code overhead analysis for
+NISQ algorithms, Rydberg gate fidelity improvements, reconfigurable array topology for ML kernels.
+
+**Why in scope:** Hardware constraints are the binding constraint on QML deployment; understanding
+the 2–3 year hardware roadmap directly governs which QML approaches are viable.
+
+**What makes it PASS/TRIAGE (not SKIP):**
+- Directly analyzes neutral-atom / Rydberg hardware (not just generic quantum hardware)
+- Reports gate fidelity, coherence times, or qubit counts relevant to QML circuit requirements
+- Identifies specific constraints or opportunities for QML (e.g., "this topology enables these kernels")
+- QML Transfer Value is HIGH or MEDIUM
+
+**What keeps it SKIP:**
+- Superconducting/trapped-ion only with no neutral-atom relevance
+- Pure fault-tolerant quantum computing with no NISQ-regime bridge
+- No connection to circuit depths or qubit counts accessible in 2–3 years
+
+---
+
+### QML Transfer Value Assessment (for Adjacent Papers)
+
+For every adjacent paper, assess QML Transfer Value after applying the 5 criteria:
+
+| Value | Meaning | Triage outcome |
+|-------|---------|----------------|
+| HIGH | Technique or result directly applicable to QML circuit design, training, or hardware deployment | TRIAGE or PASS (criteria permitting) |
+| MEDIUM | Provides useful context, negative result, or design constraint for QML directions | TRIAGE with narrow checklist |
+| LOW | Interesting quantum computing result but no clear QML application path | SKIP regardless of criteria scores |
+
+**Additional gate:** An adjacent paper with QML Transfer Value = LOW is SKIP even if all 5 criteria
+technically pass. The team's time is bounded; adjacent papers must earn their read.
+
+---
+
+### Applying the 5 Criteria to Adjacent Papers
+
+Mark a criterion N/A when it genuinely does not apply to the paper type:
+
+| Criterion | Mark N/A when... |
+|-----------|-----------------|
+| Dequantization Risk | Paper makes no quantum speedup claim (e.g., pure circuit design, hardware characterization) |
+| Geometric Difference | Paper is not about a quantum kernel or feature map |
+| Trainability | Paper is not about a parameterized/trained circuit |
+| Hardware Fit | Paper is explicitly about hardware characterization (hardware fit IS the subject) |
+| Classical Baseline | Paper is not about a learning task with classical ML comparators |
+
+All N/A markings must include a one-sentence justification.
