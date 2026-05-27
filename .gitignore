@@ -1,0 +1,14 @@
+# Research output — managed by connector, not git.
+# Set output_root in config/workspace.json to point to Google Drive etc.
+# Content is gitignored; directories are tracked via .gitkeep.
+output/research/*
+!output/research/.gitkeep
+output/triage/*
+!output/triage/.gitkeep
+output/triage_log.jsonl
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/

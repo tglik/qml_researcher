@@ -11,7 +11,7 @@ a paper's claims, evidence quality, and QML-specific evaluation results.
 ## File Naming
 
 ```
-{vault_path}/artifacts/{topic_slug}_{YYYY-MM-DD}.md
+{output_root}/paper-cards/{topic_slug}_{YYYY-MM-DD}.md
 ```
 
 Where:

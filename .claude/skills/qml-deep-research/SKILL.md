@@ -77,9 +77,20 @@ Multi-agent QML literature research. Question in → grounded report out.
 
 ## Setup
 
+**Config** — read once at start of Setup:
+```
+Read: config/workspace.json → CONFIG
+
+OUTPUT_ROOT = resolve(CONFIG.output_root)
+  # Relative path → absolute from repo root. Absolute path → used as-is.
+  # Examples:
+  #   "output"                              → {repo_root}/output
+  #   "C:/Users/tmgli/Google Drive/QML"    → used directly
+```
+
 **Workspace directory** — all phase outputs go here:
 ```
-WORKSPACE = C:\Users\tmgli\Documents\Source\ai-os\01_Projects\QML_Startup\research\{slug}_{YYYY-MM-DD}\
+WORKSPACE = {OUTPUT_ROOT}/research/{slug}_{YYYY-MM-DD}/
 ```
 
 Where `slug` = parent question → lowercase → hyphens → 40-char max.
@@ -300,9 +311,26 @@ Dequant risk breakdown: N HIGH / N MEDIUM / N LOW
 STATUS: DONE
 ```
 
-Append one line to vault `recent.md`:
+Write session memory file at `{WORKSPACE}/session_memory.md`:
+
 ```
-[<YYYY-MM-DD>] [SOURCE: session] Lit review completed: <topic>. N sources. Output: <path>
+---
+skill: qml-deep-research
+mode: lit-review
+slug: {slug}
+date: {YYYY-MM-DD}
+topic: {parent question}
+status: COMPLETE
+pushed_to_permanent: false
+---
+
+## Summary
+- Lit review: {N} sources screened for "{topic}"
+- Dequant breakdown: {N_HIGH} HIGH / {N_MEDIUM} MEDIUM / {N_LOW} LOW
+- Output: {WORKSPACE}/lit_review_{slug}.md
+
+## Connector Payload
+[{YYYY-MM-DD}] [SOURCE: qml-deep-research] Lit review: {topic}. {N} sources. Output: {WORKSPACE}/lit_review_{slug}.md
 ```
 
 ---
@@ -554,11 +582,35 @@ Return the file path.
 
 1. Confirm `06_final_report.md` exists and is non-empty.
 
-2. Append to vault `recent.md`:
+2. Write session memory file at `{WORKSPACE}/session_memory.md`:
+
 ```
-[<YYYY-MM-DD>] [SOURCE: session] Deep research completed: <parent question>.
-Key findings: <3 bullets from executive summary>.
-Report: <WORKSPACE>/06_final_report.md
+---
+skill: qml-deep-research
+mode: {full | fast}
+slug: {slug}
+date: {YYYY-MM-DD}
+topic: {parent question}
+status: {COMPLETE | DONE_WITH_CONCERNS}
+pushed_to_permanent: false
+---
+
+## Summary
+- {bullet 1 from executive summary}
+- {bullet 2 from executive summary}
+- {bullet 3 from executive summary}
+
+## Artifacts
+workspace: {WORKSPACE}
+final_report: {WORKSPACE}/06_final_report.md
+sources_count: {N}
+dequant_risk: {N_HIGH} HIGH / {N_MEDIUM} MEDIUM / {N_LOW} LOW
+strong_directions:
+  - {direction 1}
+  - {direction 2}
+
+## Connector Payload
+[{date}] [SOURCE: qml-deep-research] Deep research: {topic}. Key: {bullet 1}. {bullet 2}. Report: {WORKSPACE}/06_final_report.md
 ```
 
 3. Report to user:

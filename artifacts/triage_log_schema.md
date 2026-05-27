@@ -5,16 +5,16 @@ Version: 1.2 | Written by: `/qml-triage`
 Two complementary outputs per evaluation:
 
 1. **Individual Markdown file** — human-readable, one file per evaluation
-   Location: `{vault_path}/artifacts/triage/{YYYY-MM-DD}_{slug}.md`
+   Location: `{output_root}/triage/{YYYY-MM-DD}_{slug}.md`
 
 2. **JSONL index** — machine-readable, append-only
-   Location: `{vault_path}/artifacts/triage_log.jsonl`
+   Location: `{output_root}/triage_log.jsonl`
 
 ---
 
 ## Per-Paper Markdown Format
 
-File path: `artifacts/triage/{YYYY-MM-DD}_{slug}.md`
+File path: `{output_root}/triage/{YYYY-MM-DD}_{slug}.md`
 
 - `slug` = `arxiv_id` (e.g. `2207.00028`) if available, otherwise a title-derived kebab-case string
   truncated to 40 chars (e.g. `opportunities-in-full-stack-design`)

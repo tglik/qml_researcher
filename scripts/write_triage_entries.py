@@ -1,4 +1,16 @@
 import json
+import os
+from pathlib import Path
+
+def get_output_root() -> Path:
+    """Resolve output_root from config/workspace.json relative to repo root."""
+    repo_root = Path(__file__).parent.parent  # scripts/ -> repo root
+    config_path = repo_root / "config" / "workspace.json"
+    with open(config_path, encoding="utf-8") as f:
+        config = json.load(f)
+    raw = config["output_root"]
+    p = Path(raw)
+    return p if p.is_absolute() else (repo_root / p).resolve()
 
 entries = [
     {
@@ -122,12 +134,15 @@ entries = [
     }
 ]
 
-path = r"C:\Users\tmgli\Documents\Source\ai-os\01_Projects\QML_Startup\artifacts\triage_log.jsonl"
-with open(path, "a", encoding="utf-8") as f:
+output_root = get_output_root()
+output_root.mkdir(parents=True, exist_ok=True)
+(output_root / "triage").mkdir(parents=True, exist_ok=True)
+path = output_root / "triage_log.jsonl"
+with open(str(path), "a", encoding="utf-8") as f:
     for e in entries:
         f.write(json.dumps(e) + "\n")
 
-with open(path, encoding="utf-8") as f:
+with open(str(path), encoding="utf-8") as f:
     lines = f.readlines()
 print(f"Total log entries: {len(lines)}")
 for l in lines[-4:]:

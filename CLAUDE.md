@@ -94,10 +94,23 @@ Deprioritized (do not re-suggest without new evidence): generic low-data tabular
 
 ## Artifact output conventions
 
-- Artifacts → `C:\Users\tmgli\Documents\Source\ai-os\01_Projects\QML_Startup\artifacts\<topic>_<YYYY-MM-DD>.md`
-- Research runs → `C:\Users\tmgli\Documents\Source\ai-os\01_Projects\QML_Startup\research\<topic>_<date>\`
-- After every workflow run, prepend one line to `recent.md`: `[YYYY-MM-DD] [SOURCE: session] <fact>`
-- All artifact writes go to git
+All skill outputs go to a single configurable folder. Set `output_root` in `config/workspace.json`.
+Default: `output/` (repo-local, gitignored). To sync to cloud storage, set to an absolute path:
+```
+"output_root": "C:/Users/tmgli/Google Drive/My Drive/QML Research"
+```
+
+Output structure:
+- Triage cards → `{output_root}/triage/<YYYY-MM-DD>_<slug>.md`
+- Triage index → `{output_root}/triage_log.jsonl`
+- Research runs → `{output_root}/research/<topic>_<date>/`
+- Session memory → `{output_root}/research/<topic>_<date>/session_memory.md`
+
+Session memory files (`pushed_to_permanent: false`) are picked up by the ai-os connector
+to write into `recent.md` and other permanent vault files. Do not write to ai-os directly.
+
+Artifact schemas (Research Question Card, Project Charter, Paper Card, Evidence Record,
+Experiment Passport, Claim Ledger, Review Panel Report) are defined in `artifacts/` in this repo.
 
 Artifact schemas (Research Question Card, Project Charter, Paper Card, Evidence Record, Experiment Passport, Claim Ledger, Review Panel Report) are defined in `artifacts/` in this repo.
 

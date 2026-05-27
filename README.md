@@ -126,7 +126,7 @@ Every workflow produces durable artifacts. Claims, evidence, and decisions accum
 | **Review Panel Report** | Post-review: decision, strengths, weaknesses, required fixes, decisive next test |
 | **Final Integrity Report** | Pre-publication: citation verification, figure/data alignment, reproducibility |
 
-Artifacts are saved to `ai-os/01_Projects/QML_Startup/artifacts/` as `<topic>_<YYYY-MM-DD>.md`. Research runs go to `research/<topic>_<date>/`.
+All outputs go to `output/` by default (configurable in `config/workspace.json`). Triage cards land in `output/triage/`, research workspaces in `output/research/<topic>_<date>/`. Set `output_root` to a Google Drive or OneDrive path to sync automatically.
 
 ### Claim status ladder
 

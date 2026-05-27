@@ -20,8 +20,8 @@ output:
   - Inline verdict: SKIP / TRIAGE / PASS with why_interesting + why_verdict summary
   - Per-criterion rationale
   - TRIAGE checklist (if verdict is TRIAGE): 3-5 targeted questions for 30-min spot-read
-  - Individual Markdown file written to {vault}/artifacts/triage/{YYYY-MM-DD}_{slug}.md
-  - JSONL index entry appended to {vault}/artifacts/triage_log.jsonl
+  - Individual Markdown file written to {output_root}/triage/{YYYY-MM-DD}_{slug}.md
+  - JSONL index entry appended to {output_root}/triage_log.jsonl
 ---
 
 # /qml-triage
@@ -385,7 +385,12 @@ Examples:
 **Goal:** Write a human-readable Markdown file for this evaluation AND append one JSON
 line to the machine-readable index. Every evaluation is logged, even SKIPs.
 
-Vault path: `C:\Users\tmgli\Documents\Source\ai-os\01_Projects\QML_Startup`
+**Output path** — read from config at the start of Phase 4:
+```
+Read: config/workspace.json → CONFIG
+OUTPUT_ROOT = resolve(CONFIG.output_root)
+  # Relative → absolute from repo root. Absolute → used as-is.
+```
 
 ---
 
@@ -396,7 +401,7 @@ Vault path: `C:\Users\tmgli\Documents\Source\ai-os\01_Projects\QML_Startup`
   truncate to 40 chars, trim trailing hyphens.
   Example: "Opportunities in Full-Stack Design..." → `opportunities-in-full-stack-design`
 
-File path: `{vault_path}/artifacts/triage/{YYYY-MM-DD}_{slug}.md`
+File path: `{OUTPUT_ROOT}/triage/{YYYY-MM-DD}_{slug}.md`
 where `{YYYY-MM-DD}` comes from the `date` field.
 
 ---
@@ -485,7 +490,7 @@ If the file already exists at that path, append a `-2` suffix to the slug before
   "venue": "arXiv preprint | NeurIPS 2025 | company blog | ...",
   "venue_tier": "T1 | T2 | T3 | T4 | T5 | unknown",
   "mode": "full | quick",
-  "md_file": "artifacts/triage/2026-05-27_2401.12345.md",
+  "md_file": "triage/2026-05-27_2401.12345.md",
   "criteria": [
     {"name": "dequantization_risk", "verdict": "FAIL", "severity": "CRITICAL", "note": "..."},
     {"name": "geometric_difference", "verdict": "N/A", "severity": null, "note": "N/A — not a kernel paper; no feature map described."},
@@ -508,7 +513,7 @@ New field: `"md_file"` — relative path from vault root to the individual Markd
 - `arxiv_id` is `null` for non-arXiv sources — do not fabricate an ID.
 - `venue_tier` is `unknown` for blogs and company announcements unless the author's credibility warrants otherwise.
 
-Write to: `{vault_path}/artifacts/triage_log.jsonl`
+Write to: `{OUTPUT_ROOT}/triage_log.jsonl`
 If the file does not exist, create it (single JSON line, no header). Append mode — never overwrite.
 
 ---
@@ -516,8 +521,8 @@ If the file does not exist, create it (single JSON line, no header). Append mode
 ### 4.4 Print confirmation
 
 ```
-📝 Saved: artifacts/triage/{YYYY-MM-DD}_{slug}.md
-📋 Logged: artifacts/triage_log.jsonl
+📝 Saved: {OUTPUT_ROOT}/triage/{YYYY-MM-DD}_{slug}.md
+📋 Logged: {OUTPUT_ROOT}/triage_log.jsonl
 ```
 
 ### Gate: Phase 4 complete
@@ -543,10 +548,10 @@ These are the most common ways this skill produces wrong results:
 
 ## Output Artifact Reference
 
-**Per-paper Markdown:** `{vault_path}/artifacts/triage/{YYYY-MM-DD}_{slug}.md`
+**Per-paper Markdown:** `{OUTPUT_ROOT}/triage/{YYYY-MM-DD}_{slug}.md`
 Human-readable. One file per evaluation. See template in Phase 4.2.
 
-**Triage index:** `{vault_path}/artifacts/triage_log.jsonl`
+**Triage index:** `{OUTPUT_ROOT}/triage_log.jsonl`
 Machine-readable JSONL. One line per evaluation. `md_file` field links to the Markdown file.
 Schema: see `artifacts/triage_log_schema.md`
 

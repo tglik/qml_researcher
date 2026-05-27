@@ -1,0 +1,14 @@
+{
+  "_comment": [
+    "Configure all output paths for qml-researcher skills.",
+    "Set output_root to any absolute path to sync to Google Drive, Dropbox, OneDrive, etc.",
+    "Relative paths resolve from repo root.",
+    "",
+    "Examples:",
+    "  Local (default):        \"output\"",
+    "  Google Drive (Windows): \"C:/Users/tmgli/Google Drive/My Drive/QML Research\"",
+    "  OneDrive (Windows):     \"C:/Users/tmgli/OneDrive/QML Research\"",
+    "  Google Drive (Mac):     \"/Users/tmgli/Library/CloudStorage/GoogleDrive-.../QML Research\""
+  ],
+  "output_root": "output"
+}
