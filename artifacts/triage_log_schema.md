@@ -1,6 +1,6 @@
 # Triage Log Schema
 
-Version: 1.0 | Written by: `/qml-triage`
+Version: 1.1 | Written by: `/qml-triage`
 Location: `{vault_path}/artifacts/triage_log.jsonl`
 
 One JSON line per paper evaluated. Append-only. Never delete entries.
@@ -14,6 +14,8 @@ One JSON line per paper evaluated. Append-only. Never delete entries.
   "arxiv_id": "2401.12345",
   "title": "Full paper title as fetched",
   "verdict": "SKIP",
+  "why_interesting": "Uses Rydberg Hamiltonian evolution as a quantum kernel; hardware-native feature map with no classical analog in the blockade radius regime.",
+  "why_verdict": "SKIP — classical baseline FAIL (CRITICAL): compared only to default SVM; no TabPFN or tuned XGBoost tested on their tabular benchmark.",
   "date": "2026-05-27T13:45:00Z",
   "fetch_mode": "ar5iv",
   "partial_fetch": false,
@@ -67,6 +69,8 @@ One JSON line per paper evaluated. Append-only. Never delete entries.
 | arxiv_id | string | YYMM.NNNNN format | Yes |
 | title | string | As fetched from ar5iv/arXiv API | Yes |
 | verdict | string | SKIP \| TRIAGE \| PASS \| OUT_OF_SCOPE \| DEPRIORITIZED_DIRECTION | Yes |
+| why_interesting | string | 1–2 sentences on what is novel or promising — written for ALL verdicts including SKIP. Must cite fetched text. | Yes |
+| why_verdict | string | 1–2 sentences naming the dominant criterion outcome. Format: "{VERDICT} — {criterion} {FAIL/WARN/PASS} ({severity}): {specific reason}". Must cite fetched text. | Yes |
 | date | string | ISO 8601 UTC | Yes |
 | fetch_mode | string | ar5iv \| arxiv_api | Yes |
 | partial_fetch | boolean | true if only abstract fetched (no intro) | Yes |

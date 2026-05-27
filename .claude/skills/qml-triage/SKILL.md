@@ -209,12 +209,30 @@ Venue:   {venue if known, else "unknown — arXiv preprint"}
 
 VERDICT: {SKIP | TRIAGE | PASS}
 
+Why interesting:  {1–2 sentences on what is novel, promising, or worth
+                   knowing — written even for SKIP papers. Focus on the
+                   strongest claim or technique, not the flaws.}
+
+{If SKIP:}
+Why SKIP:         {1–2 sentences naming the specific criterion failure(s)
+                   that disqualify this paper. Quote the red flag from the
+                   fetched text where possible.}
+
+{If TRIAGE:}
+Why TRIAGE:       {1–2 sentences on what is unresolved — the specific
+                   concern(s) that prevent a PASS. Name the criterion and
+                   the open question, not just "hardware fit unclear."}
+
+{If PASS:}
+Why PASS:         {1–2 sentences on why all criteria are satisfied and
+                   what makes this paper ready for full evaluation.}
+
 Per-criterion:
-  ✗ SKIP  [{severity}]  Dequantization Risk — {note}
+  ✗ FAIL  [{severity}]  Dequantization Risk — {note}
   ⚠ WARN  [MAJOR]       Hardware Fit — {note}
   ✓ PASS               Geometric Difference — {note}
   ✓ PASS               Trainability — {note}
-  ✗ SKIP  [CRITICAL]   Classical Baseline — {note}
+  ✗ FAIL  [CRITICAL]   Classical Baseline — {note}
 
 {If SKIP:}
 Rejected in: ~{seconds elapsed} seconds. Saved: ~half a day of reading.
@@ -233,6 +251,12 @@ Recommended next step: /qml-evaluate {arxiv_id}
 ```
 
 Use these symbols: ✗ for FAIL/SKIP, ⚠ for WARN/TRIAGE, ✓ for PASS.
+
+**Writing rules for the summary fields:**
+- `Why interesting` is always written, including for SKIP. A paper can be interesting but still disqualified.
+- `Why SKIP/TRIAGE/PASS` names the dominant criterion outcome, not a generic statement. Bad: "hardware concerns exist." Good: "Hardware fit FAIL — superconducting-only; no neutral-atom gate budget analyzed."
+- Both fields must be derived from fetched text only. No fabrication.
+- For adjacent papers, `Why interesting` should name the QML Transfer Value (HIGH/MEDIUM/LOW) and explain the specific QML implication.
 
 ### 3.3 Generate TRIAGE checklist
 
@@ -265,6 +289,8 @@ Examples:
   "arxiv_id": "2401.12345",
   "title": "...",
   "verdict": "SKIP",
+  "why_interesting": "1–2 sentences on the paper's most novel or promising aspect. Written for every verdict including SKIP. Must cite fetched text, not general topic knowledge.",
+  "why_verdict": "SKIP — classical_baseline FAIL (CRITICAL): compared only to default SVM; no TabPFN or tuned XGBoost tested. Name the specific criterion and quote the evidence.",
   "date": "2026-05-27T13:45:00Z",
   "fetch_mode": "ar5iv | arxiv_api",
   "partial_fetch": false,
@@ -281,6 +307,11 @@ Examples:
   "elapsed_seconds": 28
 }
 ```
+
+**Rules for `why_interesting` and `why_verdict`:**
+- Both fields must use fetched text only — no general knowledge about the paper topic.
+- `why_interesting` is written even for SKIP. A paper can have a genuinely interesting idea and still be disqualified.
+- `why_verdict` must name the specific criterion and severity: `"SKIP — {criterion} FAIL ({severity}): {quote or paraphrase from paper}"`. For TRIAGE, name the criteria at WARN and the specific open question. For PASS, name what passed and why the evidence was sufficient.
 
 **4.2 Append to log file.**
 
