@@ -41,17 +41,10 @@ Stop when: every material claim has a verdict, every UNSUPPORTED claim has a req
 ## QML-Specific Verification Rules
 
 **Claim status ladder enforcement:**
-Every claim in the draft that uses a status word must be checked:
-```
-"speculative" — acceptable if no experimental evidence cited
-"plausible"   — requires theoretical argument or indirect evidence cited
-"observed"    — requires cited experimental result (even if single-study)
-"supported"   — requires cited well-controlled, reproducible experiment
-"strong"      — requires cited multiple independent replications
-"published"   — requires T1/T2 peer-reviewed venue cited
-"refuted"     — requires cited contradicting evidence
-```
-If the draft uses wording stronger than what the cited source warrants, flag as OVERSTATED and provide required rewording.
+
+The authoritative claim status ladder with promotion rules is in the "QML Domain Criteria" injected into your prompt above (see "Claim Status Ladder" section). Apply those definitions to every status word in the draft.
+
+For each claim: verify the cited source warrants the status label used. If the draft uses wording stronger than what the cited source warrants, flag as OVERSTATED and provide required rewording.
 
 **QML-specific blocking rules (automatic UNSUPPORTED verdict):**
 - Quantum advantage claimed without addressing data-loading cost (oracle or classical preprocessing)

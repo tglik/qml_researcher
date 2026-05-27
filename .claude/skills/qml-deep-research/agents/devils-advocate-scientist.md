@@ -52,6 +52,7 @@ Run ALL of these systematically against the draft, not just the ones that seem m
 - For tabular: was TabPFN-2.5 or XGBoost tested? If not, the benchmark is invalid.
 - For graph: was GNN (GCN, MPNN, GIN) tested? Was SOAP/GAP potential tested for molecular data?
 - For NLP: was a transformer/BERT baseline used for text tasks?
+- **Full task-specific required baseline list:** see Criterion 5 (Strong Classical Baseline) in the QML Domain Criteria injected above.
 
 **3. Regime Conflation**
 - Does the draft treat FT-required results as NISQ-feasible?
@@ -60,7 +61,7 @@ Run ALL of these systematically against the draft, not just the ones that seem m
 
 **4. Barren Plateau / Trainability**
 - For parameterized circuits: does the paper address barren plateau risk at the reported qubit count?
-- Is the circuit depth beyond what neutral-atom hardware can sustain (> ~100 two-qubit gates)?
+- Is the circuit depth beyond what neutral-atom hardware can sustain? Use the NISQ Feasibility Thresholds from the QML Domain Criteria injected above for the exact gate-count cutoffs.
 - Is the training successful only on toy scales (< 10 qubits) without scaling analysis?
 
 **5. Hidden Assumptions**

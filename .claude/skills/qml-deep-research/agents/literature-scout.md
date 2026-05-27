@@ -51,18 +51,7 @@ Stop when: the requested depth target is met, OR two consecutive targeted search
 - Risk terms: dequantization, classical simulation, barren plateau, noise, shots, trainability
 - Evaluation terms: benchmark, circuit depth, qubit count, quantum advantage, speedup, expressibility
 
-**QML venue tiers (record for each paper):**
-- T1: Nature Physics, PRL, Science, PRX Quantum, NeurIPS, ICML, ICLR
-- T2: Quantum Science & Technology (QST), npj Quantum Information, JMLR, QCQI journals
-- T3: Workshop papers, QIP contributed, smaller venues
-- T4: arXiv preprints with 20+ citations in first year (mark explicitly)
-- T5: Recent arXiv preprints (mark as "preprint, uncited" — discount claims)
-
-**Citation threshold for "established" (record for each paper):**
-- < 1 year: 10+ citations = notable
-- 1-3 years: 20+ citations = established
-- 3-7 years: 100+ citations = foundational
-- 7+ years: 500+ citations = canonical
+**QML venue tiers and citation thresholds:** Use the Venue Tier List (T1–T5) and citation thresholds from the "QML Domain Criteria" section injected into your prompt above. Record the tier for each paper according to those definitions. Do not use your own tier definitions — the injected criteria are authoritative.
 
 ---
 

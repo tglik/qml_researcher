@@ -40,37 +40,16 @@ Stop when: every source in the literature file has a classification row and ever
 
 ## Five QML Criteria (apply to every source)
 
-Apply these criteria from the team's domain knowledge. For each source, record verdict per criterion:
+**The criteria definitions, NISQ feasibility thresholds, strong/deprioritized directions, and hardware parameters are injected from `criteria/qml_domain.md` — see the "QML Domain Criteria" section in your prompt above. Apply those definitions exactly.**
 
-**1. Dequantization Risk**
-- Does a classical Nyström approximation, RFF sketch, quantum-inspired SVD (Tang 2018), or importance-sampling trick match or exceed performance?
-- Is the advantage dependent on quantum data input (LOW risk) or classical data with quantum encoding (HIGH/MEDIUM risk)?
-- Verdict: LOW (structurally quantum-protected) | MEDIUM (protected only under specific access model) | HIGH (likely classically replicable)
+Use the **deep research verdict vocabulary** from the Vocabulary Bridge table in the injected criteria:
+- Dequantization Risk: **LOW** (structurally protected) / **MEDIUM** (protected under specific access model) / **HIGH** (likely classically replicable)
+- Geometric Difference: **DISTINCT** (clear separation) / **UNCLEAR** (no analysis) / **REDUNDANT** (matches classical kernel)
+- Trainability: **PASS** (addressed) / **WARN** (partially addressed) / **FAIL** (not addressed or simulable)
+- Hardware Fit: **PASS** (neutral-atom ready) / **CONDITIONAL** (feasible with caveats) / **FAIL** (FT-required or wrong topology)
+- Classical Baseline: **STRONG** (appropriate baseline) / **WEAK** (suboptimal baseline) / **ABSENT** (no classical comparison)
 
-**2. Geometric Difference**
-- Is the quantum kernel or feature map genuinely different from RBF/polynomial/neural kernels?
-- Does the paper analyze the kernel spectrum or measure its geometric difference from classical kernels?
-- Verdict: DISTINCT (clear geometric separation) | UNCLEAR (no analysis) | REDUNDANT (matches classical kernel)
-
-**3. Trainability / Simulability**
-- For parameterized circuits: is barren plateau risk addressed with gradient scaling analysis?
-- Is the circuit depth within trainable range at the claimed qubit count?
-- Is the circuit classically simulable (MPS/tensor network tractable)?
-- Verdict: PASS (addressed) | WARN (partially addressed) | FAIL (not addressed or simulable)
-
-**4. Hardware Fit — Neutral Atom / NISQ**
-- Is the circuit architecture feasible on neutral-atom (Rydberg/tweezer) hardware in 1-3 years?
-- Does it require all-to-all connectivity (available in neutral-atom) or only linear chains?
-- Qubit count: < 50 (NISQ-feasible today), 50-300 (near-term neutral-atom), > 300 (requires early-FT)?
-- Two-qubit gate count: < 50 (safe), 50-500 (marginal), > 500 (FT-required)?
-- Verdict: PASS (neutral-atom ready) | CONDITIONAL (feasible with caveats) | FAIL (FT-required or wrong topology)
-
-**5. Classical Baseline**
-- For tabular data: was TabPFN-2.5 or tuned XGBoost tested?
-- For graph data: was GNN (GCN, GIN, MPNN) or SOAP/GAP potential tested?
-- For molecular/chemistry: was standard DFT or SOAP tested?
-- For NLP/sequence: was transformer or BERT tested?
-- Verdict: STRONG (appropriate baseline used) | WEAK (suboptimal baseline only) | ABSENT (no classical comparison)
+Use the NISQ Feasibility Thresholds table from the injected criteria to determine PASS / CONDITIONAL / FAIL for Hardware Fit (qubit count ranges and two-qubit gate count thresholds are defined there).
 
 ---
 

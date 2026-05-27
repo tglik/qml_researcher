@@ -41,17 +41,10 @@ Stop when: every sub-question has a synthesized section, all material claims are
 ## QML Synthesis Requirements
 
 **Claim status ladder — never skip steps:**
-```
-speculative  — hypothesis only, no experimental support
-plausible    — theoretical argument or indirect evidence
-observed     — reported experimental result (may lack rigor or reproducibility)
-supported    — well-controlled experiment, reproducible
-strong       — multiple independent replications + theoretical backing
-published    — peer-reviewed T1/T2 venue
-           ↘ refuted — contradicted by subsequent evidence
-```
 
-Label every material claim with its status in parentheses after the citation.
+The authoritative ladder with promotion rules is in the "QML Domain Criteria" injected into your prompt above (see "Claim Status Ladder" section). Apply those definitions exactly.
+
+Label every material claim with its status in parentheses after the citation: e.g., `quantum kernel advantage on graph data [Author 2024] (supported)`.
 
 **Required QML distinctions (flag explicitly in every section):**
 - Theorem vs. simulation vs. hardware demonstration vs. empirical benchmark

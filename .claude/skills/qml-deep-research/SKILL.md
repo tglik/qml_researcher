@@ -82,6 +82,13 @@ Create the workspace directory. Write `state.json` and update after each phase w
 AGENTS_DIR = .claude/skills/qml-deep-research/agents/
 ```
 
+**Domain criteria** — read once during Setup, before Phase 1. Inject into every agent that needs domain knowledge. This ensures all agents use the team's current criteria, not stale inline copies:
+```
+Read: criteria/qml_domain.md → QML_DOMAIN
+```
+
+The `QML_DOMAIN` variable is passed as a labelled section inside every relevant agent prompt (see Agent Spawn Convention and each phase below).
+
 ---
 
 ## Agent Spawn Convention
@@ -200,6 +207,12 @@ Agent(
 
 ---
 
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
+
+---
+
 ## Task for this invocation
 
 Search QML and quantum computing literature for the following sub-questions.
@@ -246,6 +259,12 @@ Agent(
 
 ---
 
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
+
+---
+
 ## Task for this invocation
 
 Classify every source in the merged literature file using the five QML criteria
@@ -284,6 +303,12 @@ Agent(
   description="QML synthesis: draft report from classified literature",
   prompt="""
 {AGENT_DEF}
+
+---
+
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
 
 ---
 
@@ -331,6 +356,12 @@ Agent(
 
 ---
 
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
+
+---
+
 ## Task for this invocation
 
 Stress-test the QML research draft using all seven attack vectors in your Role section:
@@ -369,6 +400,12 @@ Agent(
   description="Source-to-claim audit of QML draft",
   prompt="""
 {AGENT_DEF}
+
+---
+
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
 
 ---
 
@@ -414,6 +451,12 @@ Agent(
   description="Final QML research report from audited evidence",
   prompt="""
 {AGENT_DEF}
+
+---
+
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
 
 ---
 
