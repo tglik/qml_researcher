@@ -354,3 +354,81 @@ Mark a criterion N/A when it genuinely does not apply to the paper type:
 | Classical Baseline | Paper is not about a learning task with classical ML comparators |
 
 All N/A markings must include a one-sentence justification.
+
+---
+
+## Claim Status Ladder
+
+All QML claims must progress through this ladder. Writing agents may not strengthen wording beyond the current status; the evidence-auditor enforces it.
+
+```
+speculative  — hypothesis only, no experimental support
+plausible    — theoretical argument or indirect evidence
+observed     — reported experimental result (may lack rigor or reproducibility)
+supported    — well-controlled experiment, reproducible
+strong       — multiple independent replications + theoretical backing
+published    — peer-reviewed T1/T2 venue
+           ↘ refuted — contradicted by subsequent evidence
+```
+
+**Label every material claim** in research output with its current status in parentheses after the citation: e.g., `quantum kernel advantage on graph data [Author 2024] (supported)`.
+
+**Promotion rules:**
+- speculative → plausible: requires a theoretical argument, even informal
+- plausible → observed: requires a reported experiment, even preliminary
+- observed → supported: requires controlled experiment with reproducibility evidence
+- supported → strong: requires independent replication and/or theoretical backing
+- strong → published: requires T1 or T2 peer review
+- Any status → refuted: requires contradicting evidence from a subsequent paper; refuted claims stay in the record
+
+---
+
+## NISQ Feasibility Thresholds
+
+These thresholds operationalize Criterion 4 (Hardware Fit) for neutral-atom NISQ hardware.
+Update this section when hardware capabilities change significantly.
+
+**Qubit count ranges:**
+
+| Range | NISQ Classification | Timeline | Hardware Fit verdict |
+|-------|---------------------|----------|---------------------|
+| < 50 qubits | Feasible today | Available now | PASS |
+| 50–300 qubits | Near-term neutral-atom | 1–3 years | CONDITIONAL |
+| > 300 qubits | Early fault-tolerant required | 3–7 years | FAIL |
+| > 1000 logical qubits | Full fault-tolerant | > 7 years | FAIL |
+
+**Two-qubit gate count per circuit:**
+
+| Count | Assessment | Hardware Fit verdict |
+|-------|------------|---------------------|
+| < 50 | Within current coherence budget | PASS |
+| 50–500 | Noise accumulation expected; error mitigation required | CONDITIONAL |
+| > 500 | Coherence limits exceeded on current neutral-atom hardware | FAIL |
+
+**Current neutral-atom hardware parameters (update as hardware improves):**
+- Two-qubit gate fidelity: ~99.5% (best current, Rydberg blockade)
+- Coherence time: T2 ~ 1–10 seconds (atomic clock transitions)
+- Maximum demonstrated qubits: ~256 (QuEra Aquila), 100+ (Pasqal)
+- Native gates: CZ (Rydberg blockade), global and local single-qubit rotations
+- Connectivity: reconfigurable 2D arrays; limited all-to-all via atom transport
+
+---
+
+## Verdict Vocabulary Bridge
+
+Two skills operate at different depth levels and use different verdict vocabularies. This table makes them explicitly comparable so a paper can be traced through the pipeline without confusion.
+
+| Criterion | Triage verdict (`qml-triage`) | Deep Research verdict (`quantum-domain-analyst`) |
+|-----------|-------------------------------|--------------------------------------------------|
+| Dequantization Risk | FAIL CRITICAL / WARN / PASS | HIGH / MEDIUM / LOW |
+| Geometric Difference | FAIL CRITICAL / WARN / PASS | REDUNDANT / UNCLEAR / DISTINCT |
+| Trainability | FAIL CRITICAL / WARN / PASS | FAIL / WARN / PASS |
+| Hardware Fit | FAIL MAJOR / WARN / PASS | FAIL / CONDITIONAL / PASS |
+| Classical Baseline | FAIL CRITICAL / WARN / PASS | ABSENT / WEAK / STRONG |
+
+**Reading the table:**
+- `FAIL CRITICAL` in triage ≈ `HIGH` / `REDUNDANT` / `FAIL` / `ABSENT` in deep research (clear disqualifier)
+- `WARN` in triage ≈ `MEDIUM` / `UNCLEAR` / `WARN` / `CONDITIONAL` / `WEAK` in deep research (unresolved concern)
+- `PASS` in triage ≈ `LOW` / `DISTINCT` / `PASS` / `STRONG` in deep research (criterion satisfied)
+
+Triage uses pass/fail vocabulary because its purpose is a fast binary filter. Deep research uses richer vocabulary because its purpose is nuanced classification that feeds synthesis. Both vocabularies are correct for their context; use this table when comparing a paper's triage log entry to its deep-research classification.
