@@ -1,97 +1,166 @@
 ---
 name: qml-triage
-version: 1.0.0
+version: 2.0.0
 description: |
-  Fast first-pass filter for QML papers. Given an arXiv ID or URL, fetches
-  the abstract and introduction, applies the five QML domain criteria, and
-  returns a SKIP / TRIAGE / PASS verdict with per-criterion rationale in ~30 seconds.
-  Use before committing to a full paper read. Saves time on papers that should
-  be rejected in minutes rather than hours.
-  Auto-invoke when user shares an arXiv URL or asks "is this worth reading?",
-  "should we look at this paper?", or "triage this paper."
+  Fast first-pass filter for any QML-relevant source. Accepts arXiv papers,
+  local PDFs, web URLs, blog posts, company announcements, whitepapers, and
+  plain paper titles. Fetches and extracts content, applies the five QML domain
+  criteria (with N/A where not applicable), and returns a SKIP / TRIAGE / PASS
+  verdict with per-criterion rationale in ~30–60 seconds.
+  Use before committing to a full read on any source — not just academic papers.
+  Auto-invoke when user shares any URL, file path, arXiv ID, or asks "is this
+  worth reading?", "should we look at this?", or "triage this."
 input:
-  - arXiv ID (e.g. 2401.12345) or full arXiv URL
-  - Optional: --mode quick (dequantization + baseline only) | --mode full (default, all 5 criteria)
+  - arXiv ID (2401.12345), arXiv URL, or arxiv: prefix
+  - Local file path or file:// URL pointing to a PDF
+  - Any http/https URL (blog, company site, news article, whitepaper)
+  - Plain title string or keyword — triggers arXiv title search via /qml-fetch-arxiv
+  - Optional: --mode quick (dequantization + baseline only) | --mode full (default)
 output:
-  - Inline verdict: SKIP / TRIAGE / PASS with per-criterion rationale
-  - TRIAGE checklist (if verdict is TRIAGE): 3-5 targeted questions for 30-minute spot-read
+  - Inline verdict: SKIP / TRIAGE / PASS with why_interesting + why_verdict summary
+  - Per-criterion rationale
+  - TRIAGE checklist (if verdict is TRIAGE): 3-5 targeted questions for 30-min spot-read
   - Triage log entry appended to artifacts/triage_log.jsonl
 ---
 
 # /qml-triage
 
-Fast QML paper filter. Five criteria, one verdict, under 30 seconds.
+Fast QML signal filter. Any source, five criteria, one verdict.
 
 ---
 
 ## ⚠️ IRON RULES — Read Before Starting
 
 ```
-❌ Do NOT evaluate from the title alone. Abstract + intro must be read.
-❌ Do NOT produce a PASS verdict without checking all 5 criteria.
-❌ Do NOT hallucinate paper content. Only use text fetched from the source.
+❌ Do NOT evaluate from the title or headline alone — fetch and read the content.
+❌ Do NOT produce a PASS verdict without checking all 5 applicable criteria.
+❌ Do NOT fabricate content — only use text actually fetched from the source.
 ❌ Do NOT skip the triage log write even if the verdict is SKIP.
-❌ Do NOT apply these criteria to non-QML papers — check first.
+❌ Do NOT apply these criteria to non-QML sources — domain check first.
 ```
 
 ---
 
-## Phase 0: Input Parsing and Domain Check
+## Phase 0: Input Detection, Fetch, and Domain Check
 
-**Goal:** Extract a clean arXiv ID and confirm the paper is in scope (QML / quantum ML / quantum computing for ML).
+**Goal:** Identify the input type, fetch the content using the appropriate method,
+and confirm the source is in scope (QML / quantum ML / quantum computing or adjacent areas).
 
-### Steps
+### 0.1 Detect input type
 
-**0.1 Parse the input.**
+Inspect the raw input and classify it:
 
-Accept any of these formats and extract the arXiv ID:
-- `2401.12345` → ID is `2401.12345`
-- `2401.12345v2` → ID is `2401.12345` (strip version suffix for fetch)
-- `https://arxiv.org/abs/2401.12345` → ID is `2401.12345`
-- `https://ar5iv.org/abs/2401.12345` → ID is `2401.12345`
-- `arxiv:2401.12345` → ID is `2401.12345`
+| Input pattern | Type | Fetch method |
+|--------------|------|-------------|
+| Matches `\d{4}\.\d{4,5}(v\d+)?` (with or without `arxiv:` prefix) | arXiv ID | → Step 0-A |
+| URL contains `arxiv.org`, `ar5iv.org`, or `ar5iv.labs.arxiv.org` | arXiv URL | → Step 0-A |
+| Starts with `file://` or is an absolute path ending in `.pdf` | Local PDF | → Step 0-B |
+| Starts with `http://` or `https://` (not arXiv/ar5iv) | Web URL | → Step 0-C |
+| Plain text, no URL scheme, no ID pattern | Title / keyword | → Step 0-A (search mode) |
 
-If input does not match any of these patterns, stop immediately:
+If none of the above match after careful inspection, stop:
 ```
-Error: "{input}" is not a valid arXiv ID or URL.
-Expected format: 2401.12345  or  https://arxiv.org/abs/2401.12345
-```
-
-**0.2 Fetch abstract and title.**
-
-Primary: `WebFetch https://ar5iv.org/abs/{arxiv_id}`
-
-Extract from the HTML:
-- Title (look for `<h1 class="ltx_title"` or `<title>` tag)
-- Abstract (look for `<div id="abstract"` or `<blockquote class="abstract"`)
-- First section of the introduction (look for `<section id="S1"` or `<h2` containing "Introduction")
-
-If ar5iv returns 404 or the page body is empty (paper not yet indexed, typically < 48h from submission):
-→ Fallback: `WebFetch https://export.arxiv.org/abs/{arxiv_id}`
-  Extract: title and abstract from the XML response (`<title>`, `<summary>` tags).
-  Note: fallback gives abstract only, no introduction. Mark as `PARTIAL_FETCH: true` in log.
-
-If both fail, stop:
-```
-Error: Could not fetch paper {arxiv_id}. Check the ID is correct and try again.
-ar5iv: {status_code}
-arXiv API: {status_code}
+Error: Cannot determine input type for "{input}".
+Provide: arXiv ID, arXiv URL, file:// path to PDF, http/https URL, or a plain title to search.
 ```
 
-**0.3 Domain check.**
+---
 
-Read the title and abstract. If the paper is clearly NOT about quantum computing, quantum machine learning, or hybrid classical-quantum methods:
+### Step 0-A: arXiv Fetch (ID, URL, or Title Search)
+
+**Helper:** This step follows the `/qml-fetch-arxiv` skill procedure.
+Read `.claude/skills/qml-fetch-arxiv/SKILL.md` and execute it for this input.
+The helper returns: `title`, `abstract`, `intro_text`, `arxiv_id`, `venue`, `venue_tier`, `partial_fetch`.
+
+Set `source_type = "academic_paper"` and `fetch_mode = "arxiv"`.
+Set `source_url = "https://arxiv.org/abs/{arxiv_id}"`.
+
+---
+
+### Step 0-B: Local PDF Read
+
+**Input:** `file:///path/to/paper.pdf` or an absolute filesystem path ending in `.pdf`.
+
+Extract the absolute path (strip `file://` prefix if present).
+
+Use the `Read` tool:
 ```
-OUT_OF_SCOPE: This paper does not appear to be about QML or quantum computing.
-Title: {title}
-If you believe this is an error, run: /qml-triage {arxiv_id} --force
+Read {absolute_path} pages="1-4"
 ```
-Stop. Do not continue. Do not write a triage log entry.
+
+From the first 4 pages, extract:
+- Title (usually the largest text on page 1, or a bold/centred heading)
+- Abstract or executive summary
+- Key claims and any stated contributions
+- Author names and affiliation (for credibility assessment)
+
+If `Read` fails (file not found, tool unavailable):
+```
+Error: Could not read {path}. Check the path exists and is accessible.
+Workaround: Upload the paper to arXiv and triage via the arXiv ID instead.
+```
+Stop.
+
+Set `source_type = "pdf_local"`, `fetch_mode = "local_pdf"`, `partial_fetch = true` (pages 1–4 only).
+Set `source_url = "file://{absolute_path}"`.
+
+---
+
+### Step 0-C: Web Fetch (Blog, News, Company Site, Whitepaper)
+
+**Input:** Any `http://` or `https://` URL that is not an arXiv/ar5iv domain.
+
+Use `WebFetch {url}` with this extraction prompt:
+
+> Extract: (1) the page title or headline, (2) the main thesis or claim — what does this source assert about quantum computing, QML, or ML?, (3) any technical description of an approach, method, or product, (4) any comparison to classical methods or stated advantage, (5) author name or organization, (6) any quantitative results (accuracy, speedup, qubit counts, benchmark scores).
+
+If the URL redirects to a login or paywall, note `partial_fetch = true` and work with whatever text was returned.
+
+After fetching, classify `source_type` from the content:
+
+| source_type | Indicators |
+|-------------|-----------|
+| `blog_post` | Personal blog, company engineering blog, editorial voice |
+| `news_article` | Tech/science journalism (TechCrunch, Nature News, MIT News, Wired) |
+| `company_announcement` | Product launch, press release, investor update, company website |
+| `technical_report` | Whitepaper, non-arXiv preprint, conference proceedings PDF fetched via URL |
+| `academic_paper` | Journal paper fetched directly (e.g., Nature, IEEE, ACM via DOI) |
+| `other` | Forum post, podcast transcript, social media, anything else |
+
+Set `fetch_mode = "web"`.
+Set `source_url = {url}`.
+
+---
+
+### 0.2 Content adequacy check
+
+After fetching, verify you have enough to evaluate:
+- Minimum required: title/headline + at least one substantive paragraph describing an approach or claim
+- If the fetched content is only a title and date (e.g., a paywalled abstract), mark `partial_fetch = true` and note the limitation in the verdict output
+
+---
+
+### 0.3 Domain check
+
+Read the extracted content. If the source is clearly NOT about quantum computing, quantum machine learning, or QML-adjacent areas (see "Expanded Scope" in `criteria/qml_domain.md`):
+
+```
+OUT_OF_SCOPE: This source does not appear to be about QML or quantum computing.
+Title/Headline: {title}
+Source type: {source_type}
+If you believe this is an error, run: /qml-triage {input} --force
+```
+Stop. Do not write a triage log entry.
+
+**Permissive check for non-academic sources:** A blog or company announcement that
+discusses quantum computing for data, optimization, or ML-adjacent tasks IS in scope.
+If uncertain, proceed to Phase 1 and let the criteria decide.
 
 ### Gate: Phase 0 → Phase 1
-- arXiv ID parsed ✓
-- Paper text fetched (abstract + intro, or abstract only if fallback) ✓
-- Paper is QML-relevant ✓
+- Input type detected ✓
+- Content fetched: title + substantive body text ✓
+- `source_type`, `source_url`, `fetch_mode`, `partial_fetch` assigned ✓
+- Source is QML-relevant ✓
 
 ---
 
@@ -117,8 +186,10 @@ Stop.
 
 **1.2 Note the current "Deprioritized Directions" list** from the criteria file.
 
-If the paper's abstract clearly places it in a deprioritized direction (e.g., ZZ-feature map on UCI dataset, HHL speedup without dequantization refutation):
+If the source's content clearly falls in a deprioritized direction (e.g., ZZ-feature map on UCI dataset, HHL speedup without dequantization refutation, "quantum ML" demo on MNIST):
 → Skip Phase 2 entirely. Issue immediate SKIP with reason: `DEPRIORITIZED_DIRECTION`.
+
+This applies to all source types — a blog post promoting a ZZ-feature map demo is as deprioritized as the paper it describes.
 
 ### Gate: Phase 1 → Phase 2
 - `criteria/qml_domain.md` loaded ✓
@@ -128,54 +199,82 @@ If the paper's abstract clearly places it in a deprioritized direction (e.g., ZZ
 
 ## Phase 2: Apply Five Criteria
 
-**Goal:** Evaluate the paper's abstract and introduction against each of the five QML criteria. Produce a per-criterion verdict.
+**Goal:** Evaluate the fetched content against each of the five QML criteria. Produce a per-criterion verdict.
 
 Apply each criterion independently. For each, output:
 ```
 Criterion: {name}
-Verdict: FAIL | WARN | PASS
-Severity: CRITICAL | MAJOR | MINOR  (only if FAIL or WARN)
-Note: {one specific sentence citing evidence from the paper text}
+Verdict: FAIL | WARN | PASS | N/A
+Severity: CRITICAL | MAJOR | MINOR  (only if FAIL or WARN; omit for PASS and N/A)
+Note: {one specific sentence citing text from the source — quote or close paraphrase}
 ```
 
-Work through the criteria in this order (most disqualifying first):
+Work through criteria in this order (most disqualifying first):
+
+### Adapting to source type
+
+The five criteria were designed for academic papers but apply to all source types.
+Use these adaptations:
+
+**Academic paper (arXiv, PDF, journal):** Apply all criteria to abstract + intro + methods.
+Cite section numbers where visible.
+
+**Blog post / news article:** Apply criteria to the claims made in the body text.
+The author may not state technical details explicitly — infer from what IS stated and mark
+gaps as WARN rather than FAIL when details are simply absent (not contradicted).
+Note: `[source: blog/news — technical details may be omitted]` when a criterion is hard to
+assess due to format.
+
+**Company announcement / press release:** Apply extra skepticism. Commercial sources routinely
+omit classical baselines and hardware caveats. Missing technical detail on criteria 3, 4, 5
+should default to WARN (not PASS). An unsubstantiated speedup claim → FAIL (CRITICAL) on
+dequantization unless a clear proof or citation is present.
+
+**Technical report / whitepaper:** Treat as academic paper but with lower venue tier (T5 by default).
+
+---
 
 ### Criterion 1: Dequantization Risk
-- Check: Does the paper claim speedup for a quantum kernel, quantum linear algebra, or sampling task?
-- If yes: Is there a hardness argument against Nystrom/RFF approximation? Or empirical evidence that RFF fails?
+- Check: Does the source claim speedup, advantage, or superiority for a quantum kernel, quantum linear algebra, or sampling task?
+- For academic sources: Is there a hardness argument against Nystrom/RFF approximation? Or empirical evidence that RFF fails?
+- For non-academic sources: Does the source cite or reference a rigorous proof of advantage? Vague "quantum is better" claims with no citation → WARN (MAJOR).
 - Apply the SKIP/TRIAGE/PASS decision table from `criteria/qml_domain.md`.
 - Severity if FAIL: **CRITICAL**
 
 ### Criterion 2: Geometric Difference
-- Check: Is the feature map a single-layer Pauli encoding (Z-map, ZZ-map)?
-- If yes: These produce kernels equivalent to truncated Fourier series → FAIL (CRITICAL)
-- If structured encoding: is there evidence the geometry differs from RBF/polynomial?
+- Check: Is a quantum feature map or quantum kernel described?
+- If yes and it is a single-layer Pauli encoding (Z-map, ZZ-map): FAIL (CRITICAL)
+- If described informally (e.g., "our quantum model captures correlations classical models miss"): WARN — requires verification
+- If not a kernel/feature map approach (VQC, optimization, hardware): mark N/A with justification
 - Severity if FAIL: **CRITICAL**
 
 ### Criterion 3: Trainability / Simulability Trilemma
-- Check: Is this a parameterized quantum circuit (PQC/VQC) paper?
-- If yes: Does it address barren plateaus (gradient scaling with n)? Does it address classical simulability?
-- Check system size: n ≤ 8 qubit experiments only with no scaling analysis → FAIL (CRITICAL)
+- Check: Is a parameterized/trainable quantum circuit (PQC/VQC) described or implied?
+- If yes: Does the source address barren plateaus? Classical simulability?
+- For non-academic sources: If a VQC is described without any training analysis, mark WARN (MAJOR) — absence of information, not confirmed failure.
+- If the method is fixed-parameter (reservoir computing, Hamiltonian kernel, analog evolution): mark N/A — no training, no barren plateau risk.
+- System size: n ≤ 8 qubit experiments only with no scaling analysis → FAIL (CRITICAL)
 - Severity if FAIL: **CRITICAL**
 
 ### Criterion 4: Hardware Fit — NISQ / Neutral Atom
 - Check: Does the method require QRAM, fault-tolerant error correction, or depth O(polylog N)?
 - Check: Are results only on superconducting hardware with no neutral-atom analysis?
+- For non-academic sources: If hardware is not specified, mark WARN (MAJOR) — not enough information.
 - Severity if FAIL: **MAJOR** (hardware fit alone rarely SKIPs a strong result, but flags it)
 
 ### Criterion 5: Strong Classical Baseline
-- Check: What classical baselines are used? Are they competitive?
-- For tabular data: is TabPFN or XGBoost present?
-- For graphs/molecules: is GNN/SOAP/GAP present?
-- Missing required baseline → FAIL (CRITICAL)
-- Using untuned/toy baseline only → FAIL (CRITICAL)
+- Check: What classical methods are the quantum approach compared against?
+- For academic sources: apply task-specific required baseline list from `criteria/qml_domain.md`.
+- For non-academic sources: Is any classical comparison stated? If none stated → WARN (MAJOR).
+  If classical comparison is stated but the classical method is clearly weak (untuned MLP, etc.) → FAIL (CRITICAL).
+  If the source makes no performance claim at all (purely descriptive) → N/A with note.
 - Severity if FAIL: **CRITICAL**
 
 **Mode: quick** — run only Criterion 1 (Dequantization) and Criterion 5 (Baseline). Skip 2, 3, 4.
 
 ### Gate: Phase 2 → Phase 3
 - All applicable criteria evaluated ✓
-- Each criterion has: name, verdict, severity (if FAIL/WARN), one-sentence note ✓
+- Each criterion has: name, verdict (FAIL/WARN/PASS/N/A), severity (if FAIL/WARN), one-sentence note citing source text ✓
 
 ---
 
@@ -202,10 +301,12 @@ Print to stdout:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 QML TRIAGE VERDICT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Paper:   {title}
-arXiv:   {arxiv_id}
-Fetched: {abstract | abstract+intro} via {ar5iv | arXiv API}
-Venue:   {venue if known, else "unknown — arXiv preprint"}
+Title:       {title or headline}
+Source:      {source_url}
+Type:        {academic_paper | pdf_local | blog_post | news_article |
+              company_announcement | technical_report | other}
+Fetched:     {what was retrieved} via {arxiv | local_pdf | web}
+Venue/Auth:  {venue/author/organization if known, else "unknown"}
 
 VERDICT: {SKIP | TRIAGE | PASS}
 
@@ -286,32 +387,38 @@ Examples:
 
 ```json
 {
-  "arxiv_id": "2401.12345",
+  "arxiv_id": "2401.12345 | null (if not an arXiv source)",
   "title": "...",
+  "source_type": "academic_paper | pdf_local | blog_post | news_article | company_announcement | technical_report | other",
+  "source_url": "https://arxiv.org/abs/2401.12345 | file:///path/to/paper.pdf | https://...",
   "verdict": "SKIP",
-  "why_interesting": "1–2 sentences on the paper's most novel or promising aspect. Written for every verdict including SKIP. Must cite fetched text, not general topic knowledge.",
+  "why_interesting": "1–2 sentences on the source's most novel or promising aspect. Written for every verdict including SKIP. Must cite fetched text, not general topic knowledge.",
   "why_verdict": "SKIP — classical_baseline FAIL (CRITICAL): compared only to default SVM; no TabPFN or tuned XGBoost tested. Name the specific criterion and quote the evidence.",
   "date": "2026-05-27T13:45:00Z",
-  "fetch_mode": "ar5iv | arxiv_api",
+  "fetch_mode": "arxiv | local_pdf | web",
   "partial_fetch": false,
-  "venue": "arXiv preprint | NeurIPS 2025 | ...",
+  "venue": "arXiv preprint | NeurIPS 2025 | company blog | ...",
+  "venue_tier": "T1 | T2 | T3 | T4 | T5 | unknown",
+  "mode": "full | quick",
   "criteria": [
     {"name": "dequantization_risk", "verdict": "FAIL", "severity": "CRITICAL", "note": "..."},
-    {"name": "geometric_difference", "verdict": "PASS", "severity": null, "note": "..."},
+    {"name": "geometric_difference", "verdict": "N/A", "severity": null, "note": "N/A — not a kernel paper; no feature map described."},
     {"name": "trainability", "verdict": "PASS", "severity": null, "note": "..."},
     {"name": "hardware_fit", "verdict": "WARN", "severity": "MAJOR", "note": "..."},
     {"name": "classical_baseline", "verdict": "FAIL", "severity": "CRITICAL", "note": "..."}
   ],
   "triage_checklist": [],
-  "evaluator": "qml-triage/1.0.0",
-  "elapsed_seconds": 28
+  "evaluator": "qml-triage/2.0.0",
+  "elapsed_seconds": 35
 }
 ```
 
 **Rules for `why_interesting` and `why_verdict`:**
-- Both fields must use fetched text only — no general knowledge about the paper topic.
-- `why_interesting` is written even for SKIP. A paper can have a genuinely interesting idea and still be disqualified.
-- `why_verdict` must name the specific criterion and severity: `"SKIP — {criterion} FAIL ({severity}): {quote or paraphrase from paper}"`. For TRIAGE, name the criteria at WARN and the specific open question. For PASS, name what passed and why the evidence was sufficient.
+- Both fields must use fetched text only — no general knowledge about the topic.
+- `why_interesting` is written even for SKIP. A source can have a genuinely interesting idea and still be disqualified.
+- `why_verdict` must name the specific criterion and severity: `"SKIP — {criterion} FAIL ({severity}): {quote or paraphrase from source}"`.
+- `arxiv_id` is `null` for non-arXiv sources — do not fabricate an ID.
+- `venue_tier` is `unknown` for blogs and company announcements unless the author's credibility warrants otherwise.
 
 **4.2 Append to log file.**
 

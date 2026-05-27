@@ -66,21 +66,23 @@ One JSON line per paper evaluated. Append-only. Never delete entries.
 
 | Field | Type | Values | Required |
 |-------|------|--------|----------|
-| arxiv_id | string | YYMM.NNNNN format | Yes |
-| title | string | As fetched from ar5iv/arXiv API | Yes |
+| arxiv_id | string \| null | YYMM.NNNNN format; null for non-arXiv sources | Yes |
+| title | string | As fetched from source | Yes |
+| source_type | string | academic_paper \| pdf_local \| blog_post \| news_article \| company_announcement \| technical_report \| other | Yes |
+| source_url | string | Canonical URL or file:// path | Yes |
 | verdict | string | SKIP \| TRIAGE \| PASS \| OUT_OF_SCOPE \| DEPRIORITIZED_DIRECTION | Yes |
 | why_interesting | string | 1–2 sentences on what is novel or promising — written for ALL verdicts including SKIP. Must cite fetched text. | Yes |
 | why_verdict | string | 1–2 sentences naming the dominant criterion outcome. Format: "{VERDICT} — {criterion} {FAIL/WARN/PASS} ({severity}): {specific reason}". Must cite fetched text. | Yes |
 | date | string | ISO 8601 UTC | Yes |
-| fetch_mode | string | ar5iv \| arxiv_api | Yes |
-| partial_fetch | boolean | true if only abstract fetched (no intro) | Yes |
-| venue | string | Venue name or "arXiv preprint" | Yes |
+| fetch_mode | string | arxiv \| local_pdf \| web | Yes |
+| partial_fetch | boolean | true if content was incomplete (abstract-only, paywall, pages 1–4 of PDF) | Yes |
+| venue | string | Venue name, "arXiv preprint", "company blog", etc. | Yes |
 | venue_tier | string | T1 \| T2 \| T3 \| T4 \| T5 \| unknown | Yes |
 | mode | string | full \| quick | Yes |
 | criteria[].name | string | dequantization_risk \| geometric_difference \| trainability \| hardware_fit \| classical_baseline | Yes |
-| criteria[].verdict | string | FAIL \| WARN \| PASS | Yes |
-| criteria[].severity | string \| null | CRITICAL \| MAJOR \| MINOR \| null (if PASS) | Yes |
-| criteria[].note | string | One sentence, citing paper evidence | Yes |
+| criteria[].verdict | string | FAIL \| WARN \| PASS \| N/A | Yes |
+| criteria[].severity | string \| null | CRITICAL \| MAJOR \| MINOR \| null (if PASS or N/A) | Yes |
+| criteria[].note | string | One sentence citing source text; for N/A include one-sentence justification | Yes |
 | triage_checklist | array of string | Questions for spot-read (only if verdict=TRIAGE) | Yes |
 | evaluator | string | skill_name/version | Yes |
 | elapsed_seconds | integer | Wall clock seconds for evaluation | Yes |
