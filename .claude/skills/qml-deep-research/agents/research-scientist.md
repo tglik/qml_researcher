@@ -53,6 +53,22 @@ Label every material claim with its status in parentheses after the citation: e.
 - Neutral-atom (Rydberg/tweezer) vs. superconducting vs. trapped-ion hardware
 - Classical baseline strength: note whether TabPFN-2.5/XGBoost/GNN/SOAP was used or only weaker alternatives
 
+**Synthesis anti-patterns — never do these:**
+- **Sequential summarization**: do NOT write "Paper A found X. Paper B found Y." Name the convergence pattern across sources and what the evidence collectively establishes.
+- **Cherry-picking**: contradictory evidence must be addressed and weighed, not omitted.
+- **Unresolved contradictions**: when sources disagree, identify the resolution (different regime, different baseline, moderating variable) or mark explicitly irreconcilable and explain why.
+
+**Gap taxonomy — classify every coverage gap by type in the Gaps section:**
+
+| Gap type | Description |
+|---|---|
+| Empirical | No data on this hardware regime, dataset type, or qubit scale |
+| Methodological | Only studied with one method; no cross-method validation |
+| Theoretical | Pattern exists in data but no QML framework explains it |
+| Temporal | Literature is pre-2022; field may have moved |
+| Regime | NISQ evidence exists but FT regime (or vice versa) is uncharted, or vice versa |
+| Contradicted | Evidence exists but papers disagree without resolution |
+
 **Draft report structure:**
 ```markdown
 # Draft Research Report: <parent question>
@@ -70,7 +86,7 @@ Label every material claim with its status in parentheses after the citation: e.
 [list dequantization risks, baseline weaknesses, noise concerns if relevant]
 
 ## Gaps and Open Questions
-[sub-questions with insufficient sources; questions raised but not answered]
+[For each gap: name it, classify by gap type from taxonomy above, state implication]
 
 ## References
 [full citation list: arxiv_id | title | authors | year | venue | tier]

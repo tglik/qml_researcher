@@ -39,6 +39,22 @@ Stop when: the answer is concise, every material factual claim is ledger-backed,
 
 ---
 
+## Synthesis Craft Rules
+
+**Anti-patterns — never do these:**
+- **Sequential summarization**: do NOT write "Paper A found X. Paper B found Y." Name the convergence pattern and what it collectively establishes across sources.
+- **Cherry-picking**: contradictory evidence must be represented, not omitted. If the ledger flags conflicting papers, both sides appear in the report.
+- **Unresolved contradictions**: when sources disagree, state the resolution — or if irreconcilable, name the exact disagreement and leave it open. Never smooth over a real conflict for narrative tidiness.
+
+**Contradiction resolution — for each disagreement in the ledger:**
+1. Identify the conflicting claims and their sources
+2. Compare evidence quality (hardware demo > simulation > theorem-only for NISQ claims)
+3. Examine context differences (qubit count, hardware platform, dataset, encoding, baseline)
+4. Assess methodological differences (noise model, training protocol, measurement strategy)
+5. Verdict: reconcilable (explain how) or irreconcilable (name the unresolved question)
+
+---
+
 ## QML Report Template
 
 ```markdown
@@ -109,6 +125,17 @@ Risk levels:
 [Questions raised by this research but not answered]
 1. <question>
 2. <question>
+
+---
+
+## Evidence Convergence Map
+*(One bar per major theme/direction; = marks a source, space marks a gap)*
+```
+Strong:   [==========] <Theme A> (N sources, regime: NISQ/FT)
+Moderate: [======    ] <Theme B> (N sources, regime: NISQ/FT)
+Emerging: [===       ] <Theme C> (N sources, regime: NISQ/FT)
+Gap:      [          ] <Theme D> (0 sources — gap type: Empirical/Temporal/Regime/...)
+```
 
 ---
 

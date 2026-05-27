@@ -19,11 +19,20 @@ triggers:
   - investigate qml
   - qml research
   - what do we know about
+  - is this claim true
+  - fact check this
+  - verify this paper
+  - give me a reading list
+  - what papers exist on
+  - annotated bibliography
 
 input:
   - Research question or topic (required)
   - Optional --fast: skip phases 2 and 4-5 (Phase 0 → 1 → 3 → 6)
   - Optional --scope-only: stop after Phase 0 and wait for user review
+  - Optional --socratic: run guided 5-question QML clarification before PICO (for vague inputs)
+  - Optional --lit-review: stop after Phase 1; produce annotated bibliography instead of synthesis
+  - Optional --fact-check: verify a single claim or paper (Phase 1 targeted + Phase 5 only)
 
 output:
   - Research workspace: {vault}/research/{slug}_{YYYY-MM-DD}/
@@ -134,6 +143,22 @@ here cannot affect any other skill.
 
 ### Steps
 
+**0.0 Socratic Clarification (only if `--socratic` flag is set or input is clearly vague)**
+
+Trigger conditions: user provides a direction rather than a question ("something about reservoirs", "we should look at X", "what do you think about Y?"), or the PICO frame cannot be filled without guessing.
+
+Ask these 5 questions in a single AskUserQuestion (multiSelect: false, one question per entry):
+
+1. **Data type**: What kind of data is this quantum approach operating on? (tabular / graph / molecular / time-series / unstructured / other)
+2. **Regime intent**: Are we asking what's NISQ-feasible now, or what the theoretical direction looks like long-term? (NISQ-feasible now / long-term theoretical / both)
+3. **Baseline bar**: What would "it works" mean — better than what? (beat XGBoost/TabPFN / beat GNN / beat SOAP/GAP / beat existing quantum method / no baseline defined yet)
+4. **Dequantization concern**: Is the proposed advantage based on data structure access (high dequantization risk) or geometry/Hamiltonian structure (lower risk)? (data-structure / geometry-Hamiltonian / unclear)
+5. **Hardware scope**: Must this work on neutral-atom specifically, or is this a hardware-agnostic survey? (neutral-atom only / hardware-agnostic / both)
+
+Use answers to auto-fill the PICO frame. Skip the manual PICO prompting. Proceed to 0.2 FINER.
+
+---
+
 **0.1 PICO framing:**
 - P (Problem): What QML problem / domain / data type?
 - I (Intervention): What quantum approach is being evaluated?
@@ -237,6 +262,48 @@ Wait for all cluster agents to complete. Retry once if an agent fails to produce
 **Coverage gap handling:** re-run literature-scout with broader terms for any sub-question with < min_sources. Do this at most once per gap; flag remaining gaps in `00_scope.md`.
 
 Merge all cluster output files into `01_literature_merged.md` (mechanical concatenation + deduplication — you can do this yourself).
+
+---
+
+## Lit-Review Mode Gate
+
+**If `--lit-review` flag is set: stop here after Phase 1. Do not run Phases 2-6.**
+
+Produce an annotated bibliography from `01_literature_merged.md`. For each included source write exactly:
+
+```markdown
+### [Author YYYY] — <Title>
+**arXiv/DOI:** <id>  **Venue:** <venue> (Tier T?)
+**Five-criteria tags:** Dequant: LOW/MEDIUM/HIGH | Regime: NISQ/FT/analog | Baseline: STRONG/WEAK/ABSENT
+**Key claim:** <one sentence — what the paper claims, in its own terms>
+**Why in scope:** <one sentence — which sub-question this addresses>
+**Caveat:** <one sentence — main limitation or assumption>
+```
+
+Output file: `WORKSPACE/lit_review_<slug>.md`
+
+Report to user:
+```
+LIT REVIEW COMPLETE
+
+Topic: <parent question>
+Workspace: <WORKSPACE>
+Sources included: N  |  Excluded: N
+Output: lit_review_<slug>.md
+
+Top 3 by relevance:
+1. [cite] — <why>
+2. [cite] — <why>
+3. [cite] — <why>
+
+Dequant risk breakdown: N HIGH / N MEDIUM / N LOW
+STATUS: DONE
+```
+
+Append one line to vault `recent.md`:
+```
+[<YYYY-MM-DD>] [SOURCE: session] Lit review completed: <topic>. N sources. Output: <path>
+```
 
 ---
 
@@ -533,6 +600,118 @@ If the user says "fast research", "quick research", or passes `--fast`:
 
 ---
 
+## Fact-Check Mode (`--fact-check`)
+
+Use when: a specific claim needs verification (from a paper abstract, VC deck, team memo, or collaborator) without running full research.
+
+**Pipeline: Phase 0 (claim framing only) → Phase 1 (targeted) → Phase 5 (audit) → output**
+
+**Step FC-1: Frame the claim**
+
+Identify:
+- The exact verbatim claim to verify
+- What type of claim: QML advantage | benchmark result | hardware feasibility | theoretical result | commercial claim
+- The source (if any): citation, URL, or "unsourced"
+
+Write `WORKSPACE/00_scope.md` with a single sub-question: "Is this claim supported by evidence?"
+
+**Step FC-2: Targeted literature sweep**
+
+Spawn `literature-scout` with a narrow search:
+- Search terms: key technical terms from the claim + dequantization + classical baseline + the specific method
+- Min sources: 3 papers that directly address the claim (pro or con)
+- Date range: last 4 years unless the claim is foundational
+
+```
+Read: .claude/skills/qml-deep-research/agents/literature-scout.md → AGENT_DEF
+
+Agent(
+  subagent_type="claude",
+  description="Targeted literature sweep for claim verification",
+  prompt="""
+{AGENT_DEF}
+
+---
+
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
+
+---
+
+## Task for this invocation
+
+Targeted search for evidence supporting or contradicting this specific claim:
+
+**Claim:** "<verbatim claim>"
+**Source:** <source if known>
+
+Search for: papers that directly test, prove, disprove, or qualify this claim.
+Also search for: dequantization risks for the specific method; stronger classical baselines.
+Minimum 3 sources. Return the candidate source table and any direct contradictions found.
+
+Output file: <WORKSPACE>/01_literature_merged.md
+"""
+)
+```
+
+**Step FC-3: Evidence audit of the claim**
+
+Spawn `evidence-auditor` with a single-claim focus:
+
+```
+Read: .claude/skills/qml-deep-research/agents/evidence-auditor.md → AGENT_DEF
+
+Agent(
+  subagent_type="claude",
+  description="Claim verification audit",
+  prompt="""
+{AGENT_DEF}
+
+---
+
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
+
+---
+
+## Task for this invocation
+
+Verify this specific claim against the literature found:
+
+**Claim to verify:** "<verbatim claim>"
+
+Apply the five QML-specific blocking rules. Return a single verdict:
+- SUPPORTED — evidence directly backs the claim as stated
+- OVERSTATED — evidence supports a weaker version; provide required rewording
+- UNSUPPORTED — no valid evidence found
+- CONTRADICTED — evidence directly refutes the claim
+
+Input: <WORKSPACE>/01_literature_merged.md
+Output file: <WORKSPACE>/05_evidence_ledger.md
+"""
+)
+```
+
+**Report to user:**
+```
+FACT-CHECK COMPLETE
+
+Claim: "<verbatim claim>"
+Verdict: SUPPORTED | OVERSTATED | UNSUPPORTED | CONTRADICTED
+Evidence strength: STRONG | MODERATE | WEAK
+
+[If OVERSTATED]: Suggested rewording: "..."
+[If CONTRADICTED]: Contradicting evidence: [cite]
+
+Supporting sources: N
+Output: <WORKSPACE>/05_evidence_ledger.md
+STATUS: DONE
+```
+
+---
+
 ## Anti-Pattern Reference
 
 | Anti-pattern | Why it fails | What to do instead |
@@ -543,3 +722,6 @@ If the user says "fast research", "quick research", or passes `--fast`:
 | Abstract-only synthesis | Methods section often contradicts abstract | Require full-text fetch in literature-scout |
 | Merge Phases 3+6 | Skips audit; overstated claims enter report | Always run evidence-auditor between synthesis and final write |
 | Agent returns summary, not file | Next phase has no grounded input | Require explicit file path in every agent prompt |
+| Vague input → skip Socratic → PICO guesses | Scope based on wrong assumptions; wasted research | Detect vague inputs; run `--socratic` clarification first |
+| Use full deep research for a single claim | 6 phases of overhead for a yes/no verdict | Use `--fact-check` for single-claim verification |
+| Use full deep research when only a reading list is needed | Synthesis without a real question to answer | Use `--lit-review` for bibliography-only tasks |
