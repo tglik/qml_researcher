@@ -1,11 +1,12 @@
 ---
-name: qml-fetch-arxiv
+name: fetch-arxiv
 version: 1.0.0
 description: |
-  Helper skill: fetch a paper from arXiv by ID, URL, or title search.
+  General-purpose helper: fetch any paper from arXiv by ID, URL, or title search.
   Returns title, abstract, introduction text, arXiv ID, venue, venue_tier,
-  and partial_fetch flag — ready for /qml-triage or /qml-evaluate to consume.
-  Can be invoked standalone to retrieve paper content without running triage.
+  and partial_fetch flag. Domain-agnostic — works for any research field.
+  Can be invoked standalone or called from any skill that needs to read an
+  arXiv paper (e.g. /qml-triage, /qml-evaluate).
   Auto-invoked by /qml-triage when input is an arXiv ID, arXiv URL, or plain
   title string.
 input:
@@ -15,10 +16,10 @@ input:
   - Plain title or keyword string → triggers arXiv search
 output:
   - Structured paper content: title, abstract, intro_text, arxiv_id, venue, venue_tier, partial_fetch
-  - Printed to stdout in a readable block; usable as input to /qml-triage Phase 1+
+  - Printed to stdout in a readable block; usable as input to any downstream skill
 ---
 
-# /qml-fetch-arxiv
+# /fetch-arxiv
 
 Fetch any arXiv paper by ID, URL, or title. Handles ar5iv redirects, arXiv API fallback,
 and title search automatically.

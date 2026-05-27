@@ -14,7 +14,7 @@ input:
   - arXiv ID (2401.12345), arXiv URL, or arxiv: prefix
   - Local file path or file:// URL pointing to a PDF
   - Any http/https URL (blog, company site, news article, whitepaper)
-  - Plain title string or keyword — triggers arXiv title search via /qml-fetch-arxiv
+  - Plain title string or keyword — triggers arXiv title search via /fetch-arxiv
   - Optional: --mode quick (dequantization + baseline only) | --mode full (default)
 output:
   - Inline verdict: SKIP / TRIAGE / PASS with why_interesting + why_verdict summary
@@ -68,8 +68,8 @@ Provide: arXiv ID, arXiv URL, file:// path to PDF, http/https URL, or a plain ti
 
 ### Step 0-A: arXiv Fetch (ID, URL, or Title Search)
 
-**Helper:** This step follows the `/qml-fetch-arxiv` skill procedure.
-Read `.claude/skills/qml-fetch-arxiv/SKILL.md` and execute it for this input.
+**Helper:** This step follows the `/fetch-arxiv` skill procedure.
+Read `.claude/skills/fetch-arxiv/SKILL.md` and execute it for this input.
 The helper returns: `title`, `abstract`, `intro_text`, `arxiv_id`, `venue`, `venue_tier`, `partial_fetch`.
 
 Set `source_type = "academic_paper"` and `fetch_mode = "arxiv"`.
