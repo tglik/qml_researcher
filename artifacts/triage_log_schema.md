@@ -1,6 +1,8 @@
 # Triage Output Schema
 
-Version: 1.2 | Written by: `/qml-triage`
+Version: 1.3 | Written by: `/qml-paper-review --fast`
+
+> **Note:** The `/qml-triage` skill has been retired. Use `/qml-paper-review --fast` for first-pass filtering. Fast reviews produce the same 5-criteria assessment and a WEAK/MARGINAL/CREDIBLE verdict, with full workspace artifacts instead of a single card.
 
 Two complementary outputs per evaluation:
 
@@ -132,7 +134,7 @@ If all ✓ → `/qml-evaluate {arxiv_id}`. If any ✗ → treat as SKIP.
     }
   ],
   "triage_checklist": [],
-  "evaluator": "qml-triage/2.0.0",
+  "evaluator": "qml-paper-review/fast",
   "elapsed_seconds": 24
 }
 ```
@@ -217,22 +219,22 @@ for l in open('artifacts/triage_log.jsonl'):
 
 ## Validation Test Protocol
 
-Run this after building `/qml-triage` to confirm criteria are correctly codified.
+Run this periodically to confirm criteria are correctly codified.
 
-**Step 1:** Identify the last 5 papers the team evaluated manually (before this tool existed).
+**Step 1:** Identify 5 papers the team has already evaluated (from `output/reviews/`).
 
 **Step 2:** For each paper, record:
-- The team's manual verdict (SKIP / READ / PASS)
-- The specific criterion that triggered rejection (if SKIP)
+- The team's verdict (WEAK / MARGINAL / CREDIBLE / LANDMARK)
+- The specific criterion that drove the verdict
 
-**Step 3:** Run `/qml-triage {arxiv_id}` on each paper.
+**Step 3:** Run `/qml-paper-review --fast {arxiv_id}` on each paper.
 
 **Step 4:** Compare:
-- Did the tool reach the same verdict?
-- If the tool said PASS and the team said SKIP — which criterion did the tool miss? Update `criteria/qml_domain.md`.
-- If the tool said SKIP and the team said PASS — was the team right? Add an exception/nuance to the relevant criterion.
+- Did the fast review reach the same verdict?
+- If review said CREDIBLE and team said WEAK — which criterion did the review miss? Update `criteria/qml_domain.md`.
+- If review said WEAK and team said CREDIBLE — was the team right? Add an exception/nuance to the relevant criterion.
 
-**Success threshold:** ≥ 3/5 verdicts match AND ≥ 1 paper that was eventually rejected by the team gets SKIP from the tool (validating triage saves time).
+**Success threshold:** ≥ 3/5 verdicts match AND ≥ 1 paper that was eventually rejected by the team gets WEAK from the fast review.
 
 Record results here:
 

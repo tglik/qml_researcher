@@ -12,8 +12,8 @@ description: |
   a paper supposedly supports a team direction, or before citing any result in a
   pitch, strategy doc, or grant proposal.
 
-  This is NOT triage (/qml-triage). This is the full critical read: claims
-  extracted, novelty assessed, quality judged, consensus researched.
+  Use `--fast` for first-pass filtering (replaces the retired /qml-triage skill).
+  Full mode: claims extracted, novelty assessed, quality judged, consensus researched.
 
 triggers:
   - review this paper
@@ -101,11 +101,11 @@ AGENTS_DIR = .claude/skills/qml-paper-review/agents/
 Read: criteria/qml_domain.md → QML_DOMAIN
 ```
 
-**Triage log check** — before fetching, check whether this paper has been triaged:
+**Prior review check** — before fetching, check whether this paper has been reviewed before:
 ```
-Grep: {OUTPUT_ROOT}/triage_log.jsonl for the paper ID or slug
+Grep: {OUTPUT_ROOT}/reviews/ for the paper ID or slug (session_memory.md files)
 ```
-If a prior triage entry exists, note the verdict (SKIP/TRIAGE/PASS) in the workspace state. A prior SKIP verdict is a red flag — state it explicitly in Phase 2 output.
+If a prior review exists, note the verdict (WEAK/MARGINAL/CREDIBLE/LANDMARK) in the workspace state. A prior WEAK verdict is a red flag — state it explicitly in Phase 2 output.
 
 ---
 

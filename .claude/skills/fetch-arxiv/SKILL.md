@@ -6,9 +6,7 @@ description: |
   Returns title, abstract, introduction text, arXiv ID, venue, venue_tier,
   and partial_fetch flag. Domain-agnostic — works for any research field.
   Can be invoked standalone or called from any skill that needs to read an
-  arXiv paper (e.g. /qml-triage, /qml-evaluate).
-  Auto-invoked by /qml-triage when input is an arXiv ID, arXiv URL, or plain
-  title string.
+  arXiv paper (e.g. /qml-paper-review, /qml-deep-research).
 input:
   - arXiv ID: 2401.12345 or 2401.12345v2
   - arXiv URL: https://arxiv.org/abs/2401.12345 or https://ar5iv.org/abs/...
@@ -148,7 +146,7 @@ Default: `T5` for unconfirmed preprints. If venue is known, assign accordingly.
 
 ## Phase 4: Output
 
-Print the extracted content in a structured block for use by the caller (`/qml-triage`, `/qml-evaluate`, or the user directly):
+Print the extracted content in a structured block for use by the caller (`/qml-paper-review`, `/qml-deep-research`, or the user directly):
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -169,8 +167,8 @@ Introduction (first section):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-If invoked standalone (not from within `/qml-triage`), end here.
-If invoked as part of `/qml-triage` Phase 0-A, pass the above content directly into Phase 1.
+If invoked standalone, end here.
+If invoked from within another skill (e.g. `/qml-paper-review`), pass the above content directly into the calling skill's next phase.
 
 ---
 

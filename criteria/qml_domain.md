@@ -4,7 +4,7 @@ Version: 1.0 | Last updated: 2026-05-27
 Maintainers: Tsahi, Meir, Adi — edit this file as the team's understanding evolves.
 
 This document is the authoritative source for how the team evaluates QML papers.
-It is loaded by the `/qml-triage` and `/qml-evaluate` skills as a cached context block.
+It is loaded by the `/qml-paper-review` and `/qml-deep-research` skills as a cached context block.
 **Edit criteria here; skills pick up changes automatically.**
 
 ---
@@ -418,7 +418,7 @@ Update this section when hardware capabilities change significantly.
 
 Two skills operate at different depth levels and use different verdict vocabularies. This table makes them explicitly comparable so a paper can be traced through the pipeline without confusion.
 
-| Criterion | Triage verdict (`qml-triage`) | Deep Research verdict (`quantum-domain-analyst`) |
+| Criterion | Fast review verdict (`qml-paper-review --fast`) | Deep Research verdict (`quantum-domain-analyst`) |
 |-----------|-------------------------------|--------------------------------------------------|
 | Dequantization Risk | FAIL CRITICAL / WARN / PASS | HIGH / MEDIUM / LOW |
 | Geometric Difference | FAIL CRITICAL / WARN / PASS | REDUNDANT / UNCLEAR / DISTINCT |
