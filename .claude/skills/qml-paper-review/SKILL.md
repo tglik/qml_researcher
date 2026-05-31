@@ -1,0 +1,532 @@
+---
+name: qml-paper-review
+version: 1.0.0
+description: |
+  Deep critical review of a QML paper. Reads the full paper, extracts every
+  claim with type and evidence labels, assesses genuine novelty vs. prior art,
+  judges reproducibility and soundness with explicit red flags, applies the five
+  QML domain criteria, researches consensus and contradicting evidence across the
+  field, and issues a single crisp verdict with a falsification condition.
+
+  Use when: a paper is referenced in a meeting, a collaborator cites a result,
+  a paper supposedly supports a team direction, or before citing any result in a
+  pitch, strategy doc, or grant proposal.
+
+  This is NOT triage (/qml-triage). This is the full critical read: claims
+  extracted, novelty assessed, quality judged, consensus researched.
+
+triggers:
+  - review this paper
+  - evaluate this paper
+  - is this paper credible
+  - deep review
+  - paper review
+  - what do you think of this paper
+  - is this result real
+  - does this paper hold up
+  - critical review
+  - is this bullshit
+  - fact check this paper
+  - should we trust this result
+
+input:
+  - arXiv ID (2401.12345), arXiv URL, local PDF path, or http/https URL (required)
+  - Optional --fast: skip Phase 3 (consensus research); verdict from paper alone
+  - Optional --claim "<text>": focus the review on one specific claim
+
+output:
+  - Review workspace: {output_root}/reviews/{slug}_{YYYY-MM-DD}/
+    - 00_paper_content.md       — fetched full paper text
+    - 01_claim_registry.md      — claims grouped by category (TOP/SUPPORT/GENERAL/MOTIVATIONAL), each with crisp claim + quote
+    - 02_analysis.md            — innovation + quality + QML domain criteria
+    - 03_consensus_evidence.md  — supporting and conflicting papers (skipped in --fast)
+    - 04_final_review.md        — verdict + crisp report
+
+allowed-tools:
+  - Agent
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - WebSearch
+  - WebFetch
+  - AskUserQuestion
+---
+
+# /qml-paper-review
+
+Any QML paper → claims extracted → novelty and quality judged → consensus researched → crisp verdict with falsification condition.
+
+---
+
+## ⚠️ IRON RULES — Read Before Starting
+
+```
+❌ Do NOT summarize the paper — this is a critical review, not an abstract rewrite
+❌ Do NOT give a CREDIBLE or LANDMARK verdict without passing all 5 QML criteria
+❌ Do NOT fabricate evidence — every claim note must cite fetched paper text
+❌ Do NOT use vague hedges ("interesting," "shows promise," "could work") — take a position
+❌ Do NOT skip the falsification condition — every verdict must state what would change it
+❌ Do NOT let the review-synthesizer run until consensus-researcher completes (in standard mode)
+❌ Do NOT produce a review from abstract only — fetch full paper content first
+```
+
+---
+
+## Setup
+
+**Config** — read once at start of Setup:
+```
+Read: config/workspace.json → CONFIG
+OUTPUT_ROOT = resolve(CONFIG.output_root)
+```
+
+**Workspace directory:**
+```
+WORKSPACE = {OUTPUT_ROOT}/reviews/{slug}_{YYYY-MM-DD}/
+```
+
+Where `slug` = paper title → lowercase → hyphens → 40-char max.
+
+Create the workspace directory. Write `state.json` with: `current_phase`, `fast_mode`, `target_claim` (if --claim flag used), `paper_id`.
+
+**Agent definitions directory:**
+```
+AGENTS_DIR = .claude/skills/qml-paper-review/agents/
+```
+
+**Domain criteria** — read once during Setup, inject into every agent:
+```
+Read: criteria/qml_domain.md → QML_DOMAIN
+```
+
+**Triage log check** — before fetching, check whether this paper has been triaged:
+```
+Grep: {OUTPUT_ROOT}/triage_log.jsonl for the paper ID or slug
+```
+If a prior triage entry exists, note the verdict (SKIP/TRIAGE/PASS) in the workspace state. A prior SKIP verdict is a red flag — state it explicitly in Phase 2 output.
+
+---
+
+## Agent Spawn Convention
+
+All agent definitions live in `agents/` alongside this SKILL.md.
+Always `subagent_type="claude"`, inject the agent definition into the prompt.
+
+```
+[Orchestrator]
+Read: .claude/skills/qml-paper-review/agents/<agent-name>.md → AGENT_DEF
+
+Agent(
+  subagent_type="claude",
+  description="<short description>",
+  prompt="""
+{AGENT_DEF}
+
+---
+
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
+
+---
+
+## Task for this invocation
+
+<task-specific instructions>
+"""
+)
+```
+
+---
+
+## Phase 0 — Fetch Full Paper Content
+
+**Goal:** Retrieve the full paper text — not just the abstract.
+
+**This phase runs in the main session — no agent delegation.**
+
+### 0.1 Detect input type
+
+| Input pattern | Type | Fetch method |
+|--------------|------|-------------|
+| `\d{4}\.\d{4,5}(v\d+)?` (with or without `arxiv:` prefix) | arXiv ID | → Step 0-A |
+| URL contains `arxiv.org` or `ar5iv.org` | arXiv URL | → Step 0-A |
+| Absolute path ending in `.pdf` or `file://` prefix | Local PDF | → Step 0-B |
+| `http://` or `https://` (not arXiv) | Web URL | → Step 0-C |
+| Plain text, no URL pattern | Title search | → Step 0-A (search mode) |
+
+### Step 0-A: arXiv Fetch
+
+Execute the `/fetch-arxiv` skill procedure:
+```
+Read: .claude/skills/fetch-arxiv/SKILL.md → execute
+```
+This returns: `title`, `abstract`, `intro_text`, `arxiv_id`, `venue`, `venue_tier`, `partial_fetch`.
+
+After the basic fetch, also attempt to retrieve the HTML full text from ar5iv:
+```
+WebFetch: https://ar5iv.org/html/{arxiv_id}
+```
+Extract additionally: methods section text, results (including table numbers), conclusions, related work section.
+
+If ar5iv fetch fails, work with abstract + intro (mark `partial_fetch = true` in state.json).
+
+### Step 0-B: Local PDF Read
+
+Read the PDF in pages:
+```
+Read: {absolute_path} pages="1-5"   → first 5 pages (abstract + intro + start of methods)
+Read: {absolute_path} pages="6-15"  → methods + results (adjust range if needed)
+```
+
+Extract: title, authors, abstract, methods, experimental setup, results tables, conclusions.
+
+### Step 0-C: Web Fetch
+
+```
+WebFetch: {url}
+```
+Extraction target: title, thesis/claims, technical description, methods, any quantitative results, comparisons to classical methods, authors/organization.
+
+### 0.2 Content adequacy check
+
+Minimum required content to proceed:
+- Title + authors
+- Abstract or executive summary
+- At least partial methods description (not just abstract claims)
+
+If only abstract is available: mark `partial_fetch = true`, proceed but note in every phase output that analysis is limited to abstract-level claims.
+
+If no substantive content at all: stop.
+```
+Error: Insufficient content fetched from "{input}".
+Fetched: {what was retrieved}
+Try: provide the arXiv ID or a direct PDF path.
+```
+
+### 0.3 Write paper content to workspace
+
+Write `WORKSPACE/00_paper_content.md`:
+
+```markdown
+# Paper Content: {title}
+
+**arXiv ID:** {arxiv_id or —}
+**Authors:** {authors}
+**Venue:** {venue} · {venue_tier}
+**Source URL:** {url}
+**Fetch method:** {arxiv | local_pdf | web}
+**Partial fetch:** {yes | no}
+**Fetch date:** {YYYY-MM-DD}
+
+---
+
+## Abstract
+{abstract text}
+
+## Introduction
+{intro_text}
+
+## Methods
+{methods_text — or "NOT FETCHED (partial)" if unavailable}
+
+## Results
+{results_text including any table summaries}
+
+## Conclusions
+{conclusions_text}
+
+## Related Work
+{related_work_text — key papers the authors acknowledge as prior art}
+```
+
+**Gate Phase 0 → Phase 1:**
+- Paper content written to `00_paper_content.md` ✓
+- Fetch adequacy noted (full / partial) ✓
+
+---
+
+## Phase 1 — Claim Extraction
+
+**Goal:** Extract every material claim in the paper with type label and evidence label. No interpretation yet — just extraction.
+
+**Agent:** `agents/claim-extractor.md`
+
+```
+Read: .claude/skills/qml-paper-review/agents/claim-extractor.md → AGENT_DEF
+
+Agent(
+  subagent_type="claude",
+  description="Extract and label all claims from QML paper",
+  prompt="""
+{AGENT_DEF}
+
+---
+
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
+
+---
+
+## Task for this invocation
+
+Extract claims from this QML paper separated into four categories: TOP, SUPPORT, GENERAL, MOTIVATIONAL.
+Include a crisp rephrased claim (≤20 words) plus the supporting quote for every entry.
+Include the paper's stated main contribution, the gap it claims to fill, and prior art cited.
+
+Fast mode: <yes | no>
+  — If yes: extract TOP and MOTIVATIONAL claims only (skip SUPPORT and GENERAL).
+
+Input file: <WORKSPACE>/00_paper_content.md
+Output file: <WORKSPACE>/01_claim_registry.md
+
+Return the file path and a count of: total claims, TOP claims, MOTIVATIONAL claims,
+SUPPORT claims (0 if fast mode), GENERAL claims (0 if fast mode), VAGUE flags, MISATTRIBUTED flags.
+"""
+)
+```
+
+**Gate Phase 1 → Phase 2:**
+- `01_claim_registry.md` exists and is non-empty ✓
+- TOP and MOTIVATIONAL claim counts reported ✓
+- In full mode: SUPPORT and GENERAL counts reported ✓
+
+---
+
+## Phase 2 — Innovation, Quality & Domain Analysis
+
+**Goal:** Assess genuine novelty vs. prior art. Judge reproducibility and soundness. Apply the five QML criteria to the specific paper.
+
+**Agent:** `agents/paper-analyst.md`
+
+**MANDATORY:** This agent does NOT search the external literature. It works only from the fetched paper content and claim registry.
+
+```
+Read: .claude/skills/qml-paper-review/agents/paper-analyst.md → AGENT_DEF
+
+Agent(
+  subagent_type="claude",
+  description="Assess novelty, quality, and QML domain criteria for paper",
+  prompt="""
+{AGENT_DEF}
+
+---
+
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
+
+---
+
+## Task for this invocation
+
+Assess the innovation, quality, and QML compliance of this paper.
+Apply all five QML domain criteria to the specific claims and methods described.
+
+Input files:
+- Paper content: <WORKSPACE>/00_paper_content.md
+- Claim registry: <WORKSPACE>/01_claim_registry.md
+
+Prior triage verdict (if any): <from state.json>
+Partial fetch flag: <from state.json>
+
+Output file: <WORKSPACE>/02_analysis.md
+Return the file path, the quality verdict, and the QML criteria summary
+(how many PASS / WARN / FAIL).
+"""
+)
+```
+
+**Gate Phase 2 → Phase 3:**
+- `02_analysis.md` exists ✓
+- Quality verdict assigned ✓
+- All 5 QML criteria evaluated ✓
+- If prior triage verdict was SKIP and Phase 2 produces a CREDIBLE or LANDMARK preliminary assessment: flag to user before proceeding.
+
+---
+
+## Phase 3 — Consensus Research
+
+**Skip if `--fast` flag is set. Note in final review: "Fast mode: consensus research skipped."**
+
+**Goal:** Find papers that support or contradict the main claims. Score the evidence weight.
+
+**Agent:** `agents/consensus-researcher.md`
+
+```
+Read: .claude/skills/qml-paper-review/agents/consensus-researcher.md → AGENT_DEF
+
+Agent(
+  subagent_type="claude",
+  description="Research consensus and contradicting evidence for paper claims",
+  prompt="""
+{AGENT_DEF}
+
+---
+
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
+
+---
+
+## Task for this invocation
+
+Search QML and quantum computing literature for papers that support or contradict
+the main claims extracted from this paper.
+
+Input files:
+- Claim registry: <WORKSPACE>/01_claim_registry.md
+- Innovation/quality analysis: <WORKSPACE>/02_analysis.md
+
+Focus search on: the 3-5 highest-stakes claims from 01_claim_registry.md — specifically
+any claim labeled EMPIRICAL ADVANTAGE or THEORETICAL NOVELTY, and any QML criteria
+concern flagged in 02_analysis.md.
+
+Output file: <WORKSPACE>/03_consensus_evidence.md
+Return the file path and a summary: N supporting / N contradicting / evidence weight.
+"""
+)
+```
+
+**Gate Phase 3 → Phase 4:**
+- `03_consensus_evidence.md` exists ✓
+- Evidence weight assigned ✓
+
+---
+
+## Phase 4 — Final Review
+
+**Goal:** Write the crisp, position-taking review with verdict and falsification condition.
+
+**Agent:** `agents/review-synthesizer.md`
+
+**MANDATORY:** Do NOT write the final review yourself. The review-synthesizer takes a position you may not take.
+
+```
+Read: .claude/skills/qml-paper-review/agents/review-synthesizer.md → AGENT_DEF
+
+Agent(
+  subagent_type="claude",
+  description="Write crisp final QML paper review with verdict",
+  prompt="""
+{AGENT_DEF}
+
+---
+
+## QML Domain Criteria (authoritative — injected from criteria/qml_domain.md)
+
+{QML_DOMAIN}
+
+---
+
+## Task for this invocation
+
+Write the final critical review of this QML paper. Issue a single crisp verdict with
+a falsification condition. Apply the review format in your Role section exactly.
+
+Input files:
+- Paper content: <WORKSPACE>/00_paper_content.md
+- Claim registry: <WORKSPACE>/01_claim_registry.md
+- Innovation/quality/domain analysis: <WORKSPACE>/02_analysis.md
+- Consensus evidence: <WORKSPACE>/03_consensus_evidence.md
+  (if missing — fast mode — write "Consensus research skipped (--fast mode)" in that section)
+
+Fast mode: <yes | no>
+Partial fetch: <yes | no>
+
+Output file: <WORKSPACE>/04_final_review.md
+Return the file path and the verdict (LANDMARK | CREDIBLE | MARGINAL | WEAK | REFUTED | UNSOUND).
+"""
+)
+```
+
+---
+
+## Completion
+
+1. Confirm `04_final_review.md` exists and is non-empty.
+
+2. Write session memory at `{WORKSPACE}/session_memory.md`:
+
+```
+---
+skill: qml-paper-review
+paper_id: {arxiv_id or slug}
+date: {YYYY-MM-DD}
+title: {paper title}
+verdict: {LANDMARK | CREDIBLE | MARGINAL | WEAK | REFUTED | UNSOUND}
+status: COMPLETE
+pushed_to_permanent: false
+---
+
+## Summary
+- Verdict: {verdict}
+- Novelty: {NOVEL | INCREMENTAL | PRIOR-ART | MISATTRIBUTED}
+- Quality: {RIGOROUS | ADEQUATE | WEAK | UNSOUND}
+- QML criteria: {N PASS / N WARN / N FAIL}
+- Consensus: {STRONG_SUPPORT | MIXED | CONTRADICTED | INSUFFICIENT | SKIPPED}
+- Falsification: {one sentence}
+
+## Artifacts
+workspace: {WORKSPACE}
+final_review: {WORKSPACE}/04_final_review.md
+
+## Connector Payload
+[{date}] [SOURCE: qml-paper-review] Paper review: "{title}" — Verdict: {verdict}. {one-sentence takeaway}. Review: {WORKSPACE}/04_final_review.md
+```
+
+3. Report to user:
+
+```
+REVIEW COMPLETE
+
+Paper:    {title}
+arXiv:    {arxiv_id}
+Verdict:  {LANDMARK | CREDIBLE | MARGINAL | WEAK | REFUTED | UNSOUND}
+
+Novelty:  {NOVEL | INCREMENTAL | PRIOR-ART | MISATTRIBUTED}
+Quality:  {RIGOROUS | ADEQUATE | WEAK | UNSOUND}
+QML:      {N PASS / N WARN / N FAIL}
+Consensus: {STRONG_SUPPORT | MIXED | CONTRADICTED | INSUFFICIENT | SKIPPED}
+
+One-line verdict: {direct sentence}
+Falsification: {what evidence would change the verdict}
+
+Workspace: {WORKSPACE}
+Files:
+  00_paper_content.md       — full paper text
+  01_claim_registry.md      — {N_top} TOP + {N_motivational} MOTIVATIONAL{or: + {N_support} SUPPORT + {N_general} GENERAL} claims
+  02_analysis.md            — innovation + quality + 5 QML criteria
+  03_consensus_evidence.md  — {N} supporting / {N} contradicting{or: SKIPPED}
+  04_final_review.md        — full review
+
+STATUS: DONE
+```
+
+---
+
+## Fast Mode
+
+If the user passes `--fast` or says "quick review":
+- Run: Phase 0 → Phase 1 → Phase 2 → Phase 4 (skip Phase 3)
+- Phase 4 inputs: `00`, `01`, `02` only
+- Note in completion and final review: "Fast mode: consensus research skipped. Verdict from paper analysis alone; may change with field evidence."
+
+---
+
+## Anti-Pattern Reference
+
+| Anti-pattern | Why it fails | What to do instead |
+|---|---|---|
+| Summarize instead of review | Misses the point — user wants a verdict, not a summary | Extract claims, judge quality, take a position |
+| Vague quality judgment ("interesting") | Gives the team nothing to act on | Name the specific flaw or strength with a quote from the paper |
+| Accept paper's own quality framing | Authors never say their paper is bad | Apply external quality criteria regardless of author framing |
+| Skip QML criteria because paper looks good | QML failure modes are invisible without the criteria | Always run all 5 criteria |
+| No falsification condition | Verdict is unfalsifiable and useless | Every verdict must state: "This would change if [specific evidence]" |
+| Abstract-only review | Methods section often contradicts abstract claims | Require full text or partial_fetch flag |
+| Issue CREDIBLE with a WARN criterion | Downgrades trust in the verdict | WARN → MARGINAL at best; FAIL → WEAK or worse |
+| Write the final review as orchestrator | Removes the separation of synthesis and judgment | Always delegate to review-synthesizer |
