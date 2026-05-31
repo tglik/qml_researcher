@@ -1,6 +1,6 @@
 # QML Domain Criteria for Paper Triage and Evaluation
 
-Version: 1.0 | Last updated: 2026-05-27
+Version: 1.1 | Last updated: 2026-05-31
 Maintainers: Tsahi, Meir, Adi — edit this file as the team's understanding evolves.
 
 This document is the authoritative source for how the team evaluates QML papers.
@@ -27,124 +27,9 @@ Severity of a FAIL:
 
 ---
 
-## Criterion 1: Dequantization Risk
+## Criterion 1: Strong Classical Baseline
 
-### Definition
-A QML method is **dequantization-vulnerable** if a classical algorithm using randomized linear algebra — specifically Nystrom approximation, Random Fourier Features (RFF), sketching, or low-rank matrix methods — can reproduce the same computational result within polynomial overhead. If so, the quantum advantage disappears classically and the paper's main claim is likely invalid.
-
-Key references: Ewin Tang's dequantization results (2018, 2019); Cotler et al. (2021) on classical shadow tomography reproducing quantum kernel estimates.
-
-### What a Failing Paper Looks Like
-- Claims speedup for a quantum kernel or quantum linear algebra routine without proving hardness of classical approximation
-- Uses a quantum kernel of the form K(x,y) = |⟨φ(x)|φ(y)⟩|² where φ is a polynomial-depth circuit — these are known to be approximable by RFF
-- Cites exponential advantage in a sampling or linear-algebra task without addressing Tang-style reductions
-- Advantage holds only in the query complexity model (oracle access) without evidence it persists in the realistic model where classical algorithms can exploit data structure
-- Paper benchmarks against a classical SVM or kernel method without testing whether an RFF approximation of the proposed quantum kernel achieves comparable accuracy
-
-**Red flags in abstract/intro:** "quantum speedup for linear systems," "quantum advantage for kernel methods," "exponential speedup for recommendation," "quantum PCA advantage" — all require dequantization check.
-
-### What a Passing Paper Looks Like
-- Explicitly proves or cites a hardness result showing the task is not efficiently Nystrom/RFF-approximable
-- Works in a regime (e.g., highly non-stationary kernel, specific data manifold) where classical low-rank approximation is provably insufficient
-- Demonstrates empirically that an RFF approximation of their quantum kernel performs substantially worse (not just slightly) on the target task
-- Addresses dequantization risk explicitly in a limitations or related work section
-
-### Examples
-**Failing:** "We propose a quantum kernel for molecular property prediction and show it outperforms an SVM on a 100-molecule benchmark." → No dequantization check. The quantum kernel is almost certainly RFF-approximable. SKIP.
-
-**Passing:** "Our quantum kernel exploits Hamiltonian simulation on neutral-atom hardware; we show that the resulting feature map cannot be efficiently approximated by polynomial-degree classical kernels on this graph-structured data." → Explicit argument against classical approximation. Advance to full read.
-
----
-
-## Criterion 2: Geometric Difference
-
-### Definition
-A quantum kernel K_Q(x,y) has **genuine geometric difference** from classical kernels (RBF, polynomial, Matérn) if it induces a fundamentally different geometry on the data manifold — one that cannot be reproduced by any classical kernel family even in principle, not just in practice. Without geometric difference, a quantum kernel is an expensive way to approximate something classical methods already do well.
-
-Geometric difference was formalized by Huang et al. (Nature Communications, 2021): a quantum kernel provides learning advantage only if it has high geometric difference with the best classical kernel for the task.
-
-### What a Failing Paper Looks Like
-- Proposes a quantum kernel without checking whether its feature space geometry is distinct from standard kernel families
-- Shows performance improvement over a generic SVM but does not test against the best-tuned classical kernel (e.g., ARD-RBF, Matérn 5/2 with automatic relevance determination)
-- Claims the quantum kernel "captures quantum correlations" without specifying what classical correlations it cannot capture
-- The circuit is a single-layer encoding (Z-feature map, ZZ-feature map) — these produce kernels equivalent to truncated Fourier series and have minimal geometric difference from cosine kernels
-
-**Red flags:** Single-layer Pauli encoding circuits; ZZ-feature maps on low-dimensional data; "quantum-enhanced SVM" without kernel comparison.
-
-### What a Passing Paper Looks Like
-- Computes or bounds the geometric difference between the proposed quantum kernel and the best-performing classical kernel on the target dataset
-- Demonstrates that the quantum kernel separates data that no polynomial-degree classical kernel separates well
-- Uses hardware-native entanglement patterns (e.g., neutral-atom Rydberg interactions) that generate correlations structurally unavailable to classical kernel families
-- Provides theory on why the specific data structure (graph topology, many-body physics, molecular geometry) requires the specific quantum geometry
-
----
-
-## Criterion 3: Trainability / Simulability Trilemma
-
-### Definition
-Parameterized quantum circuits (PQCs) face a fundamental trilemma:
-1. **Barren plateaus** — generic random circuits have exponentially vanishing gradients, making training impossible at scale
-2. **Classical simulability** — circuits shallow enough to train are often classically simulable via tensor networks, stabilizer methods, or polynomial-time algorithms
-3. **Expressibility trap** — maximally expressive circuits have barren plateaus; low-expressibility circuits offer no quantum advantage
-
-A paper that does not address all three corners of this trilemma for its specific circuit architecture is incomplete.
-
-Reference: McClean et al. (2018) on barren plateaus; Cerezo et al. (2021) on cost-function-dependent plateaus; Napp et al. (2022) on classical simulation of shallow circuits.
-
-### What a Failing Paper Looks Like
-- Uses a deep (>10-20 layer) random PQC without addressing barren plateau mitigation
-- Claims trainability for a circuit that has been shown to be in the barren-plateau regime by prior work
-- Uses a shallow, low-entanglement circuit on a task where classical simulation (e.g., MPS/DMRG) trivially applies
-- Reports training success on toy problems (n ≤ 6 qubits) and extrapolates to large-n without noise or gradient analysis
-- Does not report whether gradients vanish with system size
-- Uses hardware-efficient ansatz (HEA) on a non-chemistry task without justification — HEA is known to suffer from barren plateaus on generic tasks
-
-**Red flags:** n ≤ 10 qubit experiments only; no gradient norm vs. system size analysis; "hardware-efficient ansatz" with no barren plateau discussion; "random circuit" or "random initialization."
-
-### What a Passing Paper Looks Like
-- Uses a structured ansatz (QAOA-style, problem-specific, Hamiltonian simulation) with theoretical justification for gradient propagation
-- Provides gradient norm scaling analysis showing polynomial rather than exponential decay
-- Uses mid-circuit measurement or feedforward to escape the trainability-expressibility trap
-- Demonstrates the circuit is not classically simulable via a hardness argument or by showing tensor network contraction cost is exponential for the specific structure
-- Employs reservoir computing or Hamiltonian kernel approaches that sidestep the training problem entirely (fixed-parameter circuits)
-
----
-
-## Criterion 4: Hardware Fit — NISQ / Neutral Atom
-
-### Definition
-The team's hardware context is **neutral-atom processors** (Pasqal, QuEra, Atom Computing), operating in the NISQ regime (50–500 qubits, no error correction, coherence-limited depth). Our partner is Q-Factor.
-
-A paper is hardware-realistic if its approach maps to this regime without requiring: fault-tolerant error correction, QRAM of size O(N), depth O(polylog N), or connectivity beyond what neutral-atom hardware provides.
-
-### What a Failing Paper Looks Like
-- Requires fault-tolerant quantum computation (QFT, Shor, HHL, Grover) as a subroutine
-- Assumes QRAM for data loading (exponential state preparation is intractable)
-- Requires all-to-all connectivity but neutral-atom hardware is 2D grid or configurable geometry
-- Circuit depth exceeds coherence limits (typically T2-limited to O(100-1000) two-qubit gates on current neutral-atom hardware)
-- Claims hardware results on superconducting (IBM/Google) qubits and extrapolates to neutral atom without topology/noise analysis
-- "Near-term" claim but requires >100 logical qubits
-
-**Red flags:** "Assumes QRAM," "fault-tolerant gate set," circuit depth O(n log n) or worse for n > 50, superconducting-only experiments claimed as general.
-
-### What a Passing Paper Looks Like
-- Explicitly analyzes neutral-atom gate fidelities, coherence times, and qubit connectivity
-- Circuit depth ≤ O(100) two-qubit gates for n ≤ 200 qubits
-- Uses Rydberg-native gates (CZ, CCZ via blockade) rather than generic universal gates
-- Demonstrates graph-structured entanglement that maps to neutral-atom reconfigurable arrays
-- Identifies the specific neutral-atom primitive (analog Hamiltonian simulation, digital circuit, hybrid analog-digital) being exploited
-- Quantum advantage claimed for n = 50-300 qubit regime accessible within 2-3 years
-
-### Hardware Parameter Reference (update as hardware improves)
-- Two-qubit gate fidelity: ~99.5% (best current neutral atom)
-- Coherence time: T2 ~ 1-10 seconds (atom-clock transitions)
-- Max qubits demonstrated: ~256 (QuEra Aquila), 100+ (Pasqal)
-- Native gates: CZ (Rydberg blockade), local and global single-qubit rotations
-- Connectivity: reconfigurable 2D arrays, limited all-to-all via atom transport
-
----
-
-## Criterion 5: Strong Classical Baseline
+**Scope: applies only when the paper makes a performance comparison to classical ML methods. If the paper makes no classical ML comparison, mark this criterion N/A.**
 
 ### Definition
 A QML paper demonstrates quantum advantage only relative to the **best available** classical method for the same task, trained and tuned appropriately. Using a weak, untuned, or obsolete classical baseline is the single most common failure mode in QML papers and renders the advantage claim invalid.
@@ -190,15 +75,184 @@ A QML paper demonstrates quantum advantage only relative to the **best available
 
 ---
 
+## Criterion 2: Dequantization Risk
+
+**Scope: applies to papers claiming quantum computational speedup or algorithmic advantage over classical methods. For papers about hardware characterization, circuit design without speedup claims, or results that do not assert quantum-vs-classical performance differences, mark this criterion N/A.**
+
+### Definition
+A QML method is **dequantization-vulnerable** if a classical algorithm using randomized linear algebra — specifically Nystrom approximation, Random Fourier Features (RFF), sketching, or low-rank matrix methods — can reproduce the same computational result within polynomial overhead. If so, the quantum advantage disappears classically and the paper's main claim is likely invalid.
+
+Key references: Ewin Tang's dequantization results (2018, 2019); Cotler et al. (2021) on classical shadow tomography reproducing quantum kernel estimates.
+
+### What a Failing Paper Looks Like
+- Claims speedup for a quantum kernel or quantum linear algebra routine without proving hardness of classical approximation
+- Uses a quantum kernel of the form K(x,y) = |⟨φ(x)|φ(y)⟩|² where φ is a polynomial-depth circuit — these are known to be approximable by RFF
+- Cites exponential advantage in a sampling or linear-algebra task without addressing Tang-style reductions
+- Advantage holds only in the query complexity model (oracle access) without evidence it persists in the realistic model where classical algorithms can exploit data structure
+- Paper benchmarks against a classical SVM or kernel method without testing whether an RFF approximation of the proposed quantum kernel achieves comparable accuracy
+
+**Red flags in abstract/intro:** "quantum speedup for linear systems," "quantum advantage for kernel methods," "exponential speedup for recommendation," "quantum PCA advantage" — all require dequantization check.
+
+### What a Passing Paper Looks Like
+- Explicitly proves or cites a hardness result showing the task is not efficiently Nystrom/RFF-approximable
+- Works in a regime (e.g., highly non-stationary kernel, specific data manifold) where classical low-rank approximation is provably insufficient
+- Demonstrates empirically that an RFF approximation of their quantum kernel performs substantially worse (not just slightly) on the target task
+- Addresses dequantization risk explicitly in a limitations or related work section
+
+### Examples
+**Failing:** "We propose a quantum kernel for molecular property prediction and show it outperforms an SVM on a 100-molecule benchmark." → No dequantization check. The quantum kernel is almost certainly RFF-approximable. SKIP.
+
+**Passing:** "Our quantum kernel exploits Hamiltonian simulation on neutral-atom hardware; we show that the resulting feature map cannot be efficiently approximated by polynomial-degree classical kernels on this graph-structured data." → Explicit argument against classical approximation. Advance to full read.
+
+---
+
+## Criterion 3: Quantum-Native Data Fit
+
+**Scope: applies to papers proposing quantum kernels, quantum feature maps, or quantum embedding strategies. For papers about purely gate-based optimization, hardware characterization, or non-kernel QML methods, mark N/A.**
+
+### Definition
+A quantum feature map or kernel has **quantum-native data fit** when it produces a structure on the data that is genuinely unavailable to classical kernel families — not just harder to compute, but fundamentally different. This has two inter-related components:
+
+1. **Geometric difference** (Huang et al., Nature Communications 2021): the quantum kernel induces a different geometry on the data manifold than RBF, polynomial, or Matérn kernels — one that cannot be reproduced classically even in principle, not just in practice.
+2. **Data structure alignment**: the data or problem has a natural structure (graph topology, many-body interaction, molecular symmetry, combinatorial constraint) that maps onto the quantum circuit's entanglement pattern in a way that classical feature engineering cannot replicate.
+
+A quantum kernel that lacks both properties is an expensive approximation to something classical methods already do well.
+
+> **Note on terminology:** The research literature uses "geometric difference" (Huang et al.) for the formal mathematical measure. The team uses "quantum-native data fit" to also capture the structural question of whether the problem *needs* quantum geometry, not only whether the kernel *has* it.
+
+### What a Failing Paper Looks Like
+- Proposes a quantum kernel without checking whether its feature space geometry is distinct from standard kernel families
+- Shows performance improvement over a generic SVM but does not test against the best-tuned classical kernel (e.g., ARD-RBF, Matérn 5/2 with automatic relevance determination)
+- Claims the quantum kernel "captures quantum correlations" without specifying what classical correlations it cannot capture
+- The circuit is a single-layer encoding (Z-feature map, ZZ-feature map) — these produce kernels equivalent to truncated Fourier series and have minimal geometric difference from cosine kernels
+
+**Red flags:** Single-layer Pauli encoding circuits; ZZ-feature maps on low-dimensional data; "quantum-enhanced SVM" without kernel comparison.
+
+### What a Passing Paper Looks Like
+- Computes or bounds the geometric difference between the proposed quantum kernel and the best-performing classical kernel on the target dataset
+- Demonstrates that the quantum kernel separates data that no polynomial-degree classical kernel separates well
+- Uses hardware-native entanglement patterns (e.g., neutral-atom Rydberg interactions, molecular geometry constraints) that generate correlations structurally unavailable to classical kernel families
+- Provides theory on why the specific data structure (graph topology, many-body physics, molecular geometry) requires the specific quantum geometry
+
+---
+
+## Criterion 4: Trainability / Simulability
+
+### Definition
+Parameterized quantum circuits (PQCs) face three inter-related risks:
+1. **Barren plateaus** — generic random circuits have exponentially vanishing gradients, making training impossible at scale
+2. **Classical simulability** — circuits shallow enough to train are often classically simulable via tensor networks, stabilizer methods, or polynomial-time algorithms
+3. **Expressibility trap** — maximally expressive circuits have barren plateaus; low-expressibility circuits offer no quantum advantage
+
+These three risks are inter-related but a paper need not resolve all of them. **Identify which risks are structurally present for the specific circuit architecture, and flag those that are unaddressed.** A paper using fixed-parameter circuits (reservoir computing, Hamiltonian kernels) sidesteps training risks entirely and should only be checked for simulability. A structured problem-specific ansatz may naturally avoid barren plateaus and only needs a simulability argument.
+
+Reference: McClean et al. (2018) on barren plateaus; Cerezo et al. (2021) on cost-function-dependent plateaus; Napp et al. (2022) on classical simulation of shallow circuits.
+
+### What a Failing Paper Looks Like
+- Uses a deep (>10-20 layer) random PQC without addressing barren plateau mitigation
+- Claims trainability for a circuit that has been shown to be in the barren-plateau regime by prior work
+- Uses a shallow, low-entanglement circuit on a task where classical simulation (e.g., MPS/DMRG) trivially applies
+- Reports training success on toy problems (n ≤ 6 qubits) and extrapolates to large-n without noise or gradient analysis
+- Does not report whether gradients vanish with system size
+- Uses hardware-efficient ansatz (HEA) on a non-chemistry task without justification — HEA is known to suffer from barren plateaus on generic tasks
+
+**Red flags:** n ≤ 10 qubit experiments only; no gradient norm vs. system size analysis; "hardware-efficient ansatz" with no barren plateau discussion; "random circuit" or "random initialization."
+
+### What a Passing Paper Looks Like
+- Uses a structured ansatz (QAOA-style, problem-specific, Hamiltonian simulation) with theoretical justification for gradient propagation
+- Provides gradient norm scaling analysis showing polynomial rather than exponential decay
+- Uses mid-circuit measurement or feedforward to escape the trainability-expressibility trap
+- Demonstrates the circuit is not classically simulable via a hardness argument or by showing tensor network contraction cost is exponential for the specific structure
+- Employs reservoir computing or Hamiltonian kernel approaches that sidestep the training problem entirely (fixed-parameter circuits)
+
+---
+
+## Criterion 5: Hardware Context & Feasibility
+
+### Definition
+Every quantum algorithm operates in a specific hardware context. When evaluating a paper, the key questions are:
+- **NISQ or FTQC?** Does the method require error correction, or is it targeting near-term noisy hardware?
+- **Modality fit:** Is the approach realistic for the specific hardware platform discussed (neutral atom, superconducting, trapped ion, photonics)?
+- **Noise sensitivity:** Does the paper analyze circuit performance under realistic noise, or only in the ideal (noiseless) case?
+- **Circuit size:** Are qubit counts and gate depths within what the claimed hardware supports today or within a stated near-term timeline?
+- **Connectivity:** Does the circuit topology match the hardware's native connectivity constraints?
+
+The team works primarily with neutral-atom partners (Q-Factor, QuEra, Pasqal) but evaluates papers across all modalities. A paper on superconducting hardware is not automatically irrelevant — flag its hardware context and note what would be needed to transfer the approach.
+
+### What a Failing Paper Looks Like
+- Requires fault-tolerant quantum computation (QFT, Shor, HHL, Grover) as a subroutine without acknowledging FTQC requirements
+- Assumes QRAM for data loading (exponential state preparation is intractable on current hardware)
+- Claims "near-term" or "NISQ" feasibility for a circuit that exceeds the coherence budget of the claimed platform
+- Reports results on one hardware modality and claims direct generalizability to another without topology/noise analysis
+- "Near-term" claim but requires >100 logical qubits (implies error correction)
+- No noise analysis for circuits with >50 two-qubit gates on a claimed NISQ platform
+
+**Red flags:** "Assumes QRAM," "fault-tolerant gate set," circuit depth O(n log n) or worse for n > 50 on NISQ claims, cross-modality generalizability without adaptation analysis.
+
+### What a Passing Paper Looks Like
+- Explicitly states the target hardware regime (NISQ vs FTQC) and platform modality
+- Analyzes circuit depth and qubit count against the stated platform's realistic parameters
+- Includes noise modeling or error mitigation analysis for circuits with >50 two-qubit gates
+- For multi-platform claims: provides platform-specific adaptation analysis or at minimum flags differences in connectivity and noise model
+- Quantum advantage is claimed for a qubit/gate regime accessible within a stated near-term timeline
+
+### Hardware Reference Parameters by Modality
+
+Use these when assessing whether a circuit is realistic for a stated platform.
+
+**Neutral atom (Pasqal, QuEra, Atom Computing — primary team modality):**
+- Two-qubit gate fidelity: ~99.5% (Rydberg blockade)
+- Coherence time: T2 ~ 1–10 s (atomic clock transitions)
+- Max demonstrated qubits: ~256 (QuEra Aquila)
+- Native gates: CZ (Rydberg blockade), global and local single-qubit rotations
+- Connectivity: reconfigurable 2D arrays; limited all-to-all via atom transport
+- Strengths: long coherence, reconfigurable geometry, analog Hamiltonian simulation, native graph-problem structure
+
+**Superconducting (IBM, Google, Rigetti):**
+- Two-qubit gate fidelity: ~99.5% (best, IBM/Google)
+- Coherence time: T2 ~ 100–500 μs
+- Max usable qubits: 127+ (IBM Eagle), 53 (Google Sycamore benchmark)
+- Native gates: CX/ECR (IBM), CZ (Google)
+- Connectivity: heavy-hex (IBM), 2D grid (Google)
+- Strengths: fast gates (~100 ns), mature software ecosystem, largest deployed qubit counts
+
+**Trapped ion (IonQ, Quantinuum, Oxford):**
+- Two-qubit gate fidelity: ~99.9% (Quantinuum, best available)
+- Coherence time: T2 ~ seconds to minutes
+- Max qubits: ~32–56 (current commercial)
+- Native gates: Mølmer–Sørensen (all-to-all connectivity)
+- Strengths: highest fidelity, all-to-all connectivity; limited qubit counts
+
+### Neutral-Atom NISQ Feasibility Thresholds (for Q-Factor / team hardware)
+
+**Qubit count:**
+
+| Range | Classification | Timeline | Verdict |
+|-------|---------------|----------|---------|
+| < 50 qubits | Feasible today | Available now | PASS |
+| 50–300 qubits | Near-term neutral-atom | 1–3 years | CONDITIONAL |
+| > 300 qubits | Early fault-tolerant required | 3–7 years | FAIL |
+| > 1000 logical qubits | Full fault-tolerant | > 7 years | FAIL |
+
+**Two-qubit gate count per circuit:**
+
+| Count | Assessment | Verdict |
+|-------|------------|---------|
+| < 50 | Within current coherence budget | PASS |
+| 50–500 | Noise accumulation; error mitigation required | CONDITIONAL |
+| > 500 | Exceeds coherence limits on current neutral-atom hardware | FAIL |
+
+---
+
 ## Quick Reference: SKIP/TRIAGE/PASS Decision Table
 
-| Criterion | SKIP (CRITICAL) | TRIAGE (WARN) | PASS |
-|-----------|-----------------|---------------|------|
-| Dequantization | Clear RFF/Nystrom vulnerability; no hardness argument | Partially addresses; regime unclear | Explicit hardness or empirical disproof |
-| Geometric diff | Single-layer encoding; ZZ-feature map only | Uses structured encoding, no comparison | Geometric difference computed or argued |
-| Trainability | Barren plateau regime; n ≤ 8 qubits only | Shallow circuit, no simulability check | Gradient analysis + simulability addressed |
-| Hardware fit | QRAM assumed; fault-tolerant required | Superconducting-only; depth borderline | Neutral-atom analysis explicit |
-| Classical baseline | Toy baseline (MLP/SVM default) only | Missing one required baseline | All required baselines, tuned |
+| Criterion | SKIP (CRITICAL) | TRIAGE (WARN) | PASS | N/A when |
+|-----------|-----------------|---------------|------|----------|
+| Classical Baseline | Toy baseline (MLP/SVM default) only | Missing one required baseline | All required baselines, tuned | No classical ML comparison |
+| Dequantization | Clear RFF/Nystrom vulnerability; no hardness argument | Partially addresses; regime unclear | Explicit hardness or empirical disproof | No quantum speedup claim |
+| Quantum-Native Data Fit | Single-layer encoding; ZZ-feature map only | Uses structured encoding, no comparison | Geometric difference computed or argued | Not a kernel/feature map paper |
+| Trainability | Barren plateau regime; n ≤ 8 qubits only | Shallow circuit, no simulability check | Relevant risks addressed for this architecture | Fixed-parameter / non-trained circuit |
+| Hardware Context | QRAM assumed; FTQC required without acknowledgment | Cross-platform claimed without analysis; depth borderline | Hardware-specific analysis, platform-realistic | Paper IS a hardware characterization |
 
 **Any CRITICAL = SKIP immediately.** TRIAGE requires at least 2 criteria at WARN with none at CRITICAL.
 
@@ -302,9 +356,9 @@ approaches may feed into data augmentation or Boltzmann machine-style generative
 
 ---
 
-### Adjacent Category C — Hardware Architecture / NISQ Constraints Relevant to QML
+### Adjacent Category C — Hardware Architecture / Constraints Relevant to QML
 
-Papers about neutral-atom hardware capabilities, gate fidelity, error mitigation, fault-tolerant
+Papers about quantum hardware capabilities, gate fidelity, error mitigation, fault-tolerant
 design, or QEC overhead that affect what QML circuits are realistic to deploy.
 
 **Examples:** full-stack neutral atom quantum processor design, LDPC code overhead analysis for
@@ -314,13 +368,12 @@ NISQ algorithms, Rydberg gate fidelity improvements, reconfigurable array topolo
 the 2–3 year hardware roadmap directly governs which QML approaches are viable.
 
 **What makes it PASS/TRIAGE (not SKIP):**
-- Directly analyzes neutral-atom / Rydberg hardware (not just generic quantum hardware)
 - Reports gate fidelity, coherence times, or qubit counts relevant to QML circuit requirements
 - Identifies specific constraints or opportunities for QML (e.g., "this topology enables these kernels")
+- Covers neutral-atom hardware or another modality with a clear neutral-atom transfer path
 - QML Transfer Value is HIGH or MEDIUM
 
 **What keeps it SKIP:**
-- Superconducting/trapped-ion only with no neutral-atom relevance
 - Pure fault-tolerant quantum computing with no NISQ-regime bridge
 - No connection to circuit depths or qubit counts accessible in 2–3 years
 
@@ -347,11 +400,11 @@ Mark a criterion N/A when it genuinely does not apply to the paper type:
 
 | Criterion | Mark N/A when... |
 |-----------|-----------------|
+| Classical Baseline | Paper makes no classical ML performance comparison |
 | Dequantization Risk | Paper makes no quantum speedup claim (e.g., pure circuit design, hardware characterization) |
-| Geometric Difference | Paper is not about a quantum kernel or feature map |
+| Quantum-Native Data Fit | Paper is not about a quantum kernel or feature map |
 | Trainability | Paper is not about a parameterized/trained circuit |
-| Hardware Fit | Paper is explicitly about hardware characterization (hardware fit IS the subject) |
-| Classical Baseline | Paper is not about a learning task with classical ML comparators |
+| Hardware Context | Paper is explicitly a hardware characterization (hardware feasibility IS the subject) |
 
 All N/A markings must include a one-sentence justification.
 
@@ -383,52 +436,21 @@ published    — peer-reviewed T1/T2 venue
 
 ---
 
-## NISQ Feasibility Thresholds
-
-These thresholds operationalize Criterion 4 (Hardware Fit) for neutral-atom NISQ hardware.
-Update this section when hardware capabilities change significantly.
-
-**Qubit count ranges:**
-
-| Range | NISQ Classification | Timeline | Hardware Fit verdict |
-|-------|---------------------|----------|---------------------|
-| < 50 qubits | Feasible today | Available now | PASS |
-| 50–300 qubits | Near-term neutral-atom | 1–3 years | CONDITIONAL |
-| > 300 qubits | Early fault-tolerant required | 3–7 years | FAIL |
-| > 1000 logical qubits | Full fault-tolerant | > 7 years | FAIL |
-
-**Two-qubit gate count per circuit:**
-
-| Count | Assessment | Hardware Fit verdict |
-|-------|------------|---------------------|
-| < 50 | Within current coherence budget | PASS |
-| 50–500 | Noise accumulation expected; error mitigation required | CONDITIONAL |
-| > 500 | Coherence limits exceeded on current neutral-atom hardware | FAIL |
-
-**Current neutral-atom hardware parameters (update as hardware improves):**
-- Two-qubit gate fidelity: ~99.5% (best current, Rydberg blockade)
-- Coherence time: T2 ~ 1–10 seconds (atomic clock transitions)
-- Maximum demonstrated qubits: ~256 (QuEra Aquila), 100+ (Pasqal)
-- Native gates: CZ (Rydberg blockade), global and local single-qubit rotations
-- Connectivity: reconfigurable 2D arrays; limited all-to-all via atom transport
-
----
-
 ## Verdict Vocabulary Bridge
 
 Two skills operate at different depth levels and use different verdict vocabularies. This table makes them explicitly comparable so a paper can be traced through the pipeline without confusion.
 
 | Criterion | Fast review verdict (`qml-paper-review --fast`) | Deep Research verdict (`quantum-domain-analyst`) |
 |-----------|-------------------------------|--------------------------------------------------|
-| Dequantization Risk | FAIL CRITICAL / WARN / PASS | HIGH / MEDIUM / LOW |
-| Geometric Difference | FAIL CRITICAL / WARN / PASS | REDUNDANT / UNCLEAR / DISTINCT |
-| Trainability | FAIL CRITICAL / WARN / PASS | FAIL / WARN / PASS |
-| Hardware Fit | FAIL MAJOR / WARN / PASS | FAIL / CONDITIONAL / PASS |
 | Classical Baseline | FAIL CRITICAL / WARN / PASS | ABSENT / WEAK / STRONG |
+| Dequantization Risk | FAIL CRITICAL / WARN / PASS | HIGH / MEDIUM / LOW |
+| Quantum-Native Data Fit | FAIL CRITICAL / WARN / PASS | REDUNDANT / UNCLEAR / DISTINCT |
+| Trainability | FAIL CRITICAL / WARN / PASS | FAIL / WARN / PASS |
+| Hardware Context | FAIL MAJOR / WARN / PASS | FAIL / CONDITIONAL / PASS |
 
 **Reading the table:**
-- `FAIL CRITICAL` in triage ≈ `HIGH` / `REDUNDANT` / `FAIL` / `ABSENT` in deep research (clear disqualifier)
-- `WARN` in triage ≈ `MEDIUM` / `UNCLEAR` / `WARN` / `CONDITIONAL` / `WEAK` in deep research (unresolved concern)
-- `PASS` in triage ≈ `LOW` / `DISTINCT` / `PASS` / `STRONG` in deep research (criterion satisfied)
+- `FAIL CRITICAL` in triage ≈ `ABSENT` / `HIGH` / `REDUNDANT` / `FAIL` in deep research (clear disqualifier)
+- `WARN` in triage ≈ `WEAK` / `MEDIUM` / `UNCLEAR` / `WARN` / `CONDITIONAL` in deep research (unresolved concern)
+- `PASS` in triage ≈ `STRONG` / `LOW` / `DISTINCT` / `PASS` in deep research (criterion satisfied)
 
 Triage uses pass/fail vocabulary because its purpose is a fast binary filter. Deep research uses richer vocabulary because its purpose is nuanced classification that feeds synthesis. Both vocabularies are correct for their context; use this table when comparing a paper's triage log entry to its deep-research classification.
