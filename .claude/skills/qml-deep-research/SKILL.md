@@ -28,9 +28,8 @@ triggers:
 
 input:
   - Research question or topic (required)
-  - Optional --fast: skip phases 2 and 4-5 (Phase 0 → 1 → 3 → 6)
-  - Optional --scope-only: stop after Phase 0 and wait for user review
-  - Optional --socratic: run guided 5-question QML clarification before PICO (for vague inputs)
+  - Optional --fast: skip phases 2 and 4-5 (Phase 0A → 0B → 1 → 3 → 6)
+  - Optional --scope-only: stop after Phase 0B and wait for user review
   - Optional --lit-review: stop after Phase 1; produce annotated bibliography instead of synthesis
   - Optional --fact-check: verify a single claim or paper (Phase 1 targeted + Phase 5 only)
 
@@ -104,8 +103,9 @@ AGENTS_DIR = .claude/skills/qml-deep-research/agents/
 
 **Domain criteria** — read once during Setup, before Phase 1. Inject into every agent that needs domain knowledge. This ensures all agents use the team's current criteria, not stale inline copies:
 ```
-Read: criteria/qml_domain.md → QML_DOMAIN
+Read: c:\Users\tmgli\Documents\Source\qml_researcher\criteria\qml_domain.md → QML_DOMAIN
 ```
+If that absolute path fails (different machine), fall back to: `criteria/qml_domain.md` from the repo root.
 
 The `QML_DOMAIN` variable is passed as a labelled section inside every relevant agent prompt (see Agent Spawn Convention and each phase below).
 
@@ -146,29 +146,179 @@ here cannot affect any other skill.
 
 ---
 
-## Phase 0 — Scope
+## Phase 0A — Research Brief
 
-**Goal:** Decompose the research question into 3-7 bounded sub-questions with explicit criteria. Confirm with user before launching literature sweep.
+**Goal:** Establish WHY this research matters before deciding WHAT to research. Surfaces the decision gate, existing priors, confirmation bias risk, and explicit scope boundaries. Produces a brief that grounds Phase 0B's mechanical scope translation.
 
 **This phase runs in the main session — no agent delegation.**
 
-### Steps
-
-**0.0 Socratic Clarification (only if `--socratic` flag is set or input is clearly vague)**
-
-Trigger conditions: user provides a direction rather than a question ("something about reservoirs", "we should look at X", "what do you think about Y?"), or the PICO frame cannot be filled without guessing.
-
-Ask these 5 questions in a single AskUserQuestion (multiSelect: false, one question per entry):
-
-1. **Data type**: What kind of data is this quantum approach operating on? (tabular / graph / molecular / time-series / unstructured / other)
-2. **Regime intent**: Are we asking what's NISQ-feasible now, or what the theoretical direction looks like long-term? (NISQ-feasible now / long-term theoretical / both)
-3. **Baseline bar**: What would "it works" mean — better than what? (beat XGBoost/TabPFN / beat GNN / beat SOAP/GAP / beat existing quantum method / no baseline defined yet)
-4. **Dequantization concern**: Is the proposed advantage based on data structure access (high dequantization risk) or geometry/Hamiltonian structure (lower risk)? (data-structure / geometry-Hamiltonian / unclear)
-5. **Hardware scope**: Must this work on neutral-atom specifically, or is this a hardware-agnostic survey? (neutral-atom only / hardware-agnostic / both)
-
-Use answers to auto-fill the PICO frame. Skip the manual PICO prompting. Proceed to 0.2 FINER.
+**Escape hatch:** If the user provides a question that already includes (a) a named decision it will inform, (b) a stated hypothesis or prior, (c) a falsification criterion, and (d) explicit scope boundaries — skip 0A entirely and proceed to Phase 0B. A fully-specified brief is its own answer.
 
 ---
+
+### Mode Detection
+
+Via AskUserQuestion, ask:
+
+> Before we scope the research — what's the intent?
+
+Options:
+- **Validation** — we're already leaning toward a direction and want to stress-test it
+- **Discovery** — we want to understand a space we haven't explored yet
+- **Decision Brief** — we need a defensible summary to share with investors, collaborators, or the team
+- **Claim Verification** — someone made a specific claim and we want to check it
+
+If **Claim Verification**: recommend `--fact-check` and stop Phase 0A. The user has the right concept but the wrong mode.
+
+Mode shapes the research posture:
+- **Validation** → adversarial by default; sub-questions tilt toward disconfirmation; classical baselines prominent
+- **Discovery** → balanced sweep; no prior hypothesis to protect
+- **Decision Brief** → executive framing; startup implications front-and-center; strong classical baselines named explicitly
+
+---
+
+### The Five Research Forcing Questions
+
+Ask these **ONE AT A TIME** via AskUserQuestion. Push on each until the answer is specific and actionable. A vague answer means the research question itself isn't ready to launch.
+
+**Anti-sycophancy rules for this phase:**
+- "We want to understand the space" is not a decision gate — push for the specific action this research enables
+- "We think it probably works" is not a falsification criterion — push for specific thresholds or failure modes
+- A question that can't be falsified is a belief, not a research question
+- Never accept the stated question without probing whether it's actually the question that needs answering
+
+**STOP** after each question. Wait for the response before asking the next.
+
+#### Q1: Decision Gate
+
+**Ask:** "What decision will this research inform? What changes in your work if the answer is strongly positive vs. strongly negative?"
+
+**Push until you hear:** A specific named decision — an experiment to run, a direction to pursue or drop, a claim to make or retract, a partnership or pivot to evaluate.
+
+**Red flags:**
+- "We want to understand X better" → push: "Understand it in order to *do* what?"
+- "We should know about this area" → push: "What would you do differently if you knew?"
+- No outcome changes anything → "If neither result changes what you do next, why run this research now?"
+
+#### Q2: Existing Belief
+
+**Ask:** "Before we search: what do you already believe about this? What's your working hypothesis — and how confident are you in it?"
+
+**Push until you hear:** A stated hypothesis (even "I have no strong prior") AND a confidence level.
+
+**Red flags:**
+- High confidence + no mention of what would change their mind → confirmation bias risk; name it explicitly: "You're going in with a strong prior. The research should be designed to challenge that, not confirm it. I'll tilt the sub-questions toward disconfirmation."
+- "We believe in this direction" → not a hypothesis; push for a specific technical claim
+
+**Confirmation bias gate:** If confidence ≥ "fairly confident" AND mode = Validation → record `confirmation_bias_risk: HIGH` in the brief. Phase 0B must include at least one sub-question designed to find the strongest counterevidence.
+
+#### Q3: The Real Question
+
+**Ask:** "Make the question as specific as possible. What data type? What regime — NISQ-feasible now or long-term theoretical? What would a paper that directly answers this look like?"
+
+**Push until you hear:** A question specific enough that you could imagine a concrete paper title that answers it. "Neutral-atom reservoir computing for molecular graph regression vs. GNN on QM9-scale benchmarks, NISQ-feasible" is specific. "Quantum reservoirs for molecules" is not.
+
+**If still vague after the first answer**, ask these technical clarifiers in a single follow-up AskUserQuestion:
+
+1. **Data type**: tabular / graph / molecular / time-series / unstructured / other
+2. **Regime**: NISQ-feasible now / long-term theoretical / both
+3. **Baseline bar**: beat XGBoost/TabPFN / beat GNN / beat SOAP/GAP / beat existing quantum method / not yet defined
+4. **Dequantization prior**: do you expect classical approximations to be competitive? yes / no / unclear
+5. **Hardware scope**: neutral-atom only / hardware-agnostic / both
+
+Use the answers to sharpen the question. Present the sharpened version to the user and confirm before continuing.
+
+#### Q4: Falsification Criterion
+
+**Ask:** "What result would cause you to abandon or significantly revise this direction? Name specific thresholds, failure modes, or conditions."
+
+**Push until you hear:** At least one concrete criterion — a performance threshold not met, a dequantization result that holds, a hardware constraint that rules it out, a regime mismatch between the paper and your hardware.
+
+**Red flags:**
+- "We'd need overwhelming evidence against it" → push: "What does 'overwhelming' look like specifically?"
+- No falsification criterion at all → the question may be a belief, not a research question; name this
+
+**If they draw a blank:** Offer 2-3 QML-specific falsification candidates relevant to their question (e.g., "classical kernel matches performance within 5%", "barren plateau confirmed at your circuit depth", "no neutral-atom implementation demonstrated"). Get agreement on at least one.
+
+#### Q5: Explicit Out-of-Scope
+
+**Ask:** "What adjacent questions should this research explicitly NOT answer? What should stay out of scope?"
+
+**Push until you hear:** At least 1-2 named out-of-scope areas. This prevents Phase 0B from generating sub-questions that drift into adjacent territory.
+
+**If they draw a blank:** Offer candidates based on the question context — "Should we exclude error-correction overhead, training circuit design, or hardware comparison across modalities?" Get explicit confirmation.
+
+---
+
+### Question Reframing
+
+After Q3, if the refined question is materially different from what the user originally stated, present the reframe:
+
+> "Based on what you've described, I think the actual research question is: [reframed question]. Is that right?"
+
+Use AskUserQuestion: A) Yes, that's it  B) Adjust the framing
+
+If B: revise and confirm again. Do not proceed until the refined question is agreed.
+
+---
+
+### Write Research Brief
+
+Write `WORKSPACE/00_brief.md`:
+
+```markdown
+# Research Brief
+
+## Research Mode
+{Validation | Discovery | Decision Brief}
+Confirmation bias risk: {HIGH | LOW | N/A}
+
+## Decision Gate
+{what specific decision this research will inform}
+
+## Stated Question
+{original question as the user phrased it}
+
+## Refined Question
+{sharpened version agreed in Q3}
+
+## Existing Belief / Prior
+Hypothesis: {stated hypothesis}
+Confidence: {low | moderate | high}
+
+## Falsification Criterion
+{specific conditions that would cause a direction change}
+
+## Explicit Out-of-Scope
+- {item 1}
+- {item 2}
+
+## Notes for Phase 0B
+{any confirmation-bias tilts, adversarial sub-question requirements, mode-specific framing}
+```
+
+---
+
+### Gate
+
+Before proceeding to Phase 0B, verify:
+- Refined Question is specific enough to generate bounded sub-questions
+- At least one Falsification Criterion is named
+- Mode is set
+
+If any check fails, loop back to the relevant question.
+
+---
+
+## Phase 0B — Scope Translation
+
+**Goal:** Decompose the refined research question from the brief into 3-7 bounded sub-questions with explicit search criteria. Confirm with user before launching literature sweep.
+
+**This phase runs in the main session — no agent delegation.**
+
+**Input:** `WORKSPACE/00_brief.md` — use the Refined Question and mode as the starting point for PICO. If `confirmation_bias_risk: HIGH`, the sub-question set in 0.3 must include at least one question designed to find the strongest counterevidence or the strongest competing classical baseline.
+
+### Steps
 
 **0.1 PICO framing:**
 - P (Problem): What QML problem / domain / data type?
@@ -194,7 +344,13 @@ Revise the question if any FINER dimension fails.
 **0.4 Write scope to `WORKSPACE/00_scope.md`:**
 
 ```markdown
-# Research Scope: <parent question>
+# Research Scope: <refined question from brief>
+
+## Brief Reference
+Mode: {from brief}
+Decision gate: {from brief}
+Falsification criterion: {from brief}
+Confirmation bias risk: {from brief}
 
 ## PICO Frame
 - P: | I: | C: | O:
@@ -206,13 +362,15 @@ Revise the question if any FINER dimension fails.
 
 ## Inclusion Criteria
 ## Exclusion Criteria
+## Explicit Out-of-Scope
+{from brief}
 ## Domain: QML/quantum: yes | no
 ## Fast mode: yes | no
 ```
 
 **0.5 GATE — confirm scope with user:**
 
-> Research scope drafted: "<parent question>" — N sub-questions. Confirm to launch?
+> Research scope drafted: "<refined question>" — N sub-questions. Confirm to launch?
 
 - A) Looks good — launch (recommended)
 - B) Adjust the scope
@@ -645,7 +803,7 @@ STATUS: DONE | DONE_WITH_CONCERNS | BLOCKED
 ## Fast Mode
 
 If the user says "fast research", "quick research", or passes `--fast`:
-- Run: Phase 0 → Phase 1 → Phase 3 → Phase 6
+- Run: Phase 0A → Phase 0B → Phase 1 → Phase 3 → Phase 6
 - Skip Phases 2, 4, 5
 - Phase 6 inputs: only `00_scope.md` and `03_draft_report.md`
 - Note in completion: "Fast mode: domain classification, adversarial challenge, and evidence audit skipped. First-pass draft."
@@ -774,6 +932,7 @@ STATUS: DONE
 | Abstract-only synthesis | Methods section often contradicts abstract | Require full-text fetch in literature-scout |
 | Merge Phases 3+6 | Skips audit; overstated claims enter report | Always run evidence-auditor between synthesis and final write |
 | Agent returns summary, not file | Next phase has no grounded input | Require explicit file path in every agent prompt |
-| Vague input → skip Socratic → PICO guesses | Scope based on wrong assumptions; wasted research | Detect vague inputs; run `--socratic` clarification first |
+| Vague input → skip Phase 0A → PICO guesses | Scope based on wrong assumptions; wasted research | Always run Phase 0A; use Q3 technical clarifiers if question is still vague |
+| High-confidence prior → no adversarial sub-question | Confirmation bias confirmed, not tested | Set confirmation_bias_risk: HIGH in brief; require disconfirmation sub-question in 0B |
 | Use full deep research for a single claim | 6 phases of overhead for a yes/no verdict | Use `--fact-check` for single-claim verification |
 | Use full deep research when only a reading list is needed | Synthesis without a real question to answer | Use `--lit-review` for bibliography-only tasks |
