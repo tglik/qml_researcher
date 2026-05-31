@@ -103,11 +103,12 @@ AGENTS_DIR = .claude/skills/qml-deep-research/agents/
 
 **Domain criteria** — read once during Setup, before Phase 1. Inject into every agent that needs domain knowledge. This ensures all agents use the team's current criteria, not stale inline copies:
 ```
-Read: c:\Users\tmgli\Documents\Source\qml_researcher\criteria\qml_domain.md → QML_DOMAIN
+Read: criteria/qml_domain.md → QML_DOMAIN
 ```
-If that absolute path fails (different machine), fall back to: `criteria/qml_domain.md` from the repo root.
 
 The `QML_DOMAIN` variable is passed as a labelled section inside every relevant agent prompt (see Agent Spawn Convention and each phase below).
+
+**Working directory:** This skill uses repo-root-relative paths (`criteria/qml_domain.md`, `config/workspace.json`, `AGENTS_DIR`). Always invoke from the repository root, not from inside `.agents/skills/` or any subdirectory.
 
 ---
 
@@ -146,6 +147,17 @@ here cannot affect any other skill.
 
 ---
 
+## Agent Spawn Compatibility
+
+When running in **Claude Code**: use the `Agent` tool with `subagent_type="claude"`.
+When running in **Codex CLI**: use `codex exec "<prompt>" -s read-only`.
+When running in **Hermes**: use Hermes parallel task spawning.
+When running in **Gemini CLI**: use Gemini's agent mode.
+
+The task prompts below are agent-agnostic — inject them into whichever spawn mechanism your CLI supports.
+
+---
+
 ## Phase 0A — Research Brief
 
 **Goal:** Establish WHY this research matters before deciding WHAT to research. Surfaces the decision gate, existing priors, confirmation bias risk, and explicit scope boundaries. Produces a brief that grounds Phase 0B's mechanical scope translation.
@@ -157,6 +169,8 @@ here cannot affect any other skill.
 ---
 
 ### Mode Detection
+
+> **If running outside Claude Code (Codex, Hermes, Gemini):** AskUserQuestion is not available. Ask the following question in prose, wait for the user's typed reply, then continue. Do not batch multiple questions in one message.
 
 Via AskUserQuestion, ask:
 
@@ -178,6 +192,8 @@ Mode shapes the research posture:
 ---
 
 ### The Five Research Forcing Questions
+
+> **If running outside Claude Code (Codex, Hermes, Gemini):** AskUserQuestion is not available. Ask each question in prose, wait for the reply, then ask the next. Do not batch multiple questions in one message.
 
 Ask these **ONE AT A TIME** via AskUserQuestion. Push on each until the answer is specific and actionable. A vague answer means the research question itself isn't ready to launch.
 
@@ -218,6 +234,8 @@ Ask these **ONE AT A TIME** via AskUserQuestion. Push on each until the answer i
 
 **Push until you hear:** A question specific enough that you could imagine a concrete paper title that answers it. "Neutral-atom reservoir computing for molecular graph regression vs. GNN on QM9-scale benchmarks, NISQ-feasible" is specific. "Quantum reservoirs for molecules" is not.
 
+> **If running outside Claude Code (Codex, Hermes, Gemini):** AskUserQuestion is not available. Ask the clarifiers in prose, one at a time, waiting for each reply.
+
 **If still vague after the first answer**, ask these technical clarifiers in a single follow-up AskUserQuestion:
 
 1. **Data type**: tabular / graph / molecular / time-series / unstructured / other
@@ -255,6 +273,8 @@ Use the answers to sharpen the question. Present the sharpened version to the us
 After Q3, if the refined question is materially different from what the user originally stated, present the reframe:
 
 > "Based on what you've described, I think the actual research question is: [reframed question]. Is that right?"
+
+> **If running outside Claude Code (Codex, Hermes, Gemini):** AskUserQuestion is not available. Ask the reframing question in prose and wait for the reply.
 
 Use AskUserQuestion: A) Yes, that's it  B) Adjust the framing
 

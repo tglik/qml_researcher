@@ -43,7 +43,7 @@ Claude reads the skill, runs the 7-phase workflow (scope → literature → doma
 
 | Skill | What it does | Output artifact |
 |-------|-------------|-----------------|
-| `/deep-research` | 7-phase literature-to-report: scope → search → domain classification → synthesis → devil's advocate → evidence audit → final report | `research/<topic>_<date>/` |
+| `/qml-deep-research` | 7-phase literature-to-report: scope → search → domain classification → synthesis → devil's advocate → evidence audit → final report | `research/<topic>_<date>/` |
 | `/project-intake` | Converts a vague idea into a Research Question Card + charter decision (approve / read more / reject) | `research_question_card.md` |
 | `/literature-review` | Systematic search across arXiv/Semantic Scholar/OpenAlex, paper cards, citation chain analysis, gap map | `literature_matrix.md`, `paper_cards/` |
 | `/experiment-design` | Defines minimal decisive experiment, kill criteria, ablations, QML reproducibility fields | `experiment_passport.md` |
@@ -167,27 +167,56 @@ The plugin encodes 17 known failure modes in QML research claims:
 
 ## Installation
 
-### Local install (Claude Code)
+### macOS / Linux (Claude Code + Codex + Hermes + Gemini)
 
-```bash
-# Clone into your Claude skills directory
-git clone https://github.com/<org>/qml-researcher ~/.claude/skills/qml-researcher
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/tglik/qml_researcher /path/to/qml_researcher
+   cd /path/to/qml_researcher
+   ```
 
-# Or add to an existing Claude Code project
-git clone https://github.com/<org>/qml-researcher .claude/skills/qml-researcher
-```
+2. The `.agents/skills/` directory (canonical) and `.claude/skills/` symlinks are committed — no setup needed after clone.
 
-Skills are auto-discovered by Claude Code from the `.claude/skills/` directory. No additional setup needed.
+   Verify:
+   ```bash
+   ls -la .claude/skills/        # should show 3 symlinks → ../../.agents/skills/
+   cat .claude/skills/fetch-arxiv/SKILL.md  # should show actual SKILL.md content
+   ```
 
-### Usage
+   - **Codex, Hermes, Gemini** read `.agents/skills/` directly — no setup needed.
+   - **Claude Code** reads `.claude/skills/` via the committed symlinks — no setup needed.
 
-```
-/deep-research <question>
-/paper-card <arxiv_id or url>
-/qml-skeptic <claim or direction>
-/claim-audit <claim>
-/meeting-prep
-```
+3. Configure output path (first time only):
+   ```bash
+   # Default output_root is output/ (repo-local, gitignored)
+   # To sync to cloud storage, edit config/workspace.json:
+   #   "output_root": "/absolute/path/to/your/output/dir"
+   ```
+
+4. Run your first skill:
+   ```
+   # Claude Code: /fetch-arxiv 2401.12345
+   # Codex:       codex "/fetch-arxiv 2401.12345"
+   # Hermes:      hermes "/fetch-arxiv 2401.12345"
+   ```
+
+### Windows
+
+Symlinks require Developer Mode or WSL:
+1. Enable Developer Mode (Settings → System → For developers → Developer mode)
+2. `git config --global core.symlinks true`
+3. Re-clone the repo (an existing clone has text files instead of symlinks)
+4. Verify in WSL/Git Bash: `test -L .claude/skills/fetch-arxiv && echo OK`
+
+### Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `codex skills list` shows empty | Wrong cwd, or `.agents/skills/` not readable | Verify `cwd = repo root`; check `ls -la .agents/skills/` shows actual directories |
+| Claude Code can't find skills | `.claude/skills/` symlinks broken | Run `test -L .claude/skills/fetch-arxiv && echo OK`; if text file, see Windows steps |
+| Windows: `.claude/skills/fetch-arxiv` is a text file | Symlinks checked out as text (Developer Mode off or `core.symlinks false`) | Enable Developer Mode, `git config core.symlinks true`, delete and re-clone |
+| `AskUserQuestion` prompt not showing (Codex/Hermes) | AskUserQuestion is CC-only; skill falls back to prose | Normal — answer in chat when the skill asks a question in prose |
+| `File not found: criteria/qml_domain.md` | CLI invoked from wrong directory | Always invoke from repo root, not from inside `.agents/skills/` |
 
 ---
 

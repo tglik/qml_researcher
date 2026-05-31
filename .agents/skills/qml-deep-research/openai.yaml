@@ -1,0 +1,5 @@
+# openai.yaml — Codex CLI skill metadata stub (SCHEMA UNCONFIRMED)
+# Schema based on public documentation as of 2026-06-01; verify before relying on.
+display_name: "QML Deep Research"
+description: "Multi-phase literature research for QML topics: scope → sweep → classify → synthesize → challenge → audit → report."
+invocation_policy: explicit

@@ -1,0 +1,5 @@
+# openai.yaml — Codex CLI skill metadata stub (SCHEMA UNCONFIRMED)
+# Schema based on public documentation as of 2026-06-01; verify before relying on.
+display_name: "QML Paper Review"
+description: "Deep critical review of a QML paper: claims extracted, novelty assessed, quality judged, consensus researched, crisp verdict issued."
+invocation_policy: explicit

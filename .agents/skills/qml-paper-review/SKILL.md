@@ -60,6 +60,17 @@ Any QML paper → claims extracted → novelty and quality judged → consensus 
 
 ---
 
+## Agent Spawn Compatibility
+
+When running in **Claude Code**: use the `Agent` tool with `subagent_type="claude"`.
+When running in **Codex CLI**: use `codex exec "<prompt>" -s read-only`.
+When running in **Hermes**: use Hermes parallel task spawning.
+When running in **Gemini CLI**: use Gemini's agent mode.
+
+The task prompts below are agent-agnostic — inject them into whichever spawn mechanism your CLI supports.
+
+---
+
 ## ⚠️ IRON RULES — Read Before Starting
 
 ```

@@ -1,0 +1,5 @@
+# openai.yaml — Codex CLI skill metadata stub (SCHEMA UNCONFIRMED)
+# Schema based on public documentation as of 2026-06-01; verify before relying on.
+display_name: "Fetch arXiv"
+description: "Fetch any arXiv paper by ID, URL, or title search. Returns title, abstract, intro, venue, and tier."
+invocation_policy: explicit
