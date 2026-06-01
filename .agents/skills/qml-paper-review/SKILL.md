@@ -81,6 +81,7 @@ The task prompts below are agent-agnostic — inject them into whichever spawn m
 ❌ Do NOT skip the falsification condition — every verdict must state what would change it
 ❌ Do NOT let the review-synthesizer run until consensus-researcher completes (in standard mode)
 ❌ Do NOT produce a review from abstract only — fetch full paper content first
+❌ Do NOT continue a full review when the fetched paper is clearly non-QML / LOW transfer value — stop early and flag the likely wrong input unless the user explicitly asks to continue
 ```
 
 ---
@@ -217,7 +218,40 @@ Fetched: {what was retrieved}
 Try: provide the arXiv ID or a direct PDF path.
 ```
 
-### 0.3 Write paper content to workspace
+### 0.3 QML relevance early-stop gate
+
+Before writing the workspace or spawning any agents, classify whether the fetched paper is actually in-scope for QML review.
+
+**Stop early by default** if the title/abstract/methods contain no substantive QML signal:
+- no quantum model, quantum circuit, quantum kernel, quantum data, quantum speedup, quantum hardware, quantum chemistry simulation claim, or direct QML benchmark relevance;
+- or the paper is clearly from a non-QML native domain (e.g. classical wireless, statistics, optimization, classical ML) with only generic terms such as "kernel", "feature", "learning", or "optimization";
+- or QML Transfer Value is `LOW`.
+
+When this gate fires, do **not** run Phase 1 claim extraction, Phase 2 analysis, Phase 3 consensus research, or Phase 4 synthesis. Report a compact mismatch notice instead:
+
+```
+POSSIBLE WRONG PAPER ID — STOPPED EARLY
+
+Paper: {title}
+arXiv: {arxiv_id or —}
+Native domain: {domain}
+QML transfer value: LOW
+
+What it is about: {one short paragraph grounded in the abstract/methods}
+
+Why I stopped: I found no quantum model/kernel/data/hardware/speedup or direct QML benchmark relevance. This is likely not the QML paper you intended.
+
+Next: provide the corrected paper ID, or explicitly ask me to continue with a native-domain review.
+```
+
+Only continue past this gate if one of these is true:
+- the paper has concrete QML relevance (`MEDIUM` or `HIGH` transfer value);
+- the user explicitly requested review of a non-QML paper;
+- the user confirms continuation after the early-stop notice.
+
+If continuing on a confirmed non-QML paper, separate native-domain credibility from QML relevance in every downstream artifact. Mark the five QML criteria `N/A` when there is no quantum claim; do not mark them `FAIL` merely because the paper is out-of-domain.
+
+### 0.4 Write paper content to workspace
 
 Write `WORKSPACE/00_paper_content.md`:
 
@@ -254,6 +288,7 @@ Write `WORKSPACE/00_paper_content.md`:
 ```
 
 **Gate Phase 0 → Phase 1:**
+- QML relevance early-stop gate passed, or user explicitly confirmed continuation ✓
 - Paper content written to `00_paper_content.md` ✓
 - Fetch adequacy noted (full / partial) ✓
 
@@ -539,5 +574,6 @@ If the user passes `--fast` or says "quick review":
 | Skip QML criteria because paper looks good | QML failure modes are invisible without the criteria | Always run all 5 criteria |
 | No falsification condition | Verdict is unfalsifiable and useless | Every verdict must state: "This would change if [specific evidence]" |
 | Abstract-only review | Methods section often contradicts abstract claims | Require full text or partial_fetch flag |
+| Continuing full review on a clearly non-QML paper | Wastes effort and hides likely wrong paper IDs | Stop after Phase 0 with a mismatch notice unless the user asks to continue |
 | Issue CREDIBLE with a WARN criterion | Downgrades trust in the verdict | WARN → MARGINAL at best; FAIL → WEAK or worse |
 | Write the final review as orchestrator | Removes the separation of synthesis and judgment | Always delegate to review-synthesizer |
