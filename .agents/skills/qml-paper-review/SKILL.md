@@ -1,6 +1,6 @@
 ---
 name: qml-paper-review
-version: 1.0.0
+version: 1.1.0
 description: |
   Deep critical review of a QML paper. Reads the full paper, extracts every
   claim with type and evidence labels, assesses genuine novelty vs. prior art,
@@ -52,11 +52,51 @@ allowed-tools:
   - WebSearch
   - WebFetch
   - AskUserQuestion
+  - Bash
 ---
 
 # /qml-paper-review
 
 Any QML paper → claims extracted → novelty and quality judged → consensus researched → crisp verdict with falsification condition.
+
+---
+
+## Hermes artifact I/O policy
+
+When running under Hermes, prefer Hermes file tools (`read_file`, `write_file`,
+`patch`, `search_files`) for all workspace artifact reads/writes. Do **not** use
+`execute_code` merely to create directories, write markdown/json artifacts, merge
+phase files, or inspect local workspace files; Slack/gateway `execute_code`
+approval is intentionally one-shot and will re-prompt even after “Always Allow”.
+Reserve `execute_code` for cases that genuinely need Python control flow over
+many tool calls or nontrivial data processing.
+
+---
+
+## User-visible progress protocol
+
+Long-running paper reviews must not go silent after the paper is fetched. After **every phase** completes, send a concise progress update before starting the next phase.
+
+**Hermes/Slack:** use the current conversation as the destination. If a direct `send_message` target for the active Slack DM/thread is available, send the update there immediately; otherwise emit the update as the next assistant message before making the next blocking tool call. Do not send these updates to the Slack home channel unless the review was launched there.
+
+**Format — keep it short:**
+
+```text
+Progress: <phase name> completed.
+- <1–3 concrete facts: title/arXiv, claim counts, QML criteria summary, consensus count, verdict>
+Next: <next phase in one sentence>.
+```
+
+**Required checkpoints:**
+- After Setup / workspace creation
+- After Phase 0 paper fetch and QML relevance gate, including `partial_fetch yes|no` and `QML transfer value HIGH|MEDIUM|LOW`
+- After early-stop mismatch notice, if the paper is likely wrong/non-QML
+- After Phase 1 claim extraction, including claim counts and vague/misattributed flags
+- After Phase 2 analysis, including quality verdict and `PASS/WARN/FAIL` counts for the five QML criteria
+- After Phase 3 consensus research, or explicit skip in fast mode, including supporting/contradicting counts and evidence weight
+- After Phase 4 final review and Word export, including final verdict
+
+Progress messages are operational status, not the final review. Do not dump the review body in progress updates.
 
 ---
 
@@ -101,7 +141,7 @@ WORKSPACE = {OUTPUT_ROOT}/reviews/{slug}_{YYYY-MM-DD}/
 
 Where `slug` = paper title → lowercase → hyphens → 40-char max.
 
-Create the workspace directory. Write `state.json` with: `current_phase`, `fast_mode`, `target_claim` (if --claim flag used), `paper_id`.
+Create the workspace directory. Write `state.json` with: `current_phase`, `fast_mode`, `target_claim` (if --claim flag used), `paper_id`, `paper_title`, `partial_fetch`, `qml_transfer_value`, `claim_counts`, `quality_verdict`, `qml_criteria_summary`, `consensus_summary`, `final_verdict`, `last_progress_message`, and `final_docx_path` when available.
 
 **Agent definitions directory:**
 ```
@@ -484,17 +524,25 @@ Input files:
 Fast mode: <yes | no>
 Partial fetch: <yes | no>
 
-Output file: <WORKSPACE>/04_final_review.md
-Return the file path and the verdict (LANDMARK | CREDIBLE | MARGINAL | WEAK | REFUTED | UNSOUND).
+Output files:
+- Markdown: <WORKSPACE>/04_final_review.md
+- Word preview copy: <WORKSPACE>/04_final_review.docx
+
+Return both file paths and the verdict (LANDMARK | CREDIBLE | MARGINAL | WEAK | REFUTED | UNSOUND).
 """
 )
 ```
+
+**Word export gate:** Convert `04_final_review.md` to `04_final_review.docx` after the final review is written.
+- Preferred: `pandoc <WORKSPACE>/04_final_review.md -o <WORKSPACE>/04_final_review.docx --metadata title="<paper title> review"`
+- If `pandoc` is unavailable, use a Python fallback in a temporary venv with `python-docx` (Hermes/macOS example: `uv venv <WORKSPACE>/.docx-venv && <WORKSPACE>/.docx-venv/bin/python -m ensurepip --upgrade && <WORKSPACE>/.docx-venv/bin/python -m pip install python-docx`, then run a small converter script). Preserve headings, bullets, tables where feasible, and citations as plain text.
+- Verify the `.docx` exists and is non-empty before completion.
 
 ---
 
 ## Completion
 
-1. Confirm `04_final_review.md` exists and is non-empty.
+1. Confirm `04_final_review.md` and `04_final_review.docx` exist and are non-empty.
 
 2. Write session memory at `{WORKSPACE}/session_memory.md`:
 
@@ -519,39 +567,48 @@ pushed_to_permanent: false
 
 ## Artifacts
 workspace: {WORKSPACE}
-final_review: {WORKSPACE}/04_final_review.md
+final_review_md: {WORKSPACE}/04_final_review.md
+final_review_docx: {WORKSPACE}/04_final_review.docx
 
 ## Connector Payload
-[{date}] [SOURCE: qml-paper-review] Paper review: "{title}" — Verdict: {verdict}. {one-sentence takeaway}. Review: {WORKSPACE}/04_final_review.md
+[{date}] [SOURCE: qml-paper-review] Paper review: "{title}" — Verdict: {verdict}. {one-sentence takeaway}. Word review: {WORKSPACE}/04_final_review.docx
 ```
 
-3. Report to user:
+3. Report to user with a user-focused completion message. The final Slack/message body must not be a raw artifact dump. Put the decision-relevant verdict first, then a compact checklist of what was done, then attach/link the Word review.
 
-```
-REVIEW COMPLETE
+Required final format:
+
+```text
+REVIEW COMPLETE — DONE
 
 Paper:    {title}
-arXiv:    {arxiv_id}
-Verdict:  {LANDMARK | CREDIBLE | MARGINAL | WEAK | REFUTED | UNSOUND}
+arXiv:    {arxiv_id or —}
+Verdict:  *{LANDMARK | CREDIBLE | MARGINAL | WEAK | REFUTED | UNSOUND}*
 
-Novelty:  {NOVEL | INCREMENTAL | PRIOR-ART | MISATTRIBUTED}
-Quality:  {RIGOROUS | ADEQUATE | WEAK | UNSOUND}
-QML:      {N PASS / N WARN / N FAIL}
-Consensus: {STRONG_SUPPORT | MIXED | CONTRADICTED | INSUFFICIENT | SKIPPED}
+Executive summary:
+- <3-5 bullets from 04_final_review.md: what the paper claims, whether to trust it, main blocker/strength, startup relevance>
 
-One-line verdict: {direct sentence}
-Falsification: {what evidence would change the verdict}
+What was done:
+- Full paper fetch completed: partial_fetch <yes|no>; QML transfer value <HIGH|MEDIUM|LOW>
+- Claim extraction completed: <N_total> claims (<N_top> TOP, <N_motivational> MOTIVATIONAL, <N_support> SUPPORT, <N_general> GENERAL); <N_vague> vague / <N_misattributed> misattributed flags
+- Innovation + quality analysis completed: novelty <...>; quality <...>
+- QML criteria completed: <N PASS / N WARN / N FAIL>
+- Consensus research <completed|skipped>: <N_supporting> supporting / <N_contradicting> contradicting; evidence weight <...>
+- Final review written: verdict *<verdict>*
+- Final Word review generated: <04_final_review.docx>
 
-Workspace: {WORKSPACE}
-Files:
-  00_paper_content.md       — full paper text
-  01_claim_registry.md      — {N_top} TOP + {N_motivational} MOTIVATIONAL{or: + {N_support} SUPPORT + {N_general} GENERAL} claims
-  02_analysis.md            — innovation + quality + 5 QML criteria
-  03_consensus_evidence.md  — {N} supporting / {N} contradicting{or: SKIPPED}
-  04_final_review.md        — full review
+One-line verdict: <direct sentence>
+Falsification: <what evidence would change the verdict>
 
+Detailed review:
+MEDIA:<WORKSPACE>/04_final_review.docx
+
+Markdown copy: <WORKSPACE>/04_final_review.md
+Workspace: <WORKSPACE>
 STATUS: DONE
 ```
+
+If Word export fails after a real fallback attempt, do not hide it. Send the same executive summary, mark `Final Word review generated: NO`, attach/link the Markdown review instead, and include the exact blocker command/error in one line.
 
 ---
 

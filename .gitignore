@@ -12,3 +12,6 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
+
+# Local Claude/Hermes tool permissions
+.claude/settings.local.json

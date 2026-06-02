@@ -40,7 +40,7 @@ TOOL_MAP = {
     "Grep": "Hermes search_files(target='content') tool.",
     "WebSearch": "Hermes web/search toolset or browser when dynamic interaction is required.",
     "WebFetch": "Hermes web extraction/browser tools; fetch full text and cite exact retrieved text.",
-    "AskUserQuestion": "Hermes clarify tool. Use only when ambiguity blocks the workflow; otherwise ask in prose and wait for the user.",
+    "AskUserQuestion": "Hermes clarify tool for multiple-choice/confirmation gates; for free-form scoping questions ask one question in prose and stop the turn until the user replies. Do not proceed past explicit gates without a user answer.",
     "Bash": "Hermes terminal tool.",
 }
 

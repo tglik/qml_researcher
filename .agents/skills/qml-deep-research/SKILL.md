@@ -1,6 +1,6 @@
 ---
 name: qml-deep-research
-version: 1.1.0
+version: 1.2.0
 description: |
   Multi-agent deep research workflow for QML topics. Decomposes a question into
   scoped sub-questions, runs parallel literature sweeps, applies the five QML criteria
@@ -53,11 +53,54 @@ allowed-tools:
   - AskUserQuestion
   - WebSearch
   - WebFetch
+  - Bash
 ---
 
 # /qml-deep-research
 
 Multi-agent QML literature research. Question in → grounded report out.
+
+---
+
+## Hermes artifact I/O policy
+
+When running under Hermes, prefer Hermes file tools (`read_file`, `write_file`,
+`patch`, `search_files`) for all workspace artifact reads/writes. Do **not** use
+`execute_code` merely to create directories, write markdown/json artifacts, merge
+phase files, or inspect local workspace files; Slack/gateway `execute_code`
+approval is intentionally one-shot and will re-prompt even after “Always Allow”.
+Reserve `execute_code` for cases that genuinely need Python control flow over
+many tool calls or nontrivial data processing.
+
+---
+
+## User-visible progress protocol
+
+Long-running deep research must not go silent after the interactive scoping gates. After **every phase or revision cycle** completes, send a concise progress update before starting the next phase.
+
+**Hermes/Slack:** use the current conversation as the destination. If a direct `send_message` target for the active Slack DM/thread is available, send the update there immediately; otherwise emit the update as the next assistant message before making the next blocking tool call. Do not send these updates to the Slack home channel unless the research was launched there.
+
+**Format — keep it short:**
+
+```text
+Progress: <phase name> completed.
+- <1–3 concrete facts: sources found, blockers count, audit verdict, artifact written>
+Next: <next phase in one sentence>.
+```
+
+**Required checkpoints:**
+- After Setup / workspace creation
+- After Phase 0A research brief
+- After Phase 0B scope confirmation
+- After Phase 1 literature sweep / merge
+- After Phase 2 domain classification, or explicit skip in fast/non-QML mode
+- After each Phase 3 synthesis draft or revision
+- After each Phase 4 adversarial review, including `BLOCKING N / NON-BLOCKING N`
+- After each blocker-resolution cycle, including `resolved N / remaining N`
+- After Phase 5 evidence audit, including `UNSUPPORTED N` and `Proceed YES|NO`
+- After Phase 6 final report and Word export
+
+Progress messages are operational status, not research conclusions. Do not dump the report body in progress updates.
 
 ---
 
@@ -94,7 +137,7 @@ WORKSPACE = {OUTPUT_ROOT}/research/{slug}_{YYYY-MM-DD}/
 
 Where `slug` = parent question → lowercase → hyphens → 40-char max.
 
-Create the workspace directory. Write `state.json` and update after each phase with: `current_phase`, `fast_mode`, `coverage_retry_per_subq`, `blocking_issues_count`, `revision_cycle` (max 2).
+Create the workspace directory. Write `state.json` and update after each phase with: `current_phase`, `fast_mode`, `coverage_retry_per_subq`, `blocking_issues_count`, `blocking_issues_resolved_count`, `evidence_audit_verdict`, `proceed_recommendation` (`YES|NO|CONDITIONAL`), `revision_cycle` (max 2), `last_progress_message`, and `final_docx_path` when available.
 
 **Agent definitions directory** — all agents for this skill live here:
 ```
@@ -164,15 +207,17 @@ The task prompts below are agent-agnostic — inject them into whichever spawn m
 
 **This phase runs in the main session — no agent delegation.**
 
-**Escape hatch:** If the user provides a question that already includes (a) a named decision it will inform, (b) a stated hypothesis or prior, (c) a falsification criterion, and (d) explicit scope boundaries — skip 0A entirely and proceed to Phase 0B. A fully-specified brief is its own answer.
+**Hermes interactive gate (MANDATORY):** In Hermes, the `clarify` tool is available and is the correct replacement for Claude Code `AskUserQuestion`. Use `clarify` for the Mode Detection multiple-choice question and for the Phase 0B scope-confirmation question. For free-form Q1–Q5, ask exactly one question in the assistant's final response and stop the turn; wait for the user's reply before continuing. Do not write `00_brief.md`, `00_scope.md`, spawn subagents, or start literature search until Phase 0A has either been completed with user answers or the escape hatch below is explicitly satisfied.
+
+**Escape hatch:** If the user provides a question that already includes ALL of (a) a named decision it will inform, (b) a stated hypothesis or prior, (c) a falsification criterion, and (d) explicit scope boundaries — skip 0A entirely and proceed to Phase 0B. A fully-specified brief is its own answer. If any of those four fields is missing, Phase 0A is not complete.
 
 ---
 
 ### Mode Detection
 
-> **If running outside Claude Code (Codex, Hermes, Gemini):** AskUserQuestion is not available. Ask the following question in prose, wait for the user's typed reply, then continue. Do not batch multiple questions in one message.
+> **Hermes:** Use the `clarify` tool for this multiple-choice question. Other non-Claude runtimes may ask in prose and wait for the user's typed reply. Do not batch this with later questions.
 
-Via AskUserQuestion, ask:
+Ask:
 
 > Before we scope the research — what's the intent?
 
@@ -193,9 +238,9 @@ Mode shapes the research posture:
 
 ### The Five Research Forcing Questions
 
-> **If running outside Claude Code (Codex, Hermes, Gemini):** AskUserQuestion is not available. Ask each question in prose, wait for the reply, then ask the next. Do not batch multiple questions in one message.
+> **Hermes:** For Q1–Q5, ask one free-form question per assistant turn and stop; wait for the user's Slack reply before asking the next. Do not batch multiple questions in one message.
 
-Ask these **ONE AT A TIME** via AskUserQuestion. Push on each until the answer is specific and actionable. A vague answer means the research question itself isn't ready to launch.
+Ask these **ONE AT A TIME**. Push on each until the answer is specific and actionable. A vague answer means the research question itself isn't ready to launch.
 
 **Anti-sycophancy rules for this phase:**
 - "We want to understand the space" is not a decision gate — push for the specific action this research enables
@@ -234,7 +279,7 @@ Ask these **ONE AT A TIME** via AskUserQuestion. Push on each until the answer i
 
 **Push until you hear:** A question specific enough that you could imagine a concrete paper title that answers it. "Neutral-atom reservoir computing for molecular graph regression vs. GNN on QM9-scale benchmarks, NISQ-feasible" is specific. "Quantum reservoirs for molecules" is not.
 
-> **If running outside Claude Code (Codex, Hermes, Gemini):** AskUserQuestion is not available. Ask the clarifiers in prose, one at a time, waiting for each reply.
+> **Hermes:** Ask any needed technical clarifiers one at a time in prose, waiting for each reply.
 
 **If still vague after the first answer**, ask these technical clarifiers in a single follow-up AskUserQuestion:
 
@@ -274,9 +319,9 @@ After Q3, if the refined question is materially different from what the user ori
 
 > "Based on what you've described, I think the actual research question is: [reframed question]. Is that right?"
 
-> **If running outside Claude Code (Codex, Hermes, Gemini):** AskUserQuestion is not available. Ask the reframing question in prose and wait for the reply.
+> **Hermes:** Use `clarify` for the reframing confirmation when there are exactly two options; otherwise ask in prose and wait for the reply.
 
-Use AskUserQuestion: A) Yes, that's it  B) Adjust the framing
+Use AskUserQuestion / clarify: A) Yes, that's it  B) Adjust the framing
 
 If B: revise and confirm again. Do not proceed until the refined question is agreed.
 
@@ -389,6 +434,8 @@ Confirmation bias risk: {from brief}
 ```
 
 **0.5 GATE — confirm scope with user:**
+
+Use `clarify` in Hermes before launching any literature sweep:
 
 > Research scope drafted: "<refined question>" — N sub-questions. Confirm to launch?
 
@@ -748,17 +795,25 @@ Soften any OVERSTATED claims as flagged.
 Include the Dequantization Risk Table and Hardware Feasibility Summary.
 Executive summary: 5-8 bullets, startup-strategy focus.
 
-Output file: <WORKSPACE>/06_final_report.md
-Return the file path.
+Output files:
+- Markdown: <WORKSPACE>/06_final_report.md
+- Word preview copy: <WORKSPACE>/06_final_report.docx
+
+Return both file paths.
 """
 )
 ```
+
+**Word export gate:** Convert `06_final_report.md` to `06_final_report.docx` after the final report is written.
+- Preferred: `pandoc <WORKSPACE>/06_final_report.md -o <WORKSPACE>/06_final_report.docx --metadata title="<topic>"`
+- If `pandoc` is unavailable, use a Python fallback in a temporary venv with `python-docx` (Hermes/macOS example: `uv venv <WORKSPACE>/.docx-venv && <WORKSPACE>/.docx-venv/bin/python -m ensurepip --upgrade && <WORKSPACE>/.docx-venv/bin/python -m pip install python-docx`, then run a small converter script). Preserve headings, bullets, tables where feasible, and citations as plain text.
+- Verify the `.docx` exists and is non-empty before completion.
 
 ---
 
 ## Completion
 
-1. Confirm `06_final_report.md` exists and is non-empty.
+1. Confirm `06_final_report.md` and `06_final_report.docx` exist and are non-empty.
 
 2. Write session memory file at `{WORKSPACE}/session_memory.md`:
 
@@ -780,43 +835,52 @@ pushed_to_permanent: false
 
 ## Artifacts
 workspace: {WORKSPACE}
-final_report: {WORKSPACE}/06_final_report.md
+final_report_md: {WORKSPACE}/06_final_report.md
+final_report_docx: {WORKSPACE}/06_final_report.docx
 sources_count: {N}
 dequant_risk: {N_HIGH} HIGH / {N_MEDIUM} MEDIUM / {N_LOW} LOW
+blockers_found: {N_BLOCKING}
+blockers_resolved: {N_BLOCKING_RESOLVED}
+evidence_audit: {PASSED | PASSED_WITH_CONCERNS | FAILED}
+proceed_recommendation: {YES | NO | CONDITIONAL}
 strong_directions:
   - {direction 1}
   - {direction 2}
 
 ## Connector Payload
-[{date}] [SOURCE: qml-deep-research] Deep research: {topic}. Key: {bullet 1}. {bullet 2}. Report: {WORKSPACE}/06_final_report.md
+[{date}] [SOURCE: qml-deep-research] Deep research: {topic}. Executive summary: {bullet 1}. {bullet 2}. Proceed: {YES|NO|CONDITIONAL}. Word report: {WORKSPACE}/06_final_report.docx
 ```
 
-3. Report to user:
-```
-RESEARCH COMPLETE
+3. Report to user with a user-focused completion message. The final Slack/message body must not be a raw artifact dump. Put the decision-relevant summary first, then a compact checklist of what was done, then attach/link the Word report.
+
+Required final format:
+
+```text
+RESEARCH COMPLETE — <DONE | DONE_WITH_CONCERNS | BLOCKED>
 
 Topic: <parent question>
 Workspace: <WORKSPACE>
 
-Files:
-  00_scope.md              — scope + sub-questions
-  01_literature_merged.md  — screened bibliography (N sources)
-  02_domain_classification.md — five-criteria QML classification
-  03_draft_report.md       — synthesis draft
-  04_challenges.md         — adversarial challenges (N blocking resolved)
-  05_evidence_ledger.md    — source-to-claim audit (N claims, N% aligned)
-  06_final_report.md       — final report
+Executive summary:
+- <5-8 bullets copied or compressed from 06_final_report.md; startup/decision relevance first>
 
-Top findings:
-  1. <from executive summary>
-  2. <from executive summary>
-  3. <from executive summary>
+What was done:
+- Literature sweep completed: <N sources screened/included; note major coverage gaps if any>
+- QML domain classification completed: <N STRONG / N DEPRIORITIZED; dequant risk N HIGH / N MEDIUM / N LOW>
+- Draft written: <03_draft_report.md>
+- Adversarial review found *<N_BLOCKING> blockers* and <N_NONBLOCKING> non-blockers
+- All *<N_BLOCKING_RESOLVED>/<N_BLOCKING> blockers resolved* OR *<N_REMAINING> blockers remain*
+- Evidence audit <passed|failed|passed with concerns>: *Proceed <YES|NO|CONDITIONAL>* (<N claims audited; <N_UNSUPPORTED> unsupported)
+- Final Word report generated: <06_final_report.docx>
 
-Dequantization risk: N HIGH / N MEDIUM / N LOW
-Strong directions: <list>
+Detailed report:
+MEDIA:<WORKSPACE>/06_final_report.docx
 
+Markdown copy: <WORKSPACE>/06_final_report.md
 STATUS: DONE | DONE_WITH_CONCERNS | BLOCKED
 ```
+
+If Word export fails after a real fallback attempt, do not hide it. Send the same executive summary, mark `Word report generated: NO`, attach/link the Markdown report instead, and include the exact blocker command/error in one line.
 
 ---
 
