@@ -48,12 +48,14 @@ SKILL_DESCRIPTIONS = {
     "fetch-arxiv": "Use when fetching an arXiv paper by ID, URL, or title for QML workflows or general research; returns structured metadata, abstract, intro text, venue tier, and partial-fetch status.",
     "qml-paper-review": "Use when critically reviewing a QML paper for credibility, novelty, evidence quality, dequantization risk, baselines, hardware fit, and a falsifiable verdict.",
     "qml-deep-research": "Use when doing systematic QML literature research or fact-checking: scope the question, sweep sources, apply QML criteria, challenge claims, audit evidence, and write a final report.",
+    "qml-daily-scout": "Use when running a recurring or ad-hoc QML research scout for new papers, technical posts, publications, or news; filters recent items for QML relevance, novelty, and evidence risk.",
 }
 
 RELATED = {
-    "fetch-arxiv": ["qml-paper-review", "qml-deep-research", "arxiv"],
-    "qml-paper-review": ["fetch-arxiv", "qml-deep-research"],
-    "qml-deep-research": ["fetch-arxiv", "qml-paper-review"],
+    "fetch-arxiv": ["qml-paper-review", "qml-deep-research", "qml-daily-scout", "arxiv"],
+    "qml-paper-review": ["fetch-arxiv", "qml-deep-research", "qml-daily-scout"],
+    "qml-deep-research": ["fetch-arxiv", "qml-paper-review", "qml-daily-scout"],
+    "qml-daily-scout": ["fetch-arxiv", "qml-paper-review", "qml-deep-research", "arxiv"],
 }
 
 
@@ -147,6 +149,8 @@ def converted_skill(skill_dir: Path) -> str:
         tags.append("paper-review")
     if "deep" in name:
         tags.append("literature-review")
+    if "scout" in name:
+        tags.extend(["daily-briefing", "research-scout"])
     if "arxiv" in name:
         tags.append("arxiv")
 
