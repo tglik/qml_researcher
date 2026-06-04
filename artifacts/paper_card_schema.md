@@ -1,23 +1,39 @@
 # Paper Card Schema
 
-Version: 1.0 | Used by: `/qml-evaluate` (Phase 2)
+Version: 2.0 | Used by: `/extract-artifacts` (from paper review source files)
 
-A Paper Card is the structured output of a full QML paper evaluation. It is produced by
-`/qml-evaluate` for papers that have passed triage. It is the primary artifact for capturing
-a paper's claims, evidence quality, and QML-specific evaluation results.
+A Paper Card is the structured entity card for one evaluated paper. It lives in `cards/paper-cards/` in the artifact repo, keyed by arXiv ID. It is produced by `/extract-artifacts`, not written directly by research skills.
 
 ---
 
-## File Naming
+## File Location
 
 ```
-{output_root}/paper-cards/{topic_slug}_{YYYY-MM-DD}.md
+{output_root}/cards/paper-cards/{arxiv_id}.md
 ```
 
-Where:
-- `topic_slug` = first 3-4 significant words from paper title, hyphenated, lowercase
-  e.g. "neutral-atom-graph-kernels" for "Neutral-Atom Quantum Kernels for Graph ML"
-- `YYYY-MM-DD` = date of evaluation, not paper publication date
+Example: `cards/paper-cards/2405.12345.md`
+
+---
+
+## Frontmatter (required — used by index builders and skill context loaders)
+
+```yaml
+---
+id: 2405.12345
+type: paper-card
+title: "Quantum Kernels for Graph ML with Neutral Atoms"
+arxiv_id: 2405.12345
+authors: [farhi-edward, goldstone-jeffrey]       # author card slugs
+institute: mit-center-for-quantum                 # institute card slug
+topics: [graph-ml, neutral-atom, quantum-kernels] # used by topic-map
+verdict: STRONG_INTEREST                          # STRONG_INTEREST | CONDITIONAL | WEAK | REJECT
+claim_status: plausible                           # highest claim status among this paper's claims
+evaluated: 2026-06-04
+source: sources/reports/paper-reviews/2405.12345-review-2026-06-04.md
+extracted: true
+---
+```
 
 ---
 
@@ -30,11 +46,9 @@ Where:
 **Authors:** {Author1, Author2, ...}
 **Published:** {YYYY-MM-DD}
 **Venue:** {venue name | "arXiv preprint"}
-**Venue Tier:** {T1 | T2 | T3 | T4 | T5}  ← see criteria/qml_domain.md
-**Evaluated by:** /qml-evaluate {version}
-**Evaluation date:** {YYYY-MM-DD}
-**Triage verdict:** PASS | TRIAGE-resolved
-**Triage log ref:** triage_log.jsonl entry {arxiv_id}
+**Venue Tier:** {T1 | T2 | T3 | T4 | T5}
+**Evaluated:** {YYYY-MM-DD}
+**Source:** [[{source path}]]
 
 ---
 
@@ -49,7 +63,6 @@ Where:
 [source: abstract, section {N}]
 
 **Claim status:** {speculative | plausible | observed | supported | strong | published | refuted}
-↑ Use the claim status ladder. Do not upgrade beyond what evidence supports.
 
 ## Method
 
@@ -58,7 +71,6 @@ Where:
 
 ## Evidence
 
-{What experimental or theoretical evidence is provided for the main claim?}
 - Dataset(s): {names, sizes}
 - Metric(s): {accuracy, MSE, F1, etc.}
 - Results: {key numbers — quantum vs classical}
@@ -72,7 +84,7 @@ Where:
 
 ### 1. Dequantization Risk
 **Verdict:** PASS | WARN | FAIL  |  **Severity:** CRITICAL | MAJOR | MINOR | N/A
-**Note:** {One specific sentence. Must cite paper section or quote.}
+**Note:** {One specific sentence citing paper section or quote.}
 
 ### 2. Geometric Difference
 **Verdict:** PASS | WARN | FAIL  |  **Severity:** CRITICAL | MAJOR | MINOR | N/A
@@ -88,59 +100,59 @@ Where:
 
 ### 5. Classical Baseline
 **Verdict:** PASS | WARN | FAIL  |  **Severity:** CRITICAL | MAJOR | MINOR | N/A
-**Classical methods used:** {list what was compared against}
-**Missing baselines:** {list what should have been used but wasn't}
+**Classical methods used:** {list}
+**Missing baselines:** {list}
 **Note:** {TabPFN/XGBoost/GNN/SOAP present? Hyperparameter tuning described?}
 
-**Evaluation scope:** {full | partial — abstract+intro+conclusion only (fallback fetch)}
+**Evaluation scope:** {full | partial}
 
 ---
 
 ## Overall Verdict
 
 **QML verdict:** STRONG_INTEREST | CONDITIONAL | WEAK | REJECT
-- STRONG_INTEREST: All 5 criteria PASS; result is relevant to team's current directions
-- CONDITIONAL: 1-2 criteria at WARN; paper is interesting if concerns are resolved
-- WEAK: Criteria mostly PASS but result is not relevant to team's current directions
-- REJECT: Any CRITICAL FAIL found (should have been SKIP at triage — flag for review)
-
-**Rationale:** {2-3 sentences explaining the overall verdict.}
+**Rationale:** {2-3 sentences.}
 
 ---
 
 ## Assumptions
 
-Hidden assumptions identified in the paper that are not validated experimentally:
 - {assumption 1, with section citation}
 - {assumption 2, with section citation}
-- {e.g., QRAM availability, oracle construction cost, noise-free simulation, infinite shots}
 
 ## Limitations
 
-Limitations acknowledged by the authors:
+Authors acknowledged:
 - {limitation 1}
-- {limitation 2}
 
-Limitations NOT acknowledged but identified by evaluation:
+Not acknowledged, identified by evaluation:
 - {unacknowledged limitation 1}
 
 ## Open Questions
 
-Questions this paper raises that are relevant to our research:
 1. {question 1}
 2. {question 2}
 
 ## Follow-up Actions
 
-- [ ] {Concrete next step: e.g., "Run TabPFN on their benchmark dataset to check baseline gap"}
-- [ ] {e.g., "Check whether their kernel is RFF-approximable — test on datasets in their Table 2"}
-- [ ] {e.g., "Ask Meir: does this circuit topology map to our Pasqal hardware?"}
+- [ ] {concrete next step}
 
 ## Belief Update
 
-**Prior belief:** {What did we think about this direction before reading?}
-**Posterior belief:** {How does this paper update our view?}
+**Prior belief:** {before reading}
+**Posterior belief:** {after reading}
 **Strength of update:** STRONG | MODERATE | WEAK | NONE
+
+---
+
+## Links
+
+- Source: [[{source path}]]
+- Authors: [[cards/authors/{slug1}]], [[cards/authors/{slug2}]]
+- Institute: [[cards/institutes/{slug}]]
+- Claims: [[cards/claims/{arxiv_id}-claim-01]], [[cards/claims/{arxiv_id}-claim-02]]
+- Triage: [[{triage source path}]]
+- Related papers: [[cards/paper-cards/{related_id}]]
 ```
 
 ---
@@ -149,37 +161,21 @@ Questions this paper raises that are relevant to our research:
 
 | Field | Required | Notes |
 |-------|----------|-------|
-| arxiv_id | Yes | Canonical format: YYMM.NNNNN |
-| venue_tier | Yes | T1-T5 from criteria/qml_domain.md venue table |
-| claim_status | Yes | Must use claim status ladder; never skip steps |
-| evidence.seeds | Yes | If not reported, write "not reported" — do not omit |
-| criteria.note | Yes | Must cite paper section or quote fetched text; no fabrication |
-| evaluation_scope | Yes | "full" or "partial" — partial means fallback fetch was used |
-| overall_verdict | Yes | One of four values only |
-| follow_up_actions | Yes | At least one action item; use checkboxes |
+| id | Yes | arXiv ID — canonical dedup key |
+| type | Yes | Always `paper-card` |
+| authors | Yes | List of author card slugs (lastname-firstname) |
+| topics | Yes | Used by topic-map index builder |
+| verdict | Yes | One of four values only |
+| claim_status | Yes | Highest status among this paper's claims |
+| source | Yes | Path to the Layer 1 source file this was extracted from |
+| extracted | Yes | `true` after extraction; `false` in source frontmatter |
 
 ## Prohibited Patterns
 
 ```
-❌ Filling criteria notes from memory about the paper topic — only use fetched text
-❌ Setting claim_status = "strong" or "published" without peer review evidence
-❌ Omitting the "not reported" marker for missing fields (seeds, significance)
+❌ Writing paper card directly from a skill — always go through /extract-artifacts
+❌ Filling criteria notes from memory — only use fetched text from source
+❌ Setting claim_status beyond source ceiling (skill-report max: observed before audit)
 ❌ Setting overall_verdict = STRONG_INTEREST when any criterion is WARN
-❌ Writing "see paper" as a note — must quote or paraphrase the specific finding
+❌ Omitting the Links section — every card must link to its authors, claims, and source
 ```
-
-## Claim Status Ladder
-
-Claims in this Paper Card must not exceed the current evidence tier:
-
-```
-speculative  — hypothesis, no experimental support
-plausible    — theoretical argument or indirect evidence
-observed     — reported experimental result (may lack rigor)
-supported    — well-controlled experiment, reproducible
-strong       — multiple independent replications, theoretical backing
-published    — peer-reviewed venue T1/T2
-            ↘ refuted — contradicted by subsequent evidence
-```
-
-The Paper Card records the claim status AS OF EVALUATION DATE. If later evidence changes the status, update via `/claim-promotion`.

@@ -1,14 +1,16 @@
 {
   "_comment": [
     "Configure all output paths for qml-researcher skills.",
-    "Set output_root to any absolute path to sync to Google Drive, Dropbox, OneDrive, etc.",
-    "Relative paths resolve from repo root.",
+    "Set output_root to the qml-artifacts repo path on the current machine.",
+    "Skills write Layer 1 sources here; /extract-artifacts populates cards/ and indexes/.",
     "",
-    "Examples:",
-    "  Local (default):        \"output\"",
+    "Per-machine paths:",
+    "  Windows dev:  \"C:/Users/tmgli/Documents/Source/qml_artifacts\"",
+    "  Mac Mini:     \"/Users/tmgli/Documents/Source/qml_artifacts\"",
+    "",
+    "Legacy cloud options (not used — artifacts repo is the canonical store):",
     "  Google Drive (Windows): \"C:/Users/tmgli/Google Drive/My Drive/QML Research\"",
-    "  OneDrive (Windows):     \"C:/Users/tmgli/OneDrive/QML Research\"",
     "  Google Drive (Mac):     \"/Users/tmgli/Library/CloudStorage/GoogleDrive-.../QML Research\""
   ],
-  "output_root": "output"
+  "output_root": "C:/Users/tmgli/Documents/Source/qml_artifacts"
 }
