@@ -7,10 +7,11 @@
     "Per-machine paths:",
     "  Windows dev:  \"C:/Users/tmgli/Documents/Source/qml_artifacts\"",
     "  Mac Mini:     \"/Users/tmgli/Documents/Source/qml_artifacts\"",
+    "  tsahi Mac:    \"/Users/tsahi/repos/qml_artifacts\"",
     "",
     "Legacy cloud options (not used — artifacts repo is the canonical store):",
     "  Google Drive (Windows): \"C:/Users/tmgli/Google Drive/My Drive/QML Research\"",
     "  Google Drive (Mac):     \"/Users/tmgli/Library/CloudStorage/GoogleDrive-.../QML Research\""
   ],
-  "output_root": "C:/Users/tmgli/Documents/Source/qml_artifacts"
+  "output_root": "/Users/tsahi/repos/qml_artifacts"
 }

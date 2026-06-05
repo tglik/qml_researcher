@@ -132,7 +132,7 @@ OUTPUT_ROOT = resolve(CONFIG.output_root)
 
 **Workspace directory** — all phase outputs go here:
 ```
-WORKSPACE = {OUTPUT_ROOT}/research/{slug}_{YYYY-MM-DD}/
+WORKSPACE = {OUTPUT_ROOT}/sources/reports/deep-research/{slug}_{YYYY-MM-DD}/
 ```
 
 Where `slug` = parent question → lowercase → hyphens → 40-char max.

@@ -136,7 +136,7 @@ OUTPUT_ROOT = resolve(CONFIG.output_root)
 
 **Workspace directory:**
 ```
-WORKSPACE = {OUTPUT_ROOT}/reviews/{slug}_{YYYY-MM-DD}/
+WORKSPACE = {OUTPUT_ROOT}/sources/reports/paper-reviews/{slug}_{YYYY-MM-DD}/
 ```
 
 Where `slug` = paper title → lowercase → hyphens → 40-char max.
