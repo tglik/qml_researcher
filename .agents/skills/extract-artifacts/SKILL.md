@@ -17,13 +17,14 @@ triggers:
   - update the knowledge base
 
 input:
-  - source_file_path: path to the Layer 1 source file (required)
+  - source_file_path: path to the Layer 1 source file (mutually exclusive with --dir)
+  - --dir: path to a skill workspace directory; auto-discovers and processes all extractable files in dependency order
   - --dry-run: print what would be written without writing (optional)
   - --force: re-extract even if source is already marked extracted: true (optional)
 
 output:
   - cards/ — new and updated entity cards in the artifact repo
-  - indexes/ — paper-registry, claim-ledger, author-index, topic-map updated
+  - indexes/ — paper-registry, claim-ledger, person-index, organization-index, topic-map updated
   - _conflicts.md — any conflicts appended for human review
   - source file — Extracted Cards section added, frontmatter marked extracted: true
   - extractions/{slug}_{date}/ — phase workspace with intermediate artifacts
@@ -41,6 +42,8 @@ allowed-tools:
 # /extract-artifacts
 
 Any Layer 1 source file → entity cards extracted → knowledge base updated → indexes current.
+
+**Mode routing:** if `--dir` is provided, skip to [Directory Mode](#directory-mode---dir) and follow that section's loop — do not run the single-file Setup. Otherwise follow Setup → Phase 1–4 → Completion.
 
 ---
 
@@ -118,6 +121,113 @@ Print: `Source: {source_path} | Type: {SOURCE_TYPE} | Ceiling: {CLAIM_CEILING}`
 
 ---
 
+## Directory Mode (`--dir`)
+
+Use when pointing at a completed research or review workspace directory instead of a single source file. Processes all extractable files in the correct dependency order so that paper cards exist before claims reference them, and claim cards exist before evidence cards reference them.
+
+### Step 1 — Detect workspace type
+
+Read `config/workspace.json` → `OUTPUT_ROOT = resolve(config.output_root)`.
+
+Resolve `{dir}` to an absolute path. Scan for marker files:
+
+| Marker present | Detected type |
+|----------------|---------------|
+| `workspace_manifest.md` | `custom` — parse manifest's `processing_plan` |
+| `01_claim_registry.md` | `paper-review` |
+| `05_claim_evidence_ledger.md` or `05_evidence_ledger.md` | `deep-research` |
+
+If no marker matches, stop:
+```
+Error: cannot detect workspace type in {dir}.
+Add a workspace_manifest.md or point to a single file instead.
+```
+
+### Step 2 — Build processing plan
+
+**paper-review** — process in this order:
+
+| # | File | Role |
+|---|------|------|
+| 1 | `00_paper_content.md` | Paper metadata + cited papers |
+| 2 | `01_claim_registry.md` | Structured claims |
+| 3 | `04_final_review.md` | Synthesis + QML criteria verdicts |
+
+**deep-research** — process in this order:
+
+| # | File | Role |
+|---|------|------|
+| 1 | `01_literature_merged.md` | All surveyed papers |
+| 2 | `05_claim_evidence_ledger.md` (fallback: `05_evidence_ledger.md`) | Claims + evidence items |
+| 3 | `06_final_report.md` | Synthesis + conclusions |
+
+**custom** — read the `processing_plan` list from `workspace_manifest.md` frontmatter (see format below).
+
+Skip any file in the plan that does not exist on disk — print a warning and continue.
+
+### Step 3 — Loop: run Phase 1–4 for each file
+
+For each file in the plan:
+
+1. Set:
+   ```
+   source_path    = {dir}/{file}
+   SOURCE_TYPE    = skill-report          ← injected; do NOT read from file frontmatter
+   SOURCE_DATE    = file frontmatter.source_date if present, else today's date
+   CLAIM_CEILING  = observed
+   SOURCE_SLUG    = {first 4 significant words of filename, hyphens, lowercase}
+   WORKSPACE      = {OUTPUT_ROOT}/extractions/{SOURCE_SLUG}_{SOURCE_DATE}/
+   ```
+2. Skip the `source_type` and `extracted: true` frontmatter checks — workspace files are not expected to carry them.
+3. Write `state.json` and print: `[{N}/{total}] {file} — Ceiling: observed`
+4. Run Phase 1 → Phase 4 for this file, passing `SOURCE_TYPE = skill-report` as an explicit context variable to the source-classifier (not derived from file frontmatter).
+5. After Phase 4 completes, record counts from `{WORKSPACE}/02_write_report.md` into a running total.
+6. Print: `  → Created: {N}  Merged: {N}  Conflicts: {N}`
+
+Carry `--dry-run` and `output_root` from the dir-mode invocation into every file's run. If `--dry-run`, skip Phase 4 for all files.
+
+### Step 4 — Print combined summary
+
+```
+✓ /extract-artifacts --dir complete
+
+Directory:  {dir}
+Type:       {workspace_type}
+Files:      {processed}/{total}  (skipped: {N})
+
+Cards written (total):
+  Created:   {N}
+  Merged:    {N}
+  Conflicts: {N}  →  {OUTPUT_ROOT}/_conflicts.md
+  Skipped:   {N}
+
+Indexes updated: paper-registry, claim-ledger, person-index, organization-index, topic-map
+```
+
+If any conflicts: `⚠  {N} conflict(s) need human review → {OUTPUT_ROOT}/_conflicts.md`
+
+---
+
+### `workspace_manifest.md` format (custom workspaces)
+
+```markdown
+---
+workspace_type: custom
+source_date: {YYYY-MM-DD}
+processing_plan:
+  - file: 00_paper_content.md
+    role: Paper metadata
+  - file: 01_claim_registry.md
+    role: Claims
+  - file: 04_final_review.md
+    role: Final synthesis
+---
+```
+
+Place this file in the workspace directory. The `source_date` applies to all files unless a file's own frontmatter overrides it.
+
+---
+
 ## Phase 1 — Source Classification
 
 **Goal:** Parse the source file and extract all raw entities into a structured document.
@@ -162,12 +272,13 @@ Update `state.json`: `"phase": "phase-1-complete"`.
 
 **Agent:** `agents/entity-extractor.md`
 
-Read the three card schemas to inject:
+Read the card schemas to inject:
 ```
-Read: artifacts/paper_card_schema.md   → PAPER_SCHEMA
-Read: artifacts/claim_card_schema.md   → CLAIM_SCHEMA
-Read: artifacts/author_card_schema.md  → AUTHOR_SCHEMA
-Read: artifacts/evidence_card_schema.md → EVIDENCE_SCHEMA
+Read: artifacts/paper_card_schema.md        → PAPER_SCHEMA
+Read: artifacts/claim_card_schema.md        → CLAIM_SCHEMA
+Read: artifacts/person_card_schema.md       → PERSON_SCHEMA
+Read: artifacts/organization_card_schema.md → ORG_SCHEMA
+Read: artifacts/evidence_card_schema.md     → EVIDENCE_SCHEMA
 ```
 
 ```
@@ -197,8 +308,11 @@ output_root: {OUTPUT_ROOT}
 ### Claim Card Schema
 {CLAIM_SCHEMA}
 
-### Author Card Schema
-{AUTHOR_SCHEMA}
+### Person Card Schema
+{PERSON_SCHEMA}
+
+### Organization Card Schema
+{ORG_SCHEMA}
 
 ### Evidence Card Schema
 {EVIDENCE_SCHEMA}
@@ -316,7 +430,7 @@ Cards written:
   Conflicts: {N} — see {OUTPUT_ROOT}/_conflicts.md
   Skipped:   {N}
 
-Indexes updated: paper-registry, claim-ledger, author-index, topic-map
+Indexes updated: paper-registry, claim-ledger, person-index, organization-index, topic-map
 Workspace: {WORKSPACE}
 ```
 
@@ -336,7 +450,7 @@ Runs Phases 1–3 only. Prints the write report. Does not write any cards or upd
 ## Failure Modes to Avoid
 
 ```
-❌ Running without source_type in frontmatter — always validate before spawning agents
+❌ Reading source_type from frontmatter in --dir mode — SOURCE_TYPE is always injected as skill-report for workspace files
 ❌ Re-extracting an already-extracted source without --force — check extracted: true
 ❌ Skipping conflict logging — every disagreement must be recorded
 ❌ Letting index-updater run if card-writer reported zero cards — nothing to index

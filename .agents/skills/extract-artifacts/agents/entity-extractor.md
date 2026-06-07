@@ -1,6 +1,6 @@
 ---
 name: entity-extractor
-description: "Given a structured source parse, generates complete card content for every entity (paper, author, institute, claim, evidence) with canonical IDs assigned and claim status ceiling enforced. Produces a ready-to-write entity manifest."
+description: "Given a structured source parse, generates complete card content for every entity (paper, person, organization, claim, evidence) with canonical IDs assigned and claim status ceiling enforced. Produces a ready-to-write entity manifest."
 tools: "Read, Write"
 model: sonnet
 maxTurns: 8
@@ -40,8 +40,8 @@ Your job: read the parsed source document, generate canonical IDs for every enti
 | Card type | ID formula | Examples |
 |-----------|-----------|---------|
 | Paper Card | arXiv ID as-is | `2405.12345` |
-| Author Card | `{lastname}-{firstname}` — lowercase, hyphens, no accents, no Jr/Sr/II | `farhi-edward`, `van-dam-wim` |
-| Institute Card | words joined with hyphens, lowercase, strip "the/of/for/and", max 5 words | `mit-center-quantum`, `weizmann-institute`, `q-factor` |
+| Person Card | `{lastname}-{firstname}` — lowercase, hyphens, no accents, no Jr/Sr/II | `farhi-edward`, `van-dam-wim` |
+| Organization Card | words joined with hyphens, lowercase, strip "the/of/for/and", max 5 words | `mit-center-quantum`, `weizmann-institute`, `google-quantum-ai` |
 | Claim Card | `{paper_id}-claim-{NN}` or `{source_slug}-claim-{NN}` for non-paper sources | `2405.12345-claim-01`, `meeting-20260604-claim-01` |
 | Evidence Card | `{claim_id}-ev-{NN}` | `2405.12345-claim-01-ev-01` |
 | Research Question | topic slug — 3-5 meaningful words, hyphens | `neutral-atom-graph-kernels`, `barren-plateau-mitigation` |
@@ -61,29 +61,38 @@ For non-paper sources (meeting, discussion, news, document), use source slug:
 Generate one Paper Card body. If `source_type` is not `skill-report`, generate a stub card (minimal frontmatter + paper identity only — no QML criteria, no verdict). If `source_type` is `skill-report`, generate the full card per the paper_card_schema.
 
 Set:
+- `persons` = list of all person-card slugs (all authors)
+- `organizations` = list of all org-card slugs (from author affiliations)
+- `claims` = list of all claim-card IDs extracted from this paper
+- `evidence` = list of all evidence-card IDs extracted from this paper
 - `claim_status` = min(extracted status, claim_status_ceiling)
 - `source:` = `{source_path}`
 - `extracted: true`
 
-### For each author identified:
+### For each person (author) identified:
 
-Generate one Author Card body. Include the paper they appear in and their institution.
+Generate one Person Card body. Include the paper they appear in and their organization affiliations.
+- `organizations` = list of org-card slugs for all known affiliations
 
-### For each institution identified:
+### For each organization (institution) identified:
 
-Generate one Institute Card body with the papers linked to it.
+Generate one Organization Card body with the persons affiliated and papers linked.
+- `org_type` = classify as: `university | research-lab | company | government | consortium`
+- `persons` = list of person-card slugs affiliated with this org
+- `papers` = list of arXiv IDs where this org appears
 
 ### For each claim extracted:
 
 Generate one Claim Card body.
 - `status` = min(claimed status in source, claim_status_ceiling)
+- `evidence` = list of evidence-card IDs that directly support or contradict this claim (populated after evidence items are processed)
 - `source_type` = from frontmatter
 - For skill-report sources: the claim index (01, 02, ...) follows order in the source
 - For non-paper sources: use source slug prefix in claim ID
 
 ### For each evidence item (skill-report only):
 
-Generate one Evidence Card body. Link to the parent claim.
+Generate one Evidence Card body. Link to the parent claim. After generating all evidence cards, back-fill the `evidence` list in the parent Claim Card frontmatter.
 
 ### For each research question:
 
@@ -103,7 +112,7 @@ Write `{workspace}/01_entities.md`:
 **Claim status ceiling:** {claim_status_ceiling}
 **Generated:** {YYYY-MM-DD}
 
-**Summary:** {N} paper cards, {N} author cards, {N} institute cards, {N} claim cards, {N} evidence cards, {N} research question cards
+**Summary:** {N} paper cards, {N} person cards, {N} organization cards, {N} claim cards, {N} evidence cards, {N} research question cards
 
 ---
 
@@ -115,7 +124,7 @@ Write `{workspace}/01_entities.md`:
 
 ---
 
-## AUTHOR_CARDS
+## PERSON_CARDS
 
 ### {canonical_id}
 
@@ -123,7 +132,7 @@ Write `{workspace}/01_entities.md`:
 
 ---
 
-## INSTITUTE_CARDS
+## ORGANIZATION_CARDS
 
 ### {canonical_id}
 
@@ -160,5 +169,6 @@ Write `{workspace}/01_entities.md`:
 | Entity name | Card type | Canonical ID | Derivation |
 |-------------|-----------|-------------|-----------|
 | {name} | paper-card | {id} | arXiv ID from source |
-| {name} | author-card | {id} | lastname-firstname rule |
+| {name} | person-card | {id} | lastname-firstname rule |
+| {name} | organization-card | {id} | name-slug rule |
 ```

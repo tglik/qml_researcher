@@ -28,6 +28,7 @@ summary: "Neutral-atom quantum kernels outperform RBF kernels on molecular graph
 status: plausible                    # speculative | plausible | observed | supported | strong | published | refuted
 status_ceiling: observed             # max allowed by source type
 source_type: skill-report            # skill-report | meeting-note | discussion | news-item | document
+evidence: [2405.12345-claim-01-ev-01, 2405.12345-claim-01-ev-02]  # evidence-card IDs that directly support/contradict this claim
 last_promoted: 2026-06-04
 promoted_by: extract-artifacts
 ---
@@ -78,7 +79,7 @@ promoted_by: extract-artifacts
 ## Links
 
 - Source paper: [[cards/paper-cards/{paper_id}]]
-- Evidence: [[cards/evidence/{paper_id}-claim-{NN}-ev-01]]
+- Evidence: [[cards/evidence/{paper_id}-claim-{NN}-ev-01]], [[cards/evidence/{paper_id}-claim-{NN}-ev-02]]
 - Related claims (cross-paper): [[cards/claims/{related}]]
 - Research question: [[cards/research-questions/{slug}]]
 - Extracted from: [[{source path}]]

@@ -1,6 +1,6 @@
 # Paper Card Schema
 
-Version: 2.0 | Used by: `/extract-artifacts` (from paper review source files)
+Version: 3.0 | Used by: `/extract-artifacts` (from paper review source files)
 
 A Paper Card is the structured entity card for one evaluated paper. It lives in `cards/paper-cards/` in the artifact repo, keyed by arXiv ID. It is produced by `/extract-artifacts`, not written directly by research skills.
 
@@ -24,11 +24,13 @@ id: 2405.12345
 type: paper-card
 title: "Quantum Kernels for Graph ML with Neutral Atoms"
 arxiv_id: 2405.12345
-authors: [farhi-edward, goldstone-jeffrey]       # author card slugs
-institute: mit-center-for-quantum                 # institute card slug
-topics: [graph-ml, neutral-atom, quantum-kernels] # used by topic-map
-verdict: STRONG_INTEREST                          # STRONG_INTEREST | CONDITIONAL | WEAK | REJECT
-claim_status: plausible                           # highest claim status among this paper's claims
+persons: [farhi-edward, goldstone-jeffrey]            # person-card slugs (all authors)
+organizations: [mit-center-for-quantum, caltech-iqim] # org-card slugs (from author affiliations)
+topics: [graph-ml, neutral-atom, quantum-kernels]     # used by topic-map
+verdict: STRONG_INTEREST                              # STRONG_INTEREST | CONDITIONAL | WEAK | REJECT
+claim_status: plausible                               # highest claim status among this paper's claims
+claims: [2405.12345-claim-01, 2405.12345-claim-02]   # claim-card IDs extracted from this paper
+evidence: [2405.12345-claim-01-ev-01, 2405.12345-claim-01-ev-02] # all evidence-card IDs in this paper
 evaluated: 2026-06-04
 source: sources/reports/paper-reviews/2405.12345-review-2026-06-04.md
 extracted: true
@@ -43,7 +45,8 @@ extracted: true
 # Paper Card: {Full Paper Title}
 
 **arXiv ID:** {arxiv_id}
-**Authors:** {Author1, Author2, ...}
+**Authors:** [[cards/persons/{slug1}]], [[cards/persons/{slug2}]]
+**Organizations:** [[cards/organizations/{org1}]], [[cards/organizations/{org2}]]
 **Published:** {YYYY-MM-DD}
 **Venue:** {venue name | "arXiv preprint"}
 **Venue Tier:** {T1 | T2 | T3 | T4 | T5}
@@ -148,10 +151,10 @@ Not acknowledged, identified by evaluation:
 ## Links
 
 - Source: [[{source path}]]
-- Authors: [[cards/authors/{slug1}]], [[cards/authors/{slug2}]]
-- Institute: [[cards/institutes/{slug}]]
+- Persons: [[cards/persons/{slug1}]], [[cards/persons/{slug2}]]
+- Organizations: [[cards/organizations/{org1}]], [[cards/organizations/{org2}]]
 - Claims: [[cards/claims/{arxiv_id}-claim-01]], [[cards/claims/{arxiv_id}-claim-02]]
-- Triage: [[{triage source path}]]
+- Evidence: [[cards/evidence/{arxiv_id}-claim-01-ev-01]], [[cards/evidence/{arxiv_id}-claim-01-ev-02]]
 - Related papers: [[cards/paper-cards/{related_id}]]
 ```
 
@@ -163,10 +166,13 @@ Not acknowledged, identified by evaluation:
 |-------|----------|-------|
 | id | Yes | arXiv ID — canonical dedup key |
 | type | Yes | Always `paper-card` |
-| authors | Yes | List of author card slugs (lastname-firstname) |
+| persons | Yes | List of person-card slugs (lastname-firstname) for all authors |
+| organizations | Yes | List of org-card slugs derived from author affiliations |
 | topics | Yes | Used by topic-map index builder |
 | verdict | Yes | One of four values only |
 | claim_status | Yes | Highest status among this paper's claims |
+| claims | Yes | All claim-card IDs extracted from this paper |
+| evidence | Yes | All evidence-card IDs extracted from this paper |
 | source | Yes | Path to the Layer 1 source file this was extracted from |
 | extracted | Yes | `true` after extraction; `false` in source frontmatter |
 
@@ -177,5 +183,6 @@ Not acknowledged, identified by evaluation:
 ❌ Filling criteria notes from memory — only use fetched text from source
 ❌ Setting claim_status beyond source ceiling (skill-report max: observed before audit)
 ❌ Setting overall_verdict = STRONG_INTEREST when any criterion is WARN
-❌ Omitting the Links section — every card must link to its authors, claims, and source
+❌ Omitting the Links section — every card must link to its persons, orgs, claims, and evidence
+❌ Using "authors" or "institute" fields — superseded by "persons" and "organizations"
 ```

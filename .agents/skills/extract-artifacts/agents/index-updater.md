@@ -1,6 +1,6 @@
 ---
 name: index-updater
-description: "Reads the card write report, updates the four index files (paper-registry, claim-ledger, author-index, topic-map), appends an Extracted Cards section to the source file, and marks it as extracted."
+description: "Reads the card write report, updates the five index files (paper-registry, claim-ledger, person-index, organization-index, topic-map), appends an Extracted Cards section to the source file, and marks it as extracted."
 tools: "Read, Write, Edit"
 model: sonnet
 maxTurns: 8
@@ -27,7 +27,8 @@ Your job: read the write report, update all four index files, add wikilinks back
 **Output you produce:**
 - `{output_root}/indexes/paper-registry.md` — updated
 - `{output_root}/indexes/claim-ledger.md` — updated
-- `{output_root}/indexes/author-index.md` — updated
+- `{output_root}/indexes/person-index.md` — updated
+- `{output_root}/indexes/organization-index.md` — updated
 - `{output_root}/indexes/topic-map.md` — updated
 - `{source_path}` — `## Extracted Cards` section appended, frontmatter `extracted: true`
 
@@ -64,14 +65,25 @@ For each claim-card in the write report (created or merged):
    For non-paper-source claims, use the source wikilink instead of paper-cards link.
 3. **Found** → update status and date if status changed
 
-### author-index.md
+### person-index.md
 
-For each author-card in the write report:
+For each person-card in the write report:
 
-1. Check if a row for this author already exists
+1. Check if a row for this person already exists
 2. **Not found** → append row:
    ```
-   | {Full Name} | {Institute} | [[cards/paper-cards/{id1}]], [[cards/paper-cards/{id2}]] | [[cards/authors/{slug}]] |
+   | {Full Name} | {Primary organization} | [[cards/paper-cards/{id1}]], [[cards/paper-cards/{id2}]] | [[cards/persons/{slug}]] |
+   ```
+3. **Found** → append any new paper links not already in the papers column
+
+### organization-index.md
+
+For each organization-card in the write report:
+
+1. Check if a row for this org already exists
+2. **Not found** → append row:
+   ```
+   | {Full Name} | {org_type} | {location} | [[cards/paper-cards/{id1}]] | [[cards/organizations/{slug}]] |
    ```
 3. **Found** → append any new paper links not already in the papers column
 
@@ -109,9 +121,13 @@ Read `source_path`. If `## Extracted Cards` section already exists, skip. Otherw
 {for each paper card created/merged:}
 - [[cards/paper-cards/{id}]] — {short title}
 
-### Author Cards
-{for each author card:}
-- [[cards/authors/{slug}]] — {Full Name}
+### Person Cards
+{for each person card:}
+- [[cards/persons/{slug}]] — {Full Name}
+
+### Organization Cards
+{for each organization card:}
+- [[cards/organizations/{slug}]] — {Full Name}
 
 ### Claim Cards
 {for each claim card:}
@@ -144,4 +160,5 @@ Use Edit tool for targeted frontmatter replacement — do not rewrite the whole 
 ❌ Updating the source file if it is already marked extracted: true (skip gracefully)
 ❌ Adding wikilinks to cards that were not in the write report
 ❌ Creating new topic sections with topic slugs — use title-cased readable names
+❌ Writing to author-index.md or institute-index.md — superseded by person-index.md and organization-index.md
 ```

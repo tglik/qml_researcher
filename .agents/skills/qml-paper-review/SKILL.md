@@ -325,6 +325,16 @@ Write `WORKSPACE/00_paper_content.md`:
 
 ## Related Work
 {related_work_text — key papers the authors acknowledge as prior art}
+For each cited paper with a known arXiv ID, link: [[cards/paper-cards/{arxiv_id}]]
+
+---
+
+## Links
+
+- Paper card (post-extraction): [[cards/paper-cards/{arxiv_id}]]
+- Claim registry (next): [[01_claim_registry.md]]
+- Analysis (next): [[02_analysis.md]]
+- Final review (next): [[04_final_review.md]]
 ```
 
 **Gate Phase 0 → Phase 1:**
@@ -368,6 +378,12 @@ Fast mode: <yes | no>
 
 Input file: <WORKSPACE>/00_paper_content.md
 Output file: <WORKSPACE>/01_claim_registry.md
+
+At the end of your output file, add a `## Links` section:
+- Paper content: [[00_paper_content.md]]
+- Paper card (post-extraction): [[cards/paper-cards/{arxiv_id}]]
+- Analysis (next): [[02_analysis.md]]
+- Final review (next): [[04_final_review.md]]
 
 Return the file path and a count of: total claims, TOP claims, MOTIVATIONAL claims,
 SUPPORT claims (0 if fast mode), GENERAL claims (0 if fast mode), VAGUE flags, MISATTRIBUTED flags.
@@ -418,6 +434,15 @@ Input files:
 
 Prior triage verdict (if any): <from state.json>
 Partial fetch flag: <from state.json>
+
+When referencing specific claims, cite them by section anchor: [§Claim Category](01_claim_registry.md#category).
+
+At the end of your output file, add a `## Links` section:
+- Paper content: [[00_paper_content.md]]
+- Claim registry: [[01_claim_registry.md]]
+- Paper card (post-extraction): [[cards/paper-cards/{arxiv_id}]]
+- Consensus evidence (next): [[03_consensus_evidence.md]]
+- Final review (next): [[04_final_review.md]]
 
 Output file: <WORKSPACE>/02_analysis.md
 Return the file path, the quality verdict, and the QML criteria summary
@@ -472,6 +497,15 @@ Focus search on: the 3-5 highest-stakes claims from 01_claim_registry.md — spe
 any claim labeled EMPIRICAL ADVANTAGE or THEORETICAL NOVELTY, and any QML criteria
 concern flagged in 02_analysis.md.
 
+For each cited supporting or contradicting paper with a known arXiv ID, add a wiki link: [[cards/paper-cards/{arxiv_id}]].
+When referencing specific claims from the registry, use: [§Category](01_claim_registry.md#category).
+
+At the end of your output file, add a `## Links` section:
+- Claim registry: [[01_claim_registry.md]]
+- Analysis: [[02_analysis.md]]
+- Paper card (post-extraction): [[cards/paper-cards/{arxiv_id}]]
+- Final review (next): [[04_final_review.md]]
+
 Output file: <WORKSPACE>/03_consensus_evidence.md
 Return the file path and a summary: N supporting / N contradicting / evidence weight.
 """
@@ -524,6 +558,25 @@ Input files:
 Fast mode: <yes | no>
 Partial fetch: <yes | no>
 
+When citing specific claims from the registry, use section anchors: [§Category](01_claim_registry.md#category).
+When referencing QML criteria findings, link to: [§QML Criteria](02_analysis.md#qml-domain-criteria).
+For any supporting or contradicting paper with a known arXiv ID, add a wiki link: [[cards/paper-cards/{arxiv_id}]].
+
+At the end of your output file (after the verdict section), add a `## Workspace` section:
+
+```markdown
+## Workspace
+
+| Artifact | File | Role |
+|----------|------|------|
+| Paper Content | [[00_paper_content.md]] | Fetched full text |
+| Claim Registry | [[01_claim_registry.md]] | All extracted claims |
+| Analysis | [[02_analysis.md]] | Novelty, quality, QML criteria |
+| Consensus Evidence | [[03_consensus_evidence.md]] | Supporting / contradicting literature |
+| Final Review | [[04_final_review.md]] | This document |
+| Paper Card (post-extraction) | [[cards/paper-cards/{arxiv_id}]] | Entity card |
+```
+
 Output files:
 - Markdown: <WORKSPACE>/04_final_review.md
 - Word preview copy: <WORKSPACE>/04_final_review.docx
@@ -566,12 +619,19 @@ pushed_to_permanent: false
 - Falsification: {one sentence}
 
 ## Artifacts
-workspace: {WORKSPACE}
-final_review_md: {WORKSPACE}/04_final_review.md
-final_review_docx: {WORKSPACE}/04_final_review.docx
+
+| Artifact | Wiki link |
+|----------|-----------|
+| Paper Content | [[{WORKSPACE}/00_paper_content.md]] |
+| Claim Registry | [[{WORKSPACE}/01_claim_registry.md]] |
+| Analysis | [[{WORKSPACE}/02_analysis.md]] |
+| Consensus Evidence | [[{WORKSPACE}/03_consensus_evidence.md]] |
+| Final Review (MD) | [[{WORKSPACE}/04_final_review.md]] |
+| Final Review (DOCX) | [[{WORKSPACE}/04_final_review.docx]] |
+| Paper Card (post-extraction) | [[cards/paper-cards/{arxiv_id}]] |
 
 ## Connector Payload
-[{date}] [SOURCE: qml-paper-review] Paper review: "{title}" — Verdict: {verdict}. {one-sentence takeaway}. Word review: {WORKSPACE}/04_final_review.docx
+[{date}] [SOURCE: qml-paper-review] Paper review: "{title}" — Verdict: {verdict}. {one-sentence takeaway}. Word review: [[{WORKSPACE}/04_final_review.docx]]
 ```
 
 3. Report to user with a user-focused completion message. The final Slack/message body must not be a raw artifact dump. Put the decision-relevant verdict first, then a compact checklist of what was done, then attach/link the Word review.

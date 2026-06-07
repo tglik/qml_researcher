@@ -360,6 +360,13 @@ Confidence: {low | moderate | high}
 
 ## Notes for Phase 0B
 {any confirmation-bias tilts, adversarial sub-question requirements, mode-specific framing}
+
+---
+
+## Links
+
+- Scope: [[00_scope.md]]
+- Final report: [[06_final_report.md]]
 ```
 
 ---
@@ -394,7 +401,7 @@ If any check fails, loop back to the relevant question.
 **0.2 FINER quality check:**
 - F (Feasible): Can this be answered with available papers?
 - I (Interesting): Does the answer matter for team direction?
-- N (Novel): Check `triage_log.jsonl` — has this been systematically covered already?
+- N (Novel): Check `[[indexes/paper-registry.md]]` — has this been systematically covered already?
 - E (Ethical): No concerns.
 - R (Relevant): Directly actionable for QML startup decisions?
 
@@ -431,6 +438,15 @@ Confirmation bias risk: {from brief}
 {from brief}
 ## Domain: QML/quantum: yes | no
 ## Fast mode: yes | no
+
+---
+
+## Links
+
+- Brief: [[00_brief.md]]
+- Literature: [[01_literature_merged.md]]
+- Draft report: [[03_draft_report.md]]
+- Final report: [[06_final_report.md]]
 ```
 
 **0.5 GATE — confirm scope with user:**
@@ -486,6 +502,13 @@ Prioritize: arXiv quant-ph + cs.LG, Semantic Scholar, PRX Quantum, NeurIPS/ICML/
 
 Return the candidate source table, coverage gaps, and contradictions
 using the output format in your Role section above.
+
+At the end of your output file, add a `## Links` section:
+- Scope: [[00_scope.md]]
+- Brief: [[00_brief.md]]
+- Domain classification (next): [[02_domain_classification.md]]
+- Draft report (next): [[03_draft_report.md]]
+For each paper included, add a wiki link: [[cards/paper-cards/{arxiv_id}]] (these are pre-extraction stubs that extract-artifacts will resolve).
 
 Output file: <WORKSPACE>/01_literature_<cluster_slug>.md
 Return the file path and a one-paragraph summary.
@@ -597,6 +620,11 @@ Input files:
 Apply all five criteria to each source and produce the full classification output
 including the Strong Directions and Deprioritized Directions summaries.
 
+At the end of your output file, add a `## Links` section:
+- Literature: [[01_literature_merged.md]]
+- Scope: [[00_scope.md]]
+- Draft report (next): [[03_draft_report.md]]
+
 Output file: <WORKSPACE>/02_domain_classification.md
 Return the file path and a count of STRONG vs DEPRIORITIZED directions.
 """
@@ -647,6 +675,17 @@ Write one section per sub-question. Label every claim with its status
 State regime (NISQ / FT-required / hardware-agnostic) for every quantum approach.
 Flag coverage gaps explicitly. Do NOT include claims not in the literature file.
 
+Inline citations must use the format `[Author YYYY]` tied to a `## References` section at the end.
+For each cited paper with a known arXiv ID, include a wiki link: `[[cards/paper-cards/{arxiv_id}]]`.
+
+At the end of your output file (after References), add a `## Links` section:
+- Scope: [[00_scope.md]]
+- Literature: [[01_literature_merged.md]]
+- Domain classification: [[02_domain_classification.md]]
+- Challenges (next): [[04_challenges.md]]
+- Evidence ledger (next): [[05_evidence_ledger.md]]
+- Final report (next): [[06_final_report.md]]
+
 Output file: <WORKSPACE>/03_draft_report.md
 Return the file path and a 3-sentence summary of main findings.
 """
@@ -695,6 +734,14 @@ Input files:
 
 For each section, identify BLOCKING and NON-BLOCKING issues.
 Quote the exact claim challenged; name the attack type; suggest the fix.
+When referencing a specific claim in the draft, use a section anchor: [§Section Name](03_draft_report.md#section-name).
+
+At the end of your output file, add a `## Links` section:
+- Draft report: [[03_draft_report.md]]
+- Literature: [[01_literature_merged.md]]
+- Domain classification: [[02_domain_classification.md]]
+- Evidence ledger (next): [[05_evidence_ledger.md]]
+- Final report (next): [[06_final_report.md]]
 
 Output file: <WORKSPACE>/04_challenges.md
 Return the file path and counts: BLOCKING N, NON-BLOCKING N.
@@ -741,6 +788,14 @@ Input files:
 - Challenge log: <WORKSPACE>/04_challenges.md
 
 Produce the full Evidence Ledger table and Audit Summary.
+In the ledger table, link each claim's source paper: [[cards/paper-cards/{arxiv_id}]].
+When flagging a specific claim, cite the section: [§Section Name](03_draft_report.md#section-name).
+
+At the end of your output file, add a `## Links` section:
+- Draft report: [[03_draft_report.md]]
+- Challenge log: [[04_challenges.md]]
+- Literature: [[01_literature_merged.md]]
+- Final report (next): [[06_final_report.md]]
 
 Output file: <WORKSPACE>/05_evidence_ledger.md
 Return the file path and audit summary (total claims, alignment breakdown, verdict).
@@ -795,6 +850,26 @@ Soften any OVERSTATED claims as flagged.
 Include the Dequantization Risk Table and Hardware Feasibility Summary.
 Executive summary: 5-8 bullets, startup-strategy focus.
 
+Inline citations must use `[Author YYYY]` format tied to a `## References` section.
+For each cited paper with a known arXiv ID, add a wiki link next to its reference entry: [[cards/paper-cards/{arxiv_id}]].
+
+At the end of your output file (after References), add a `## Workspace` section:
+
+```markdown
+## Workspace
+
+| Artifact | File | Role |
+|----------|------|------|
+| Research Brief | [[00_brief.md]] | Decision gate + priors |
+| Research Scope | [[00_scope.md]] | Sub-questions + PICO frame |
+| Literature | [[01_literature_merged.md]] | Screened source bibliography |
+| Domain Classification | [[02_domain_classification.md]] | Five-criteria QML classification |
+| Draft Report | [[03_draft_report.md]] | Pre-audit synthesis |
+| Challenge Log | [[04_challenges.md]] | Adversarial issues found |
+| Evidence Ledger | [[05_evidence_ledger.md]] | Claim-to-source audit |
+| Final Report | [[06_final_report.md]] | This document |
+```
+
 Output files:
 - Markdown: <WORKSPACE>/06_final_report.md
 - Word preview copy: <WORKSPACE>/06_final_report.docx
@@ -834,9 +909,19 @@ pushed_to_permanent: false
 - {bullet 3 from executive summary}
 
 ## Artifacts
-workspace: {WORKSPACE}
-final_report_md: {WORKSPACE}/06_final_report.md
-final_report_docx: {WORKSPACE}/06_final_report.docx
+
+| Artifact | Wiki link |
+|----------|-----------|
+| Research Brief | [[{WORKSPACE}/00_brief.md]] |
+| Research Scope | [[{WORKSPACE}/00_scope.md]] |
+| Literature | [[{WORKSPACE}/01_literature_merged.md]] |
+| Domain Classification | [[{WORKSPACE}/02_domain_classification.md]] |
+| Draft Report | [[{WORKSPACE}/03_draft_report.md]] |
+| Challenge Log | [[{WORKSPACE}/04_challenges.md]] |
+| Evidence Ledger | [[{WORKSPACE}/05_evidence_ledger.md]] |
+| Final Report (MD) | [[{WORKSPACE}/06_final_report.md]] |
+| Final Report (DOCX) | [[{WORKSPACE}/06_final_report.docx]] |
+
 sources_count: {N}
 dequant_risk: {N_HIGH} HIGH / {N_MEDIUM} MEDIUM / {N_LOW} LOW
 blockers_found: {N_BLOCKING}
@@ -848,7 +933,7 @@ strong_directions:
   - {direction 2}
 
 ## Connector Payload
-[{date}] [SOURCE: qml-deep-research] Deep research: {topic}. Executive summary: {bullet 1}. {bullet 2}. Proceed: {YES|NO|CONDITIONAL}. Word report: {WORKSPACE}/06_final_report.docx
+[{date}] [SOURCE: qml-deep-research] Deep research: {topic}. Executive summary: {bullet 1}. {bullet 2}. Proceed: {YES|NO|CONDITIONAL}. Word report: [[{WORKSPACE}/06_final_report.docx]]
 ```
 
 3. Report to user with a user-focused completion message. The final Slack/message body must not be a raw artifact dump. Put the decision-relevant summary first, then a compact checklist of what was done, then attach/link the Word report.

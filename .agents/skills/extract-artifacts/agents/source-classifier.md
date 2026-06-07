@@ -20,7 +20,7 @@ Your job: read the source file, validate it is processable, and produce a fully 
 
 **Inputs you expect (injected by orchestrator):**
 - `source_path` — absolute path to the Layer 1 source file
-- `source_type` — from frontmatter: `skill-report | meeting-note | discussion | news-item | document`
+- `source_type` — injected directly by the orchestrator; may also be in file frontmatter (injected value takes precedence)
 - `claim_status_ceiling` — max claim status allowed for this source type
 - `workspace` — path to write the output file
 
@@ -40,23 +40,23 @@ Your job: read the source file, validate it is processable, and produce a fully 
 
 Read the source file at `source_path`.
 
-Check frontmatter for:
-- `source_type` (required)
-- `source_date` (required)
-- `extracted` — if `true`, note it (orchestrator decides whether to continue)
+Determine `source_type` and `source_date`:
+- `source_type` — use the value injected by the orchestrator if present; otherwise read from frontmatter; if neither exists, write a validation error to `00_source_parsed.md` and stop
+- `source_date` — read from frontmatter if present; if missing and the orchestrator did not inject it, use today's date and note it in Validation Notes
+- `extracted` — if frontmatter contains `extracted: true`, note it in Validation Notes (orchestrator decides whether to continue)
 
-If frontmatter is missing or malformed, write a validation error to `00_source_parsed.md` and stop.
+If frontmatter is missing or malformed AND `source_type` was not injected by the orchestrator, write a validation error to `00_source_parsed.md` and stop.
 
 ### Step 2: Extract by source type
 
 #### For `skill-report` (paper review, research report, triage):
 
 Extract:
-- **Papers**: all arXiv IDs (pattern `\d{4}\.\d{4,5}`), titles, author lists, institutions, venues, publication dates
+- **Papers**: all arXiv IDs (pattern `\d{4}\.\d{4,5}`), titles, author lists, organizations, venues, publication dates
 - **Claims**: every sentence asserting a quantum advantage, performance result, or research finding — include the verbatim text and section/location in source
 - **Evidence items**: experimental results (datasets, metrics, numbers) linked to their claims
-- **Authors**: full names with their listed affiliations
-- **Institutions**: all research groups, universities, companies mentioned
+- **Persons**: full names with their listed affiliations
+- **Organizations**: all research groups, universities, companies, labs mentioned — note type (university | research-lab | company | government | consortium)
 - **Research questions**: any "open question" or "future work" items the source raises
 
 #### For `meeting-note`:
@@ -118,17 +118,17 @@ Write `{workspace}/00_source_parsed.md` using the format below. Every section is
 |---|---------|-----------------|-------------------|----------------------|-----------------|
 | 1 | {id or —} | {title or —} | {authors or —} | {institution or —} | {venue or —} |
 
-## Authors Identified
+## Persons Identified
 
-| # | Full name | Institution | Role / context |
-|---|-----------|-------------|---------------|
-| 1 | {name} | {institution or —} | {author of paper X | meeting participant | etc.} |
+| # | Full name | Organization | Role / context |
+|---|-----------|--------------|---------------|
+| 1 | {name} | {organization or —} | {author of paper X | meeting participant | etc.} |
 
-## Institutions Identified
+## Organizations Identified
 
 | # | Name | Type | Context |
 |---|------|------|---------|
-| 1 | {name} | university | academic | company | {appears in paper X | mentioned by Adi | etc.} |
+| 1 | {name} | university | research-lab | company | government | consortium | {appears in paper X | mentioned by Adi | etc.} |
 
 ## Claims Extracted
 

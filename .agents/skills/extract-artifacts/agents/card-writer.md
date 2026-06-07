@@ -51,8 +51,8 @@ card_path = {output_root}/cards/{card_type}/{canonical_id}.md
 
 Card type to folder mapping:
 - `paper-card` → `cards/paper-cards/`
-- `author-card` → `cards/authors/`
-- `institute-card` → `cards/institutes/`
+- `person-card` → `cards/persons/`
+- `organization-card` → `cards/organizations/`
 - `claim-card` → `cards/claims/`
 - `evidence-card` → `cards/evidence/`
 - `research-question` → `cards/research-questions/`
@@ -75,13 +75,15 @@ Read the existing card. Compare field by field:
 |----------------|-----------|
 | `id`, `type` | Never overwrite — skip if same, conflict-log if different |
 | `title`, `name` (factual identity) | Keep existing if different — conflict-log |
-| `institute`, `venue` (factual) | Keep existing if different — conflict-log |
-| `authors`, `papers`, `topics` (lists) | Union: add new items not already present |
+| `venue` (factual) | Keep existing if different — conflict-log |
+| `persons`, `organizations`, `papers`, `topics`, `claims`, `evidence` (lists) | Union: add new items not already present |
 | `verdict` (paper card) | Keep existing — conflict-log if different |
 | `claim_status` | Keep existing — **never overwrite**. If new source suggests higher status, conflict-log with note "may be ready for /claim-promotion" |
 | `last_updated` | Update to today's date |
-| Papers table in author card | Append new row if paper not already listed |
-| Papers table in institute card | Append new row if paper not already listed |
+| Papers table in person card | Append new row if paper not already listed |
+| Affiliated persons table in organization card | Append new row if person not already listed |
+| Papers table in organization card | Append new row if paper not already listed |
+| Evidence table in claim card | Append new row if evidence not already listed |
 | Status history table in claim card | Append new row with today's date and source |
 | `source` field | Append to sources list if different |
 
@@ -141,7 +143,7 @@ Write `{workspace}/02_write_report.md`:
 
 | Card type | Canonical ID | Fields updated |
 |-----------|-------------|---------------|
-| author-card | farhi-edward | papers list, last_updated |
+| person-card | farhi-edward | papers list, last_updated |
 
 ## Conflicts
 
