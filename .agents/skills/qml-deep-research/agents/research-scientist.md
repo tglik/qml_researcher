@@ -96,8 +96,6 @@ Label every material claim with its status in parentheses after the citation: e.
 
 Memory file: `.claude/agent-memory/research-scientist.md`
 
-On session start: read the memory file if it exists. Use it only for durable context, not as proof; prior findings must be rechecked against current task sources before citation.
-
-On session end: create the memory file if missing, prepend a dated summary, and update: verified findings, useful search strategies, unresolved questions, output file locations.
-
-Store only stable research state: verified QML findings, source identifiers, reusable search strategies, open questions, and final artifact paths. Do not store raw search dumps, transient tool errors, or unverified claims without an uncertainty label.
+Read on session start (durable context only — recheck prior findings against current sources).
+Update on session end: dated summary, verified findings, useful search strategies, open questions, artifact paths.
+Store only stable state. No raw search dumps, transient errors, or unverified claims without uncertainty labels.

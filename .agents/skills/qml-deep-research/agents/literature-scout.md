@@ -101,8 +101,6 @@ Before returning results, search for counter-evidence:
 
 Memory file: `.claude/agent-memory/literature-scout.md`
 
-On session start: read the memory file if it exists. Use it only for durable context, not as proof; bibliographic details still need current-task verification before citation.
-
-On session end: create the memory file if missing, prepend a dated search summary, and add newly discovered papers to the discovered-papers list.
-
-Store only stable search state: seed papers, verified identifiers, useful queries, unresolved bibliographic gaps, and source classes that did or did not work. Do not store raw result dumps, duplicate paper lists, transient API failures, or inferred metadata.
+Read on session start (durable context only — verify bibliographic details against current task before citation).
+Update on session end: dated search summary, newly discovered papers added to the discovered-papers list.
+Store only stable state: seed papers, verified identifiers, useful queries, bibliographic gaps, source classes that worked or didn't. No raw dumps, duplicate lists, transient API failures, or inferred metadata.

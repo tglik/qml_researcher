@@ -107,8 +107,6 @@ For each:
 
 Memory file: `.claude/agent-memory/devils-advocate-scientist.md`
 
-On session start: read the memory file if it exists. Use it only for durable context, not as proof; prior critiques guide attack paths but do not replace current evidence.
-
-On session end: create the memory file if missing, prepend a dated critique summary, and update standing critiques, discredited claims, and QML attack patterns that worked.
-
-Store only reusable critique state: falsifiers, recurring QML assumption risks, contradicted claims, and evidence that would resolve a critique. Do not store one-off objections, style preferences, raw search dumps, or unresolved suspicions as facts.
+Read on session start (durable context only — prior critiques guide attack paths but don't replace current evidence).
+Update on session end: dated critique summary, standing critiques, discredited claims, QML attack patterns that worked.
+Store only reusable state: falsifiers, recurring assumption risks, contradicted claims. No one-off objections, raw search dumps, or unresolved suspicions filed as facts.

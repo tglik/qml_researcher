@@ -132,7 +132,7 @@ def canonicalize_body_paths(body: str) -> str:
 
 
 def converted_skill(skill_dir: Path) -> str:
-    text = (skill_dir / "SKILL.md").read_text()
+    text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
     fm, body = split_fm(text)
     body = canonicalize_body_paths(body)
     name = scalar_from_fm(fm, "name", skill_dir.name)
@@ -187,6 +187,7 @@ def converted_skill(skill_dir: Path) -> str:
         f"This Hermes skill is generated from `{skill_dir.relative_to(REPO)}/SKILL.md` in the qml_researcher repo. Treat `.agents/skills/` as the canonical source of truth; `.claude/skills/` is only a symlink bridge for Claude Code.\n",
         f"Canonical repo root:\n\n`{REPO}`\n",
         "Before executing the workflow, read these linked references when relevant:\n",
+        "- `references/shared/protocol.md` — agent spawn convention, Hermes I/O policy, progress update format, Word export instructions, session memory format, and completion message format. Read once during Setup before spawning any agents.\n",
         "- `references/criteria/qml_domain.md` — authoritative QML criteria; do not rely on stale inline copies.\n",
         "- `references/config/workspace.json` — output root configuration.\n",
         "- `references/artifacts/` — schemas for paper cards, triage logs, evidence records, and other outputs.\n",
@@ -212,7 +213,7 @@ def converted_skill(skill_dir: Path) -> str:
 
 
 def converted_agent(agent_path: Path) -> str:
-    text = agent_path.read_text()
+    text = agent_path.read_text(encoding="utf-8")
     fm, body = split_fm(text)
     body = canonicalize_body_paths(body)
     name = scalar_from_fm(fm, "name", agent_path.stem)
@@ -269,12 +270,12 @@ def install() -> None:
     for skill_dir in sorted(p for p in SRC.iterdir() if p.is_dir() and (p / "SKILL.md").exists()):
         out = DEST_ROOT / skill_dir.name
         (out / "references").mkdir(parents=True)
-        (out / "SKILL.md").write_text(converted_skill(skill_dir))
+        (out / "SKILL.md").write_text(converted_skill(skill_dir), encoding="utf-8")
 
         if (skill_dir / "agents").exists():
             (out / "references" / "agents").mkdir()
             for agent in sorted((skill_dir / "agents").glob("*.md")):
-                (out / "references" / "agents" / agent.name).write_text(converted_agent(agent))
+                (out / "references" / "agents" / agent.name).write_text(converted_agent(agent), encoding="utf-8")
 
         if (skill_dir / "openai.yaml").exists():
             shutil.copy2(skill_dir / "openai.yaml", out / "references" / "openai.yaml")
@@ -284,6 +285,11 @@ def install() -> None:
             link = out / "references" / subdir
             if target.exists():
                 os.symlink(target, link, target_is_directory=True)
+
+        # shared infrastructure lives under .agents/shared, not repo root
+        shared_target = REPO / ".agents" / "shared"
+        if shared_target.exists():
+            os.symlink(shared_target, out / "references" / "shared", target_is_directory=True)
         installed += 1
 
     print(f"Installed {installed} Hermes qml_researcher skills from {SRC} into {DEST_ROOT}")
