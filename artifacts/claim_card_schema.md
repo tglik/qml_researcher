@@ -1,6 +1,12 @@
 # Claim Card Schema
 
-Version: 1.0 | Written by: `/extract-artifacts`
+> **RETIRED as of 2026-06-11.** Per-paper Claim Cards are replaced by the two-tier claim model:
+> - Tier 1 (paper-scoped): claims are embedded inline in paper card bodies (`## Main Claim`, `## Evidence` sections)
+> - Tier 2 (cross-paper): use `Research Hypothesis` cards (`artifacts/research_hypothesis_schema.md`) created by `/synthesize-hypotheses`
+>
+> The `cards/claims/` directory in `qml-artifacts` has been deleted. Do not create new claim card files.
+
+Version: 1.0 (retired) | Was written by: `/extract-artifacts`
 
 One claim card per extracted claim. Keyed by `{paper_id}-claim-{NN}`. In v0, claims are scoped per paper — cross-paper merging is done manually via Research Question cards.
 

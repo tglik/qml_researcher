@@ -23,11 +23,15 @@ input:
   - --force: re-extract even if source is already marked extracted: true (optional)
 
 output:
-  - cards/ — new and updated entity cards in the artifact repo
-  - indexes/ — paper-registry, claim-ledger, person-index, organization-index, topic-map updated
+  - cards/paper-cards/ — new and updated paper cards (claims/evidence inline in card body)
+  - cards/persons/ — new and updated person cards
+  - cards/organizations/ — new and updated organization cards
+  - indexes/ — paper-registry, person-index, organization-index, topic-map updated
   - _conflicts.md — any conflicts appended for human review
   - source file — Extracted Cards section added, frontmatter marked extracted: true
   - extractions/{slug}_{date}/ — phase workspace with intermediate artifacts
+
+note: claim-ledger.md is retired. Run /synthesize-hypotheses separately to update hypothesis-ledger.md after new paper cards are created.
 
 allowed-tools:
   - Agent
@@ -201,7 +205,9 @@ Cards written (total):
   Conflicts: {N}  →  {OUTPUT_ROOT}/_conflicts.md
   Skipped:   {N}
 
-Indexes updated: paper-registry, claim-ledger, person-index, organization-index, topic-map
+Indexes updated: paper-registry, person-index, organization-index, topic-map
+
+Tip: run /synthesize-hypotheses to update hypothesis-ledger.md from the new paper cards.
 ```
 
 If any conflicts: `⚠  {N} conflict(s) need human review → {OUTPUT_ROOT}/_conflicts.md`
@@ -275,14 +281,14 @@ Update `state.json`: `"phase": "phase-1-complete"`.
 Read the card schemas to inject:
 ```
 Read: artifacts/paper_card_schema.md        → PAPER_SCHEMA
-Read: artifacts/claim_card_schema.md        → CLAIM_SCHEMA
 Read: artifacts/person_card_schema.md       → PERSON_SCHEMA
 Read: artifacts/organization_card_schema.md → ORG_SCHEMA
-Read: artifacts/evidence_card_schema.md     → EVIDENCE_SCHEMA
 ```
 
+Note: claim_card_schema and evidence_card_schema are retired. Claims and evidence are embedded inline in paper card bodies.
+
 ```
-Read: .claude/skills/extract-artifacts/agents/entity-extractor.md → AGENT_DEF
+Read: .agents/skills/extract-artifacts/agents/entity-extractor.md → AGENT_DEF
 
 Agent(
   subagent_type="claude",
@@ -305,20 +311,15 @@ output_root: {OUTPUT_ROOT}
 ### Paper Card Schema
 {PAPER_SCHEMA}
 
-### Claim Card Schema
-{CLAIM_SCHEMA}
-
 ### Person Card Schema
 {PERSON_SCHEMA}
 
 ### Organization Card Schema
 {ORG_SCHEMA}
 
-### Evidence Card Schema
-{EVIDENCE_SCHEMA}
-
 Read: {WORKSPACE}/00_source_parsed.md
-Generate canonical IDs and complete card bodies for every entity.
+Generate canonical IDs and complete card bodies for paper, person, and organization entities only.
+Claims and evidence are embedded inline in the paper card body — do NOT create separate claim or evidence cards.
 Write output to: {WORKSPACE}/01_entities.md
 """
 )
@@ -407,9 +408,10 @@ Mark {source_path} frontmatter: extracted: true, extracted_date: {today}.
 
 **Gate Phase 4 → Completion:**
 - `paper-registry.md` updated (rows added/updated) ✓
-- `claim-ledger.md` updated ✓
 - Source file has `## Extracted Cards` section ✓
 - Source frontmatter has `extracted: true` ✓
+
+Note: `claim-ledger.md` is retired — do not update it. Run `/synthesize-hypotheses` after extraction to update `hypothesis-ledger.md`.
 
 ---
 
@@ -430,8 +432,10 @@ Cards written:
   Conflicts: {N} — see {OUTPUT_ROOT}/_conflicts.md
   Skipped:   {N}
 
-Indexes updated: paper-registry, claim-ledger, person-index, organization-index, topic-map
+Indexes updated: paper-registry, person-index, organization-index, topic-map
 Workspace: {WORKSPACE}
+
+Tip: run /synthesize-hypotheses to update hypothesis-ledger.md from the new paper cards.
 ```
 
 If any conflicts were logged, add:

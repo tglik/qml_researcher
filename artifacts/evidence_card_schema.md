@@ -1,6 +1,11 @@
 # Evidence Card Schema
 
-Version: 1.0 | Written by: `/extract-artifacts`
+> **RETIRED as of 2026-06-11.** Evidence cards are replaced by inline `## Evidence` sections in paper cards.
+> Cross-paper evidence aggregation is handled by `Research Hypothesis` cards (`artifacts/research_hypothesis_schema.md`).
+>
+> The `cards/evidence/` directory in `qml-artifacts` has been deleted. Do not create new evidence card files.
+
+Version: 1.0 (retired) | Was written by: `/extract-artifacts`
 
 One card per distinct piece of evidence that supports or contradicts a claim. Keyed by `{paper_id}-claim-{NN}-ev-{NN}`.
 

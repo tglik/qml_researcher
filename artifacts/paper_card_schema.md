@@ -1,6 +1,6 @@
 # Paper Card Schema
 
-Version: 3.0 | Used by: `/extract-artifacts` (from paper review source files)
+Version: 4.0 | Used by: `/extract-artifacts` (from paper review source files)
 
 A Paper Card is the structured entity card for one evaluated paper. It lives in `cards/paper-cards/` in the artifact repo, keyed by arXiv ID. It is produced by `/extract-artifacts`, not written directly by research skills.
 
@@ -28,14 +28,14 @@ persons: [farhi-edward, goldstone-jeffrey]            # person-card slugs (all a
 organizations: [mit-center-for-quantum, caltech-iqim] # org-card slugs (from author affiliations)
 topics: [graph-ml, neutral-atom, quantum-kernels]     # used by topic-map
 verdict: STRONG_INTEREST                              # STRONG_INTEREST | CONDITIONAL | WEAK | REJECT
-claim_status: plausible                               # highest claim status among this paper's claims
-claims: [2405.12345-claim-01, 2405.12345-claim-02]   # claim-card IDs extracted from this paper
-evidence: [2405.12345-claim-01-ev-01, 2405.12345-claim-01-ev-02] # all evidence-card IDs in this paper
+claim_status: plausible                               # main claim status for this paper
 evaluated: 2026-06-04
 source: sources/reports/paper-reviews/2405.12345-review-2026-06-04.md
 extracted: true
 ---
 ```
+
+**Note:** `claims` and `evidence` fields are retired (v4). Claims and evidence are embedded inline in the paper card body (`## Main Claim` and `## Evidence` sections). Cross-paper synthesis uses `cards/hypotheses/` cards created by `/synthesize-hypotheses`.
 
 ---
 
@@ -153,8 +153,7 @@ Not acknowledged, identified by evaluation:
 - Source: [[{source path}]]
 - Persons: [[cards/persons/{slug1}]], [[cards/persons/{slug2}]]
 - Organizations: [[cards/organizations/{org1}]], [[cards/organizations/{org2}]]
-- Claims: [[cards/claims/{arxiv_id}-claim-01]], [[cards/claims/{arxiv_id}-claim-02]]
-- Evidence: [[cards/evidence/{arxiv_id}-claim-01-ev-01]], [[cards/evidence/{arxiv_id}-claim-01-ev-02]]
+- Related hypotheses: [[cards/hypotheses/{slug}]]
 - Related papers: [[cards/paper-cards/{related_id}]]
 ```
 
@@ -170,11 +169,13 @@ Not acknowledged, identified by evaluation:
 | organizations | Yes | List of org-card slugs derived from author affiliations |
 | topics | Yes | Used by topic-map index builder |
 | verdict | Yes | One of four values only |
-| claim_status | Yes | Highest status among this paper's claims |
-| claims | Yes | All claim-card IDs extracted from this paper |
-| evidence | Yes | All evidence-card IDs extracted from this paper |
+| claim_status | Yes | Main claim status for this paper |
 | source | Yes | Path to the Layer 1 source file this was extracted from |
 | extracted | Yes | `true` after extraction; `false` in source frontmatter |
+
+**Retired fields (v4):**
+- `claims` — removed. Claims are embedded inline in `## Main Claim` section.
+- `evidence` — removed. Evidence is embedded inline in `## Evidence` section.
 
 ## Prohibited Patterns
 
@@ -183,6 +184,8 @@ Not acknowledged, identified by evaluation:
 ❌ Filling criteria notes from memory — only use fetched text from source
 ❌ Setting claim_status beyond source ceiling (skill-report max: observed before audit)
 ❌ Setting overall_verdict = STRONG_INTEREST when any criterion is WARN
-❌ Omitting the Links section — every card must link to its persons, orgs, claims, and evidence
+❌ Omitting the Links section — every card must link to its persons and orgs
 ❌ Using "authors" or "institute" fields — superseded by "persons" and "organizations"
+❌ Adding "claims" or "evidence" fields to frontmatter — those are retired in v4
+❌ Linking to cards/claims/ or cards/evidence/ — those directories are retired
 ```

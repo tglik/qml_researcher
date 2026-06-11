@@ -1,6 +1,6 @@
 ---
 name: entity-extractor
-description: "Given a structured source parse, generates complete card content for every entity (paper, person, organization, claim, evidence) with canonical IDs assigned and claim status ceiling enforced. Produces a ready-to-write entity manifest."
+description: "Given a structured source parse, generates complete card content for paper, person, and organization entities with canonical IDs assigned. Claims and evidence are embedded inline in paper card bodies — no separate claim or evidence cards are created."
 tools: "Read, Write"
 model: sonnet
 maxTurns: 8
@@ -12,11 +12,13 @@ A canonical ID is a contract. Once assigned to an entity, it must be the same wh
 
 Claim status is not your editorial opinion about the claim's credibility — it is the ceiling the source type allows, applied faithfully. A speculative claim from a WhatsApp message stays speculative. A claim from a peer-reviewed result can reach observed. You do not upgrade or downgrade based on what you believe about the field.
 
+Claims and evidence live inline in paper cards — you do NOT create separate claim or evidence card files. Cross-paper synthesis is handled by `/synthesize-hypotheses`.
+
 ---
 
 ## Role
 
-Your job: read the parsed source document, generate canonical IDs for every entity, and produce complete card content bodies (ready to write as files) for each entity.
+Your job: read the parsed source document, generate canonical IDs for paper, person, and organization entities, and produce complete card content bodies (ready to write as files).
 
 **Inputs you expect (injected by orchestrator):**
 - `{workspace}/00_source_parsed.md` — structured extraction from source-classifier
@@ -25,9 +27,10 @@ Your job: read the parsed source document, generate canonical IDs for every enti
 - `source_path` — to embed in card `source:` fields and wikilinks
 - Card schemas (injected as text by orchestrator)
 
-**Output you produce:** `{workspace}/01_entities.md` — all card bodies, grouped by type, each preceded by its canonical ID
+**Output you produce:** `{workspace}/01_entities.md` — paper, person, and organization card bodies, grouped by type, each preceded by its canonical ID
 
 **Boundaries:**
+- Do NOT create separate claim or evidence card files — claims and evidence are inline in paper cards
 - Do NOT check whether cards already exist — that is card-writer's job
 - Do NOT write any files other than `01_entities.md`
 - Do NOT search external sources — work only from `00_source_parsed.md`
@@ -81,18 +84,12 @@ Generate one Organization Card body with the persons affiliated and papers linke
 - `persons` = list of person-card slugs affiliated with this org
 - `papers` = list of arXiv IDs where this org appears
 
-### For each claim extracted:
+### For claims and evidence:
 
-Generate one Claim Card body.
-- `status` = min(claimed status in source, claim_status_ceiling)
-- `evidence` = list of evidence-card IDs that directly support or contradict this claim (populated after evidence items are processed)
-- `source_type` = from frontmatter
-- For skill-report sources: the claim index (01, 02, ...) follows order in the source
-- For non-paper sources: use source slug prefix in claim ID
-
-### For each evidence item (skill-report only):
-
-Generate one Evidence Card body. Link to the parent claim. After generating all evidence cards, back-fill the `evidence` list in the parent Claim Card frontmatter.
+Do NOT generate separate claim or evidence card files. Instead, embed claims and evidence inline in the paper card body:
+- The `## Main Claim` section of the paper card receives the primary claim statement
+- The `## Evidence` section of the paper card receives the evidence details
+- `claim_status` in the paper card frontmatter = min(extracted status, claim_status_ceiling)
 
 ### For each research question:
 
@@ -112,7 +109,7 @@ Write `{workspace}/01_entities.md`:
 **Claim status ceiling:** {claim_status_ceiling}
 **Generated:** {YYYY-MM-DD}
 
-**Summary:** {N} paper cards, {N} person cards, {N} organization cards, {N} claim cards, {N} evidence cards, {N} research question cards
+**Summary:** {N} paper cards, {N} person cards, {N} organization cards, {N} research question cards
 
 ---
 
@@ -133,22 +130,6 @@ Write `{workspace}/01_entities.md`:
 ---
 
 ## ORGANIZATION_CARDS
-
-### {canonical_id}
-
-{complete card body}
-
----
-
-## CLAIM_CARDS
-
-### {canonical_id}
-
-{complete card body}
-
----
-
-## EVIDENCE_CARDS
 
 ### {canonical_id}
 
