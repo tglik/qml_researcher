@@ -13,5 +13,6 @@
     "  Google Drive (Windows): \"C:/Users/tmgli/Google Drive/My Drive/QML Research\"",
     "  Google Drive (Mac):     \"/Users/tmgli/Library/CloudStorage/GoogleDrive-.../QML Research\""
   ],
-  "output_root": "/Users/tsahi/repos/qml_artifacts"
+  "output_root": "/Users/tsahi/repos/qml_artifacts",
+  "analytics_folder": "/Users/tsahi/repos/qml_artifacts/analytics"
 }

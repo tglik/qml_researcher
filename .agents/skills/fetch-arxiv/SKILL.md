@@ -24,6 +24,24 @@ and title search automatically.
 
 ---
 
+## Setup (standalone invocation only)
+
+If called directly by the user (not as a sub-step inside another skill):
+
+Read `config/workspace.json` → CONFIG.
+```
+ANALYTICS_PATH = CONFIG.analytics_folder + "/events.jsonl"
+RUN_ID = "fa-{YYYYMMDD-HHMMSS}"
+```
+
+**Analytics — write start event** (append to ANALYTICS_PATH via `write_file` mode=append):
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_start","skill":"fetch-arxiv","version":"1.0.0","mode":"standalone","input_summary":"{input}"}
+```
+If ANALYTICS_PATH does not exist yet, create it (empty file) before appending.
+
+---
+
 ## Phase 1: Parse Input and Determine Fetch Mode
 
 ### 1.1 Classify the input
@@ -165,6 +183,11 @@ Abstract:
 Introduction (first section):
 {introduction text, or "Not available — abstract-only fetch" if partial_fetch = true}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+**Analytics — write end event** (standalone invocation only, append to ANALYTICS_PATH):
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"fetch-arxiv","version":"1.0.0","outcome":"success","duration_s":{elapsed},"output_path":null}
 ```
 
 If invoked standalone, end here.

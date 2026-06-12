@@ -1,0 +1,15 @@
+{
+  "_comment": "Map platform user IDs to display names. Used by generate_dashboard.py for team member breakdown.",
+  "local_user": "Tsahi",
+  "platform_users": {
+    "telegram": {
+      "5478573738": "Tsahi"
+    },
+    "whatsapp": {
+      "37306186604666@lid": "Tsahi"
+    },
+    "slack": {
+      "_note": "Add Slack user IDs for Meir and Adi once Slack integration is configured"
+    }
+  }
+}

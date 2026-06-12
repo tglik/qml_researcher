@@ -100,8 +100,9 @@ search until Phase 0A has been completed with user answers (or the escape hatch 
 **Config** — read once at start:
 ```
 Read: config/workspace.json → CONFIG
-OUTPUT_ROOT = resolve(CONFIG.output_root)
+OUTPUT_ROOT    = resolve(CONFIG.output_root)
   # Relative → absolute from repo root.  Absolute → used as-is.
+ANALYTICS_PATH = CONFIG.analytics_folder + "/events.jsonl"
 ```
 
 **Workspace:**
@@ -109,6 +110,16 @@ OUTPUT_ROOT = resolve(CONFIG.output_root)
 WORKSPACE = {OUTPUT_ROOT}/sources/reports/deep-research/{slug}_{YYYY-MM-DD}/
 ```
 `slug` = parent question → lowercase → hyphens → 40-char max.
+
+**Analytics — write start event** (append to ANALYTICS_PATH via `write_file` mode=append):
+```
+RUN_ID = "dr-{YYYYMMDD-HHMMSS}"   ← format from current datetime
+MODE   = "fast" if --fast else "full"
+```
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_start","skill":"qml-deep-research","version":"1.3.0","mode":"{MODE}","input_summary":"{topic_slug}"}
+```
+If ANALYTICS_PATH does not exist yet, create it (empty file) before appending.
 
 Create the workspace directory. Write `state.json` and update after each phase:
 `current_phase`, `fast_mode`, `blocking_issues_count`, `blocking_issues_resolved_count`,
@@ -510,7 +521,14 @@ draft. Max **2 total revision cycles**. If blocking issues persist after cycle 2
 
 1. Confirm `06_final_report.md` and `06_final_report.docx` exist and are non-empty.
 
-2. Write `{WORKSPACE}/session_memory.md` using the format in `shared/protocol.md`.
+2. **Analytics — write end event** (append to ANALYTICS_PATH):
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"qml-deep-research","version":"1.3.0","outcome":"success","duration_s":{elapsed},"output_path":"sources/reports/deep-research/{slug}_{YYYY-MM-DD}/"}
+```
+If any `skill_error` event was written during this run, set `outcome` to `"error"` instead.
+If `proceed_recommendation` is NO or CONDITIONAL, set `outcome` to `"done_with_concerns"`.
+
+3. Write `{WORKSPACE}/session_memory.md` using the format in `shared/protocol.md`.
    Skill-specific fields to include:
    - `sources_count`, `dequant_risk` (N HIGH / N MEDIUM / N LOW)
    - `blockers_found`, `blockers_resolved`, `evidence_audit` (PASSED | PASSED_WITH_CONCERNS | FAILED)

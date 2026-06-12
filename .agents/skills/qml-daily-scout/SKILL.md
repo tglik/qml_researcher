@@ -40,6 +40,22 @@ This skill is intentionally **agent-agnostic**. It defines the research/scouting
 
 ---
 
+## Setup
+
+Read `config/workspace.json` → CONFIG.
+```
+ANALYTICS_PATH = CONFIG.analytics_folder + "/events.jsonl"
+RUN_ID = "sc-{YYYYMMDD-HHMMSS}"
+```
+
+**Analytics — write start event** (append to ANALYTICS_PATH via `write_file` mode=append):
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_start","skill":"qml-daily-scout","version":"1.0.0","mode":"full","input_summary":"QML scout {time_window}"}
+```
+If ANALYTICS_PATH does not exist yet, create it (empty file) before appending.
+
+---
+
 ## Role
 
 You are a QML research scout. Your job is not to summarize everything new. Your job is to find technically interesting signals that could alter research priorities, experiment design, IP thinking, or technical positioning.
@@ -264,3 +280,13 @@ Before finalizing:
 - [ ] Generic quantum/AI/business-only items were skipped.
 - [ ] Final output is concise enough for a daily briefing.
 - [ ] No platform-specific delivery/channel details are embedded in the skill itself.
+
+---
+
+## Completion
+
+**Analytics — write end event** (append to ANALYTICS_PATH after sending the briefing):
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"qml-daily-scout","version":"1.0.0","outcome":"success","duration_s":{elapsed},"output_path":null}
+```
+An empty-result scout (0 items selected) is still `outcome: "success"` — it is a valid run, not an error.

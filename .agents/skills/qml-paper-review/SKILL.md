@@ -93,8 +93,19 @@ next blocking tool call.
 **Config** — read once at start:
 ```
 Read: config/workspace.json → CONFIG
-OUTPUT_ROOT = resolve(CONFIG.output_root)
+OUTPUT_ROOT    = CONFIG.output_root
+ANALYTICS_PATH = CONFIG.analytics_folder + "/events.jsonl"
 ```
+
+**Analytics — write start event** (append to ANALYTICS_PATH via `write_file` mode=append):
+```
+RUN_ID = "pr-{YYYYMMDD-HHMMSS}"   ← format from current datetime, e.g. pr-20260612-170000
+MODE   = "fast" if --fast else "full"
+```
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_start","skill":"qml-paper-review","version":"1.2.0","mode":"{MODE}","input_summary":"{paper_id_or_title}"}
+```
+If ANALYTICS_PATH does not exist yet, create it (empty file) before appending.
 
 **Workspace:**
 ```
@@ -182,6 +193,11 @@ If no substantive content:
 Error: Insufficient content fetched from "{input}".
 Try: provide the arXiv ID or a direct PDF path.
 ```
+**Analytics — write error + end events on fetch failure** (append each as a separate line):
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_error","skill":"qml-paper-review","phase":"Phase 0 — Fetch","error_summary":"Insufficient content fetched: {input}"}
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"qml-paper-review","version":"1.2.0","outcome":"error","duration_s":{elapsed},"error_summary":"Insufficient content fetched"}
+```
 
 ### 0.3 QML relevance early-stop gate
 
@@ -201,6 +217,11 @@ Next: provide the corrected paper ID, or explicitly ask me to continue.
 Continue only if: transfer value is MEDIUM or HIGH | user explicitly confirms | user requested
 non-QML review. On confirmed non-QML paper: mark five QML criteria N/A (not FAIL) and note
 native-domain credibility separately.
+
+**Analytics — on early-stop** (write end event, append to ANALYTICS_PATH):
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"qml-paper-review","version":"1.2.0","outcome":"skipped","duration_s":{elapsed},"error_summary":"QML early-stop: {reason}"}
+```
 
 ### 0.4 Write paper content to workspace
 
@@ -311,7 +332,13 @@ Add `## Links`: [[01_claim_registry.md]] (next), [[02_analysis.md]] (next), [[04
 
 1. Confirm `04_final_review.md` and `04_final_review.docx` exist and are non-empty.
 
-2. Write `{WORKSPACE}/session_memory.md` using the format in `shared/protocol.md`.
+2. **Analytics — write end event** (append to ANALYTICS_PATH):
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"qml-paper-review","version":"1.2.0","outcome":"success","duration_s":{elapsed},"output_path":"sources/reports/paper-reviews/{slug}_{YYYY-MM-DD}/"}
+```
+If any `skill_error` event was written during this run, set `outcome` to `"error"` instead.
+
+3. Write `{WORKSPACE}/session_memory.md` using the format in `shared/protocol.md`.
    Skill-specific fields:
    - `paper_id`, `title`, `verdict`
    - `novelty` (NOVEL | INCREMENTAL | PRIOR-ART | MISATTRIBUTED)

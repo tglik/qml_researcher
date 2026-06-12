@@ -67,7 +67,21 @@ Agent(
 
 ## Setup
 
-Read `config/workspace.json` → `OUTPUT_ROOT = resolve(config.output_root)`.
+Read `config/workspace.json` → CONFIG.
+```
+OUTPUT_ROOT    = resolve(CONFIG.output_root)
+ANALYTICS_PATH = CONFIG.analytics_folder + "/events.jsonl"
+```
+
+**Analytics — write start event** (append to ANALYTICS_PATH via `write_file` mode=append):
+```
+RUN_ID = "sh-{YYYYMMDD-HHMMSS}"
+SCOPE  = "--topic {topic}" if --topic else "all"
+```
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_start","skill":"synthesize-hypotheses","version":"1.0.0","mode":"{SCOPE}","input_summary":"hypothesis synthesis"}
+```
+If ANALYTICS_PATH does not exist yet, create it (empty file) before appending.
 
 ```
 HYPOTHESES_DIR = {OUTPUT_ROOT}/cards/hypotheses/
@@ -212,6 +226,11 @@ Sort rows by: `strategic_value` (actionable first, then directional) then `suppo
 ---
 
 ## Completion
+
+**Analytics — write end event** (append to ANALYTICS_PATH):
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"synthesize-hypotheses","version":"1.0.0","outcome":"success","duration_s":{elapsed},"output_path":"{HYPOTHESIS_LEDGER}"}
+```
 
 Print:
 ```

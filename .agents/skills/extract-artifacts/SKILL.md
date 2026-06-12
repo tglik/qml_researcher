@@ -79,7 +79,21 @@ Agent(
 
 ## Setup
 
-Read `config/workspace.json` → `OUTPUT_ROOT = resolve(config.output_root)`.
+Read `config/workspace.json` → CONFIG.
+```
+OUTPUT_ROOT    = resolve(CONFIG.output_root)
+ANALYTICS_PATH = CONFIG.analytics_folder + "/events.jsonl"
+```
+
+**Analytics — write start event** (append to ANALYTICS_PATH via `write_file` mode=append):
+```
+RUN_ID = "ea-{YYYYMMDD-HHMMSS}"
+MODE   = "--dir" if dir mode else "single"
+```
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_start","skill":"extract-artifacts","version":"2.0.0","mode":"{MODE}","input_summary":"{source_path_or_dir}"}
+```
+If ANALYTICS_PATH does not exist yet, create it (empty file) before appending.
 
 Resolve `source_path` to an absolute path. If the path does not exist, stop with:
 ```
@@ -416,6 +430,11 @@ Note: `claim-ledger.md` is retired — do not update it. Run `/synthesize-hypoth
 ---
 
 ## Completion
+
+**Analytics — write end event** (append to ANALYTICS_PATH):
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"extract-artifacts","version":"2.0.0","outcome":"success","duration_s":{elapsed},"output_path":"{WORKSPACE}"}
+```
 
 Read `{WORKSPACE}/02_write_report.md` for counts. Print:
 
