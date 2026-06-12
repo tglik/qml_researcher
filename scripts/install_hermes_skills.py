@@ -30,6 +30,9 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 SRC = REPO / ".agents" / "skills"
 DEST_ROOT = Path("/Users/tsahi/.hermes/profiles/labs/skills/qml-researcher")
+LABS_ROOT = Path("/Users/tsahi/.hermes/profiles/labs")
+SOUL_SRC = REPO / "SOUL.md"
+SOUL_DEST = LABS_ROOT / "SOUL.md"
 
 TOOL_MAP = {
     "Agent": "Hermes delegate_task tool. Inject the converted role prompt from references/agents/<agent>.md into the child context.",
@@ -259,6 +262,16 @@ def converted_agent(agent_path: Path) -> str:
 def install() -> None:
     if not SRC.exists():
         raise SystemExit(f"Missing source skills directory: {SRC}")
+
+    # Symlink repo SOUL.md into the labs profile root so edits propagate immediately.
+    if SOUL_SRC.exists():
+        if SOUL_DEST.exists() or SOUL_DEST.is_symlink():
+            SOUL_DEST.unlink()
+        os.symlink(SOUL_SRC, SOUL_DEST)
+        print(f"Linked SOUL.md → {SOUL_DEST}")
+    else:
+        print(f"Warning: {SOUL_SRC} not found; skipping SOUL.md install.")
+
     if DEST_ROOT.exists() or DEST_ROOT.is_symlink():
         if DEST_ROOT.is_symlink() or DEST_ROOT.is_file():
             DEST_ROOT.unlink()
