@@ -1,0 +1,148 @@
+id: qml-primitive-transfer-standard
+skill: qml-primitive-transfer
+mode: standard
+skill_version_min: "1.0.0"
+description: |
+  Standard full-mode transfer analysis for the MIS primitive on neutral-atom hardware.
+  Input is a well-specified primitive description (no report path needed).
+  Expected: ≥3 equivalent problems, ≥3 ML workloads, differentiated business ratings
+  (not all HIGH), startup alignment section names a specific focus workload.
+  Tests: problem coverage accuracy, ML workload reduction traceability, business rating
+  differentiation, startup alignment specificity, output schema compliance.
+
+input:
+  type: prompt
+  value: "mis-neutral-atom"
+  prompt: |
+    Quantum primitive: Maximum Independent Set (MIS) solver on neutral-atom hardware.
+
+    Primitive details:
+    - Native structure: graph problem — find the largest subset of vertices such that no
+      two selected vertices share an edge.
+    - Hardware: neutral-atom Rydberg arrays (e.g., Q-Factor). The Rydberg blockade mechanism
+      naturally encodes the MIS constraint: two nearby atoms cannot both be in the excited
+      (Rydberg) state simultaneously, which maps directly to the independent set constraint.
+    - Regime: NISQ / ANALOG — runs on analog Rydberg hardware without requiring universal
+      gate-based quantum circuits.
+    - Advantage mechanism: the Hamiltonian ground state of a Rydberg atom array encodes the
+      MIS solution for the graph defined by the atomic positions. No classical simulation
+      of this ground state is known to be efficient for arbitrary graphs.
+    - Key constraint: current hardware limited to ~100-300 atoms; graph geometry must be
+      embeddable in 2D plane (connectivity constrained by laser addressing geometry).
+
+    Run a full transfer analysis: map to equivalent problems, identify classical ML workloads
+    that benefit, rate business value across all four dimensions.
+
+expected_behavior:
+  min_equivalent_problems: 3
+  min_ml_workloads: 3
+  business_ratings_differentiated: true   # not all HIGH
+  startup_alignment_names_specific_workload: true
+  final_card_follows_schema: true
+
+axes:
+  problem_coverage:
+    weight: 2.0
+    artifacts: [01_equivalent_problems.md]
+    rubric: |
+      Score based on 01_equivalent_problems.md.
+      5: ≥5 equivalent problems; each has explicit reduction direction (→/←/↔); each has
+         reduction type (poly-time / approx / special-case); MIS-specific relationships
+         correctly stated (e.g., Vertex Cover is complement, Max-Clique is complement graph,
+         QUBO encoding exists via energy penalty); at least 1 problem's reduction construction
+         described in one specific paragraph (not just named)
+      4: ≥4 equivalent problems; directions present; 1 reduction construction described;
+         1 direction wrong or missing
+      3: ≥3 equivalent problems; reduction directions present but tightness notes absent;
+         or 1 direction clearly wrong
+      2: ≥3 problems listed but directions missing; or problems named without any construction
+      1: fewer than 3 problems; or all reductions in wrong direction; or reduction types absent
+      0: file missing or empty
+
+  ml_workload_traceability:
+    weight: 2.0
+    artifacts: [02_ml_workloads.md]
+    rubric: |
+      Score based on 02_ml_workloads.md.
+      5: ≥5 ML workloads; every workload has explicit "connects via" field pointing to a
+         named equivalent problem; every workload has a "classical bottleneck" that is
+         specific (not "it's slow"); reduction chain length stated for each; at least 2
+         workloads have a concrete real-world example (e.g., "50 features from 10k SNPs")
+      4: ≥4 workloads; all have "connects via"; chain lengths present; 1 missing concrete example
+      3: ≥3 workloads; "connects via" present but classical bottleneck generic for ≥2 workloads;
+         chain lengths missing
+      2: ≥3 workloads listed; connections to equivalent problems asserted but not traced;
+         bottlenecks generic or absent
+      1: fewer than 3 workloads; or workloads listed without any reduction chain
+      0: file missing or empty
+
+  business_rating_depth:
+    weight: 2.0
+    artifacts: [03_business_ratings.md]
+    rubric: |
+      Score based on 03_business_ratings.md.
+      5: every workload rated on all 4 dimensions (sv, vl, de, re) with score 0-3; aggregate
+         rating follows the rule (not all HIGH — ≤40% are HIGH); each workload has a "primary
+         risk" sentence; timeline label (NOW/2-3YR/FT-REQUIRED) present for each; cross-workload
+         pattern paragraph present and non-trivial; at least 1 LOW rating with condition for upgrade
+      4: all 4 dimensions scored; aggregate differentiated; timeline labels present; 1 workload
+         missing primary risk; cross-workload paragraph present
+      3: all 4 dimensions scored; aggregate differentiated; timeline labels missing for ≥2;
+         or all aggregates are HIGH/MED (no LOW rated workloads when ≥5 workloads present)
+      2: dimensions scored but aggregates not differentiated (all HIGH); or timeline labels absent;
+         or startup fit column missing
+      1: file exists but ratings are free-form prose without structured scores; or dimensions missing
+      0: file missing or empty
+
+  startup_alignment:
+    weight: 1.5
+    artifacts: [04_transfer_card.md]
+    rubric: |
+      Score based on Section 7 (Startup Alignment) and Section 8 (Next Steps) of 04_transfer_card.md.
+      5: startup alignment section names exactly one "Recommended focus" workload; gives ≥3
+         specific reasons it fits this startup (neutral-atom hardware, team expertise, near-term
+         revenue); names runner-up with one-sentence differentiation; at least 1 workload
+         explicitly deprioritized with condition to revisit; next steps table has ≥3 rows with
+         type/priority/owner columns populated; at least 1 next step is an experiment
+      4: recommended focus named; ≥2 startup-fit reasons; runner-up named; next steps present
+         but 1 row missing owner or type
+      3: recommended focus named; reasons present but generic ("good ML fit"); next steps
+         present but no experiment listed; or deprioritization section missing
+      2: startup alignment section present but names multiple workloads without picking one;
+         next steps present but not actionable ("do more research")
+      1: startup alignment section is free-form without a named recommended focus
+      0: section missing; or 04_transfer_card.md missing
+
+  output_structure:
+    weight: 1.5
+    artifacts: [04_transfer_card.md, 04_transfer_card.docx, session_memory.md]
+    rubric: |
+      Score based on presence and structure of all three output files.
+      5: 04_transfer_card.md has all required sections (Executive Summary / Primitive Summary /
+         Equivalent Problem Map / ML Workload Map / Business Value Ratings / Top Opportunities /
+         Startup Alignment / Next Steps / Workspace); docx exists and is non-empty (>1kb);
+         session_memory.md has frontmatter + connector payload
+      4: all sections present; docx exists; session_memory.md present but connector payload missing
+      3: all sections present in .md; docx missing with clear error note; session_memory.md present
+      2: 04_transfer_card.md missing ≥2 required sections; docx missing without explanation
+      1: 04_transfer_card.md present but free-form (no section headers matching schema); docx missing
+      0: 04_transfer_card.md missing
+
+combined_formula: weighted_average
+
+regression_thresholds:
+  combined_drop: 0.5
+  axis_drop: 1.0
+  critical:
+    from_min: 4
+    to_max: 2
+
+notes: |
+  EVALUATOR NOTE: This skill uses a concrete, well-specified primitive (MIS on neutral atoms).
+  Axes 1 and 2 have objective ground truth: MIS-specific reductions are known (Vertex Cover,
+  Max-Clique, QUBO, Set Packing, etc.); a score of 5 requires at least these four to appear
+  correctly. Check direction labels carefully — MIS → Vertex Cover means "given MIS, solve
+  Vertex Cover" (← is the more useful direction for our purpose).
+
+  For axis 3, the key regression signal is all aggregates being HIGH. If that happens,
+  mark business_rating_depth as ≤ 2 regardless of dimension scores.

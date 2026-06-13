@@ -52,13 +52,15 @@ SKILL_DESCRIPTIONS = {
     "qml-paper-review": "Use when critically reviewing a QML paper for credibility, novelty, evidence quality, dequantization risk, baselines, hardware fit, and a falsifiable verdict.",
     "qml-deep-research": "Use when doing systematic QML literature research or fact-checking: scope the question, sweep sources, apply QML criteria, challenge claims, audit evidence, and write a final report.",
     "qml-daily-scout": "Use when running a recurring or ad-hoc QML research scout for new papers, technical posts, publications, or news; filters recent items for QML relevance, novelty, and evidence risk.",
+    "qml-primitive-transfer": "Use after a research run surfaces a promising quantum primitive: maps it to equivalent NP-hard problems, identifies classical ML workloads that can use the primitive as an accelerator block, rates each workload on four business-value dimensions, and produces a ranked Primitive Transfer Card.",
 }
 
 RELATED = {
     "fetch-arxiv": ["qml-paper-review", "qml-deep-research", "qml-daily-scout", "arxiv"],
-    "qml-paper-review": ["fetch-arxiv", "qml-deep-research", "qml-daily-scout"],
-    "qml-deep-research": ["fetch-arxiv", "qml-paper-review", "qml-daily-scout"],
+    "qml-paper-review": ["fetch-arxiv", "qml-deep-research", "qml-daily-scout", "qml-primitive-transfer"],
+    "qml-deep-research": ["fetch-arxiv", "qml-paper-review", "qml-daily-scout", "qml-primitive-transfer"],
     "qml-daily-scout": ["fetch-arxiv", "qml-paper-review", "qml-deep-research", "arxiv"],
+    "qml-primitive-transfer": ["qml-paper-review", "qml-deep-research", "qml-daily-scout"],
 }
 
 
@@ -156,6 +158,8 @@ def converted_skill(skill_dir: Path) -> str:
         tags.extend(["daily-briefing", "research-scout"])
     if "arxiv" in name:
         tags.append("arxiv")
+    if "primitive-transfer" in name:
+        tags.extend(["business-value", "primitive-mapping", "opportunity-analysis"])
 
     header = [
         "---",
