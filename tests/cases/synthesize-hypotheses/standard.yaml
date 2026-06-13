@@ -1,0 +1,107 @@
+id: synthesize-hypotheses-standard
+skill: synthesize-hypotheses
+mode: standard
+skill_version_min: "1.0.0"
+description: |
+  Run hypothesis synthesis over all paper cards currently in the artifacts repo.
+  Tests: Pareto promotion filter (support_count ≥ 2), schema completeness,
+  skipped-log completeness, no-deprioritized-directions guard, ledger correctness.
+  This test operates on whatever paper cards exist at runtime — it validates the
+  structural properties of synthesis, not the specific hypotheses produced.
+
+input:
+  type: prompt
+  value: "synthesize hypotheses"
+  prompt: "Run /synthesize-hypotheses over all topics."
+
+expected_behavior:
+  skipped_log_present: true
+  ledger_updated: true
+  no_incremental_in_ledger: true
+
+axes:
+  promotion_filter:
+    weight: 2.0
+    artifacts: []
+    rubric: |
+      Check cards/hypotheses/*.md files in OUTPUT_ROOT and 01_hypothesis_candidates.md in the extraction workspace.
+      5: every promoted hypothesis card has support_count ≥ 2 in frontmatter; _synthesis_skipped.md exists and is non-empty (candidates were evaluated); no hypothesis with support_count = 1 exists in cards/hypotheses/
+      4: all promoted cards have support_count ≥ 2; _synthesis_skipped.md present but thin (1 entry)
+      3: all promoted cards have support_count ≥ 2 but _synthesis_skipped.md is missing (no log of what was rejected)
+      2: at least 1 promoted card has support_count = 1 (filter violation)
+      1: multiple cards with support_count = 1; filter not enforced
+      0: no hypothesis cards written despite paper cards being present; OR _synthesis_skipped.md missing and no cards written
+      NOTE: pass OUTPUT_ROOT/cards/hypotheses/ glob listing and _synthesis_skipped.md content to evaluator.
+
+  schema_completeness:
+    weight: 1.5
+    artifacts: []
+    rubric: |
+      Read cards/hypotheses/*.md. For each card, check required frontmatter fields from research_hypothesis_schema.md.
+      5: all hypothesis cards have complete frontmatter (slug, status on claim ladder, support_count, strategic_value, supporting_papers list, qml_criteria_passed, open_risks, last_synthesized); body has a Main Claim section and QML Criteria Evaluation section
+      4: ≥90% of cards complete; 1 card missing open_risks or last_synthesized
+      3: ≥70% complete; missing fields are non-critical (last_synthesized, supporting_papers list)
+      2: ≥50% complete; critical field (status, strategic_value, or support_count) missing in some cards
+      1: cards written but schema mostly not followed; free-form prose instead of structured frontmatter
+      0: no hypothesis cards written
+      NOTE: if 0 paper cards exist in the repo, score this axis N/A (skip) and note that.
+
+  no_deprioritized_directions:
+    weight: 2.0
+    artifacts: []
+    rubric: |
+      Check hypothesis card slugs and Main Claim sections against deprioritized directions in criteria/qml_domain.md:
+      - generic low-data tabular VQC demos
+      - single-encoding PQC claims (ZZ-feature map, Z-feature map)
+      - generic HHL linear-algebra speedups
+      - MNIST/iris/breast cancer QML
+      - HEA on non-chemistry tasks without noise analysis
+      - VQE without classical baseline (CCSD(T), DMRG)
+      5: no hypothesis cards match any deprioritized direction; _synthesis_skipped.md has at least 1 entry for a deprioritized direction that was found and rejected (positive evidence the filter ran)
+      4: no deprioritized hypothesis cards; _synthesis_skipped.md has no deprioritized entries (couldn't confirm filter ran, but no violations either)
+      3: 1 card is borderline on a deprioritized direction but has a clear justification for inclusion
+      2: 1 card clearly matches a deprioritized direction with no justification
+      1: multiple cards on deprioritized directions
+      0: hypothesis ledger contains explicitly deprioritized approaches without any justification
+
+  skipped_log_accuracy:
+    weight: 1.5
+    artifacts: []
+    rubric: |
+      Read _synthesis_skipped.md in OUTPUT_ROOT/indexes/.
+      5: file exists; each entry has: date, candidate title/slug, specific filter that failed (support_count < 2 / strategic_value = incremental / deprioritized direction / QML criterion failed), and reason
+      4: file exists; most entries complete; 1–2 missing the specific failing filter name
+      3: file exists but entries are terse (title only, no filter reason)
+      2: file exists but is essentially empty or has only 1 vague line
+      1: file does not exist but at least some hypothesis candidates were rejected (we know because fewer hypotheses than paper cards)
+      0: no file and no evidence any filtering happened
+
+  ledger_correctness:
+    weight: 1.0
+    artifacts: []
+    rubric: |
+      Read OUTPUT_ROOT/indexes/hypothesis-ledger.md.
+      5: ledger file exists; all directional and actionable hypothesis cards are listed; sorted by strategic_value (actionable first) then support_count descending; no incremental hypotheses in ledger (they should be in _synthesis_skipped.md); last updated date is current
+      4: ledger exists; all cards listed; minor sort issue; date present
+      3: ledger exists; some directional/actionable cards missing from ledger; or incremental ones included
+      2: ledger exists but is clearly incomplete or unsorted
+      1: ledger file exists but is empty or just a header row
+      0: ledger file missing
+
+combined_formula: weighted_average
+
+regression_thresholds:
+  combined_drop: 0.5
+  axis_drop: 1.0
+  critical:
+    from_min: 4
+    to_max: 2
+
+notes: |
+  EVALUATOR NOTE: This skill writes to OUTPUT_ROOT (the qml_artifacts repo), not to a test workspace.
+  The runner must:
+  1. Read OUTPUT_ROOT from config/workspace.json before running
+  2. Pass OUTPUT_ROOT paths to the evaluator explicitly
+  3. Run synthesis on --dry-run first to preview; run live only with user confirmation since it writes to the shared artifacts repo
+  The evaluator must glob cards/hypotheses/*.md and read a sample of cards (up to 5) to assess schema completeness.
+  If OUTPUT_ROOT has 0 paper cards, the test is NOT A FAILURE — mark promotion_filter and schema_completeness as N/A.

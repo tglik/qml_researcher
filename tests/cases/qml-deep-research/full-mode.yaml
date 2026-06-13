@@ -1,0 +1,126 @@
+id: qml-deep-research-full-mode
+skill: qml-deep-research
+mode: full
+skill_version_min: "1.3.0"
+expensive: true
+description: |
+  Full 6-phase deep research run on a neutral-atom QML question. This is the most
+  expensive test case (~20+ minutes, multiple agent spawns). Skipped by --fast flag.
+  Tests the complete pipeline: scoping, literature, domain classification, synthesis,
+  devil's advocate, evidence audit, and final report.
+  Input: a discovery-mode question about neutral-atom hardware-native QML approaches.
+
+input:
+  type: question
+  value: "What neutral-atom hardware-native QML approaches survive the trainability/simulability trilemma?"
+  prompt: |
+    Research question: What neutral-atom hardware-native QML approaches (reservoir computing,
+    Hamiltonian kernels, MBQC-style circuits) best survive the trainability/simulability
+    trilemma on neutral-atom hardware?
+    Mode: Discovery
+    Decision gate: which neutral-atom approach to prioritize for a proof-of-concept experiment
+    with Q-Factor hardware partnership.
+    Prior: reservoir computing and Hamiltonian kernels sidestep barren plateaus; unclear on simulability.
+    Falsification: if all three approaches are classically simulable, deprioritize all in favor of
+    dynamic-circuit/mid-circuit-measurement directions.
+    Out of scope: superconducting hardware, generic VQC/PQC, tabular data.
+
+expected_behavior:
+  phase_0a_complete: true
+  phase_0b_complete: true
+  all_phases_run: true
+  evidence_audit_passed: true
+
+axes:
+  scope_precision:
+    weight: 1.5
+    artifacts: [00_brief.md, 00_scope.md]
+    rubric: |
+      5: 00_brief.md has all Q1–Q5 sections; refined question names ≥1 specific approach; 00_scope.md has PICO frame, ≥4 sub-questions, and confirmation_bias_risk assessed; confirmation gate included if bias_risk = HIGH
+      4: all Q1–Q5 present; refined question specific; 3 sub-questions minimum; PICO frame present
+      3: scope present; Q4 (falsification) generic; sub-questions present but sparse
+      2: scope written but Q1 or Q4 missing; or sub-questions too broad
+      1: 00_scope.md essentially a copy of the input; 00_brief.md absent
+      0: either file missing
+
+  literature_coverage:
+    weight: 2.0
+    artifacts: [01_literature_merged.md]
+    rubric: |
+      5: ≥6 papers total (≥2 per sub-question cluster); each has title, author, year, venue, abstract summary, relevance note; dequantization risk comments added for any MEDIUM/HIGH papers; no consecutive fake arXiv IDs
+      4: ≥5 papers; most fields present; risk flags for HIGH papers only
+      3: ≥4 papers; some missing venue or relevance notes; risk flags absent
+      2: 2–3 papers only; OR many papers but no relevance notes
+      1: papers listed without substantive content (title only)
+      0: file missing or empty
+
+  domain_classification:
+    weight: 1.5
+    artifacts: [02_domain_classification.md]
+    rubric: |
+      5: all 5 criteria applied to every source in 01_literature_merged.md; ⚠ HIGH DEQUANTIZATION RISK tags applied in literature file for flagged papers; strong/deprioritized direction summaries present
+      4: all criteria applied; 1–2 papers lacking full criteria evaluation; risk tags present
+      3: criteria applied to most papers; deprioritized direction summary missing
+      2: criteria applied to half the papers; no summaries; few risk tags
+      1: domain classification file exists but is vague free-form prose
+      0: file missing
+
+  challenge_quality:
+    weight: 1.5
+    artifacts: [04_challenges.md]
+    rubric: |
+      5: at least 3 distinct attack vectors used (from: dequantization, weak-baseline, regime-conflation, barren-plateau, hidden-assumption, statistical-rigor, missing-contradiction); each issue is BLOCKING or NON-BLOCKING with the exact claim quoted and attack type named; BLOCKING count and NON-BLOCKING count reported
+      4: ≥2 attack vectors; issues specific with quoted claims; counts reported
+      3: ≥2 attack vectors; issues present but some without quoted claims; counts reported
+      2: challenges present but vague ("this seems weak"); no quoted claims; no blocking/non-blocking distinction
+      1: challenge file present but essentially empty or restates the draft
+      0: file missing
+
+  evidence_audit_rigor:
+    weight: 2.0
+    artifacts: [05_evidence_ledger.md]
+    rubric: |
+      5: every material claim in the draft has an entry in the ledger with ALIGNED/OVERSTATED/UNSUPPORTED verdict; UNSUPPORTED = 0 (all removed or re-cited); overall audit verdict present (PASSED/PASSED_WITH_CONCERNS/FAILED); proceed_recommendation present
+      4: ledger present; UNSUPPORTED = 0; 1–2 entries lack full detail
+      3: ledger present; UNSUPPORTED ≤ 2 with a note that they were addressed; overall verdict present
+      2: ledger present but UNSUPPORTED claims left in the draft unresolved
+      1: ledger file exists but is very thin (few claims, no overall verdict)
+      0: file missing
+
+  report_completeness:
+    weight: 1.5
+    artifacts: [06_final_report.md]
+    rubric: |
+      5: report has: executive summary (5–8 bullets, startup-focus); dequantization risk table (approach × risk level); hardware feasibility summary (approach × NISQ/FT/analog); inline citations; ## References section; addresses the specific research question with a proceed recommendation
+      4: all sections present; 1 section thin; references present
+      3: executive summary and citations present; dequantization table OR hardware summary missing
+      2: report exists but reads like a draft; missing structured sections
+      1: report present but essentially a single paragraph
+      0: file missing or empty
+
+  iron_rules_compliance:
+    weight: 1.5
+    artifacts: [03_draft_report.md, 06_final_report.md]
+    rubric: |
+      5: synthesis attributed to research-scientist agent; final prose attributed to synthesis-writer agent; orchestrator prose is coordination only; both DOCX files present
+      4: clear agent delegation evidence; one DOCX missing or empty (with error note)
+      3: delegation evidence present but report authorship ambiguous
+      2: orchestrator clearly wrote synthesis (first-person scientific claims in main session)
+      1: explicit iron rule violation
+      0: all synthesis orchestrator-written; no agent delegation
+
+combined_formula: weighted_average
+
+regression_thresholds:
+  combined_drop: 0.5
+  axis_drop: 1.0
+  critical:
+    from_min: 4
+    to_max: 2
+
+notes: |
+  EXPENSIVE: this test case runs all 6 phases and spawns multiple agents.
+  Estimated runtime: 20–40 minutes.
+  Skipped automatically when --fast is passed to /test-skills.
+  Run manually: /test-skills --run --case qml-deep-research/full-mode
+  Confirm before running: the runner will ask for explicit confirmation before starting.

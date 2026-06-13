@@ -1,0 +1,76 @@
+id: qml-deep-research-fact-check
+skill: qml-deep-research
+mode: fact-check
+skill_version_min: "1.3.0"
+description: |
+  Fact-check mode (--fact-check) on a known published result: "Quantum Convolutional
+  Neural Networks are Effectively Classically Simulable" (Bermejo et al., PRX Quantum
+  Apr 2026, doi:10.1103/8qt9-72ts). The claim is SUPPORTED by a published paper in a T1
+  venue. Tests: claim framing, targeted literature, evidence audit verdict, and the
+  SUPPORTED/OVERSTATED/UNSUPPORTED/CONTRADICTED verdict vocabulary.
+
+input:
+  type: claim
+  value: "Quantum Convolutional Neural Networks (QCNNs) are effectively classically simulable"
+  prompt: |
+    --fact-check
+    Claim: "Quantum Convolutional Neural Networks (QCNNs) are effectively classically simulable"
+    Source: Bermejo et al., PRX Quantum Apr 2026, https://link.aps.org/doi/10.1103/8qt9-72ts
+
+expected_behavior:
+  verdict_one_of: [SUPPORTED, OVERSTATED]
+  evidence_strength: [STRONG, MODERATE]
+
+axes:
+  claim_framing:
+    weight: 1.5
+    artifacts: [00_scope.md]
+    rubric: |
+      5: 00_scope.md present with: verbatim claim quoted, claim type identified (QML advantage / theoretical), source attributed, single focused sub-question "Is this claim supported by evidence?"
+      4: scope present with claim and sub-question; type missing or not from the four valid types
+      3: scope present but claim is paraphrased rather than verbatim; or sub-question is too broad
+      2: scope written but claim is substantially altered or missing the source attribution
+      1: scope file exists but is essentially empty or just restates the input
+      0: file missing
+
+  literature_search:
+    weight: 2.0
+    artifacts: [01_literature_merged.md]
+    rubric: |
+      5: ≥3 papers directly addressing QCNN simulability (the specific claim); includes the Bermejo et al. PRX paper itself; also includes at least 1 paper on dequantization/simulability of quantum circuits (e.g., Cerezo barren plateau, tensor-network simulation); papers have relevance notes and arXiv/DOI IDs
+      4: Bermejo et al. present; ≥2 additional papers; some missing relevance notes
+      3: Bermejo et al. present; 1 additional paper only; or additional papers present without simulability focus
+      2: Bermejo et al. NOT present (the primary source for this claim) but ≥2 other relevant papers
+      1: ≥1 paper but none is the Bermejo PRX paper and adjacency to the claim is weak
+      0: file missing or no papers found
+
+  evidence_audit_verdict:
+    weight: 3.0
+    artifacts: [05_evidence_ledger.md]
+    rubric: |
+      5: 05_evidence_ledger.md present with a single SUPPORTED/OVERSTATED/UNSUPPORTED/CONTRADICTED verdict; verdict is SUPPORTED (correct for this known published result); evidence strength rated STRONG or MODERATE; exact quote from Bermejo et al. or equivalent paper; five QML blocking rules applied
+      4: verdict is SUPPORTED with evidence strength; blocking rules present; 1 rule not applied
+      3: verdict is SUPPORTED but evidence strength missing; OR verdict is OVERSTATED (plausible if evaluator found a nuance — accept if a specific overstating reason is given)
+      2: verdict is UNSUPPORTED or CONTRADICTED (wrong for this known result, unless new contradicting evidence exists post-2026)
+      1: verdict present but is not one of the four valid vocabulary words
+      0: file missing or no verdict
+
+  anti_hallucination:
+    weight: 1.5
+    artifacts: [00_scope.md, 01_literature_merged.md, 05_evidence_ledger.md]
+    rubric: |
+      5: Bermejo et al. DOI or PRX Quantum reference is correctly formatted; no fabricated supporting papers; numerical results (if any) consistent with the PRX Quantum paper
+      4: Bermejo reference present with minor formatting issue; supporting papers verifiable
+      3: 1 supporting paper's arXiv ID unverifiable from fixture
+      2: Bermejo reference incorrect or missing; fabricated supporting papers
+      1: clear fabrication — invented paper supporting/contradicting the claim
+      0: pervasive fabrication
+
+combined_formula: weighted_average
+
+regression_thresholds:
+  combined_drop: 0.5
+  axis_drop: 1.0
+  critical:
+    from_min: 4
+    to_max: 2

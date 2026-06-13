@@ -1,0 +1,97 @@
+id: qml-paper-review-fast-mode
+skill: qml-paper-review
+mode: fast
+skill_version_min: "1.2.0"
+description: |
+  Fast review (--fast) of Liu et al. 2025 biomedical QML paper
+  (doi:10.1007/s10439-026-04204-8). Known paper with a weak classical baseline
+  (vanilla SVM comparison) and limited qubit count. Expected verdict: WEAK or MARGINAL.
+  Tests: fetch quality, claim extraction, all 5 QML criteria, verdict specificity,
+  and correct fast-mode compliance (consensus skipped + noted).
+
+input:
+  type: url
+  value: "https://doi.org/10.1007/s10439-026-04204-8"
+  prompt: "Quick review --fast of this paper: https://doi.org/10.1007/s10439-026-04204-8"
+  mode_flags: "--fast"
+
+expected_behavior:
+  verdict_one_of: [WEAK, MARGINAL, REFUTED]
+  falsification_condition: present
+  fast_mode_noted: true
+
+axes:
+  fetch_quality:
+    weight: 1.0
+    artifacts: [00_paper_content.md]
+    rubric: |
+      5: paper content retrieved; abstract + key methods claims visible; partial_fetch flag set correctly
+      4: content retrieved; one section thin; partial_fetch status recorded
+      3: partial content (abstract only or abstract + brief methods); clearly noted as partial
+      2: very thin retrieval; effectively only title + abstract fragment
+      1: almost no content extracted beyond metadata
+      0: file missing or empty; fetch failed entirely
+
+  claim_extraction:
+    weight: 1.5
+    artifacts: [01_claim_registry.md]
+    rubric: |
+      5: TOP and MOTIVATIONAL claims both extracted (fast mode: these are the required categories); each TOP claim has crisp rephrased form + quote; SUPPORT/GENERAL explicitly skipped with fast-mode note
+      4: TOP claims extracted with quotes; MOTIVATIONAL thin; fast-mode skip noted
+      3: ≥2 TOP claims but no quotes; OR SUPPORT/GENERAL attempted but uncategorized
+      2: only 1 TOP claim; or claims extracted without the registry structure
+      1: free-form summary substituted for structured claim registry
+      0: file missing or empty
+
+  qml_criteria:
+    weight: 2.0
+    artifacts: [02_analysis.md]
+    rubric: |
+      5: all 5 criteria evaluated; each has PASS/WARN/FAIL with paper-text citation; quality verdict assigned; NOTE: for this paper, Classical Baseline should be FAIL (vanilla SVM) and Hardware should be WARN (low qubit count)
+      4: all 5 criteria evaluated; 1–2 lack direct paper citations
+      3: 4 of 5 evaluated; quality verdict present
+      2: 3 or fewer criteria; or all 5 but verdicts are unsupported assertions
+      1: criteria present but all marked PASS without justification (which would be wrong for this paper)
+      0: file missing or no criteria section
+
+  verdict_specificity:
+    weight: 2.0
+    artifacts: [04_final_review.md]
+    rubric: |
+      5: verdict is one of the six valid verdicts; specifically names the weak baseline as the primary issue; falsification condition names what would change it (e.g., "if re-run with TabPFN-2.5 baseline achieves parity"); fast-mode note present ("consensus research skipped")
+      4: verdict present; fast-mode noted; falsification condition present but generic
+      3: verdict present; falsification condition missing; OR fast-mode not noted
+      2: verdict present but not consistent with the paper's known weak baseline
+      1: no clear verdict; vague conclusion
+      0: file missing or empty
+
+  fast_compliance:
+    weight: 1.5
+    artifacts: [04_final_review.md]
+    rubric: |
+      5: final review explicitly states "Fast mode: consensus research skipped" OR equivalent note; Phase 3 artifacts NOT present in workspace (correct omission)
+      4: fast-mode noted in text; Phase 3 file absent
+      3: fast-mode not explicitly noted but Phase 3 file is absent (compliance by omission)
+      2: fast-mode noted but Phase 3 file is present and populated (contradicts fast mode)
+      1: no fast-mode note and Phase 3 file present with actual consensus research
+      0: confusion — fast mode ignored entirely (full mode run despite --fast flag)
+
+  anti_hallucination:
+    weight: 2.0
+    artifacts: [00_paper_content.md, 01_claim_registry.md, 02_analysis.md, 04_final_review.md]
+    rubric: |
+      5: no fabricated citations; numerical results consistent across phases; no invented baselines attributed to the paper
+      4: minor citation format issue; numerical results consistent
+      3: 1 unverifiable citation from fixture content; results otherwise consistent
+      2: multiple unverifiable citations (≥3) OR a result value that doesn't match the paper
+      1: fabricated arXiv ID or invented experimental result present
+      0: pervasive fabrication
+
+combined_formula: weighted_average
+
+regression_thresholds:
+  combined_drop: 0.5
+  axis_drop: 1.0
+  critical:
+    from_min: 4
+    to_max: 2

@@ -1,0 +1,120 @@
+id: qml-daily-scout-standard
+skill: qml-daily-scout
+mode: standard
+skill_version_min: "1.0.0"
+description: |
+  Standard daily scout run over a 48-hour window. Tests source breadth, filter
+  precision (no non-QML junk selected), scoring quality, skepticism specificity,
+  and output structure. Note: scout is non-deterministic (live web). Structural
+  axes are deterministic; content axes have wider regression thresholds.
+
+input:
+  type: prompt
+  value: "Run today's QML research scout"
+  prompt: |
+    Run the QML daily scout for the last 48 hours.
+    Audience: QML startup research team (Tsahi, Meir, Adi).
+    Topic priorities: neutral-atom QML, graph kernels, dequantization, dynamic circuits.
+
+expected_behavior:
+  max_items: 7
+  each_item_has_link: true
+  each_item_has_skepticism_gate: true
+  scout_verdict_present: true
+
+axes:
+  source_breadth:
+    weight: 1.0
+    artifacts: []
+    rubric: |
+      Score this axis from the briefing text sent by the skill (not a file artifact).
+      5: scan summary explicitly names ≥2 distinct source classes (e.g., "arXiv quant-ph" + "Semantic Scholar" or a company blog); both arXiv and at least one other class appear in results
+      4: ≥2 source classes mentioned; only 1 shows up in selected items but both were searched
+      3: only arXiv mentioned and searched; no second source class
+      2: source summary vague ("searched recent papers") without naming specific sources
+      1: single item, unclear source
+      0: no scan summary; source unknown
+      NOTE: this axis is evaluated from the output text, not a file. Pass the full briefing text to the evaluator.
+
+  filter_precision:
+    weight: 2.0
+    artifacts: []
+    rubric: |
+      Score this axis from the briefing text.
+      Start at 5. Subtract 1 for each selected item that is:
+      - Generic quantum hardware news with no QML content
+      - Quantum optimization paper with no ML/learning relevance
+      - Press release or vendor announcement with no technical content
+      - Non-quantum AI paper with no QML relevance
+      - FTQC-only algorithmic speedup with no near-term path
+      Floor at 0. A scout with 0 items selected gets 5 (perfect filter — nothing was let through).
+      NOTE: evaluated from briefing text.
+
+  scoring_quality:
+    weight: 1.5
+    artifacts: []
+    rubric: |
+      Score from briefing text.
+      5: every selected item has both a relevance score (1–5) and novelty score (1–5); scores are differentiated (not all 4/5); scores appear calibrated to item descriptions (a clearly incremental result scored 3 or less)
+      4: all items scored; some minor calibration issues (e.g., press release scored 4/5 relevance)
+      3: all items scored; but all relevance scores are 4 or 5 (no differentiation)
+      2: some items lack scores; or scores are placeholders (all 5/5)
+      1: scores present but clearly misaligned with item content
+      0: no scores on any item
+      NOTE: evaluated from briefing text.
+
+  skepticism_specificity:
+    weight: 2.0
+    artifacts: []
+    rubric: |
+      Score from briefing text.
+      5: every selected item has exactly one skepticism/evidence gate that names a specific risk type (Baseline risk / Dequantization risk / Trainability risk / Hardware realism risk / Data-fit risk / Evidence weakness); no item has a vague gate ("needs more work", "may have issues")
+      4: ≥80% of items have specific named gates; 1 item has a slightly vague gate
+      3: ≥60% specific; remainder vague; at least one good example present
+      2: gates present but mostly vague or generic; few named risk types
+      1: skepticism section present but all are empty or say "no concerns"
+      0: no skepticism/evidence gate on any selected item
+      NOTE: evaluated from briefing text.
+
+  output_structure:
+    weight: 1.5
+    artifacts: []
+    rubric: |
+      Score from briefing text.
+      5: briefing starts with "Daily QML Research Scout — {date}" + scan summary line; ≤7 selected items; each item block has title, authors/institute, source/date, link, summary, top claims, why-it-matters, scores, skepticism gate; ends with "Scout verdict:" sentence
+      4: all sections present; 1–2 items missing a field (e.g., institute "not available"); item count ≤7
+      3: structure present but scout verdict missing; or 1 item over the 7-item cap
+      2: structure partially present; items lack "why it matters" or "top claims" sections
+      1: briefing is free-form prose without the structured item format
+      0: output is empty or just a list of URLs
+
+  item_count:
+    weight: 1.0
+    artifacts: []
+    rubric: |
+      Score from briefing text.
+      5: 1–6 items (right-sized for quality over quantity)
+      4: 7 items (at the cap — acceptable)
+      3: 0 items with a clear no-signal explanation
+      2: 8–9 items (slightly over cap — filter wasn't strict enough)
+      1: 10+ items (cap ignored)
+      0: no items and no explanation
+
+combined_formula: weighted_average
+
+regression_thresholds:
+  combined_drop: 0.7
+  axis_drop: 1.5
+  critical:
+    from_min: 4
+    to_max: 2
+
+notes: |
+  EVALUATOR NOTE: This skill has no file artifacts. All axes are scored from the briefing
+  text that the skill emits as its output message. The runner must capture the full output
+  text and pass it to the skill-evaluator as the "artifact" content. Paste or attach the
+  full briefing text to the evaluator prompt in place of artifact file paths.
+
+  REGRESSION THRESHOLD NOTE: Thresholds are looser than other skills because content varies
+  with the live web. A 0.7 combined drop is required to flag regression (vs 0.5 for others).
+  Only structural failures (output_structure, item_count) should trigger critical regressions.

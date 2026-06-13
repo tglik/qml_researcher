@@ -1,0 +1,102 @@
+id: qml-deep-research-fast-mode
+skill: qml-deep-research
+mode: fast
+skill_version_min: "1.3.0"
+description: |
+  Fast deep-research run on a well-scoped QML question with an existing team prior.
+  Tests Phase 0A scoping quality, literature coverage, claim-status labeling in the
+  draft and final reports, and fast-mode compliance (phases 2/4/5 skipped).
+  Input: a focused question about quantum kernels and dequantization risk on graph data.
+
+input:
+  type: question
+  value: "Do quantum kernels for graph data avoid dequantization via classical Nystrom approximation?"
+  prompt: |
+    --fast
+    Research question: Do quantum kernels for graph data avoid dequantization via classical
+    Nystrom/RFF approximation? Decision gate: whether to invest research time on graph quantum
+    kernels or focus on Hamiltonian reservoir approaches instead. Prior: dequantization is a
+    serious risk for standard quantum kernels; less clear for graph-structured encodings.
+    Falsification: if Nystrom approximation matches performance within 5% on any graph benchmark
+    we'd consider. Out of scope: molecular property prediction, tabular data.
+
+expected_behavior:
+  phase_0a_complete: true
+  phases_skipped: [2, 4, 5]
+  fast_mode_noted: true
+
+axes:
+  scope_precision:
+    weight: 1.5
+    artifacts: [00_brief.md, 00_scope.md]
+    rubric: |
+      5: 00_brief.md present with all five Q1–Q5 sections (Decision Gate, Existing Belief/Prior, Refined Question, Falsification Criterion, Out-of-Scope); refined question is more specific than input (e.g., names specific graph benchmark or qubit regime); 00_scope.md has PICO frame and ≥3 sub-questions with search terms
+      4: all Q1–Q5 present; refined question only marginally more specific than input; sub-questions present
+      3: Q1–Q5 present but Q4 (falsification criterion) is generic ("if future work shows otherwise"); scope has sub-questions but no PICO frame
+      2: scope written but Q1 or Q4 is missing or empty; or sub-questions are too broad to bound a literature search
+      1: 00_scope.md written but 00_brief.md absent; or scope is essentially a copy of the input question
+      0: either file missing; or Phase 0A was skipped
+
+  literature_coverage:
+    weight: 2.0
+    artifacts: [01_literature_merged.md]
+    rubric: |
+      5: ≥4 papers found across sub-questions; each paper has: title, author(s), year, venue, abstract summary, and why it's in scope; no consecutive arXiv IDs suggesting fabrication; ⚠ HIGH DEQUANTIZATION RISK comments added for relevant papers
+      4: ≥3 papers with most required fields; 1–2 missing venue or relevance notes; risk comments present
+      3: ≥3 papers but many missing fields; or ≥4 papers but no dequantization risk flags
+      2: only 1–2 papers; or papers listed without abstracts/relevance justification
+      1: file exists but is mostly a list of titles without any supporting detail
+      0: file missing or empty
+
+  claim_labeling:
+    weight: 2.0
+    artifacts: [03_draft_report.md, 06_final_report.md]
+    rubric: |
+      5: every material claim in both files carries a status-ladder label in parentheses: (speculative), (plausible), (observed), (supported), (strong), or (published); no unlabeled claims that make an assertion about QML performance; every claim has an inline citation
+      4: ≥90% of claims labeled; 1–2 unlabeled but minor claims; citations present
+      3: ≥70% of claims labeled; some sections have unlabeled claims; citations mostly present
+      2: labels present in some sections but absent in others; or labels used inconsistently (not from the ladder)
+      1: claim labels attempted but format is wrong (e.g., [STRONG] instead of (strong))
+      0: no status-ladder labels anywhere in either file
+
+  report_completeness:
+    weight: 1.5
+    artifacts: [06_final_report.md]
+    rubric: |
+      5: final report has: executive summary (≥3 bullets, startup-focus); dequantization risk table; hardware feasibility summary; inline citations with ## References section; addresses the specific input question
+      4: all sections present; one section thin (e.g., hardware summary is a single line)
+      3: executive summary and citations present; dequantization table OR hardware summary missing
+      2: final report exists but reads like a draft (missing executive summary or no structured sections)
+      1: final report present but very thin — essentially a 1-paragraph summary
+      0: file missing or empty
+
+  fast_compliance:
+    weight: 1.5
+    artifacts: [06_final_report.md]
+    rubric: |
+      5: final report explicitly notes "Fast mode: domain classification, adversarial challenge, and evidence audit skipped. First-pass draft."; files 02_domain_classification.md, 04_challenges.md, 05_evidence_ledger.md NOT present in workspace
+      4: fast-mode noted; one of the three phase files present but empty or stub
+      3: fast-mode NOT noted in report but the three phase files are absent (compliance by omission)
+      2: fast-mode noted but at least one phase file is present and populated
+      1: no fast-mode note; phase files absent but claim labels are inconsistently strong (implies audit happened)
+      0: full-mode phases ran despite --fast flag (all three phase files present and populated)
+
+  iron_rules_compliance:
+    weight: 2.0
+    artifacts: [03_draft_report.md, 06_final_report.md]
+    rubric: |
+      5: evidence that synthesis was delegated to agents (e.g., state.json records phase transitions, or final report header attributes synthesis to synthesis-writer); orchestrator prose is limited to coordination language, not scientific claims; no "I synthesize" or first-person claim-making in orchestrator-authored sections
+      4: agents clearly used; orchestrator wrote minor bridging prose that isn't scientific claims
+      3: hard to distinguish orchestrator prose from agent output; no clear attribution, but output quality is good
+      2: orchestrator clearly wrote the synthesis (first-person scientific claims in the main session's voice)
+      1: explicit iron rule violation found (e.g., "I will now synthesize the literature..." followed by synthesized text)
+      0: all synthesis is obviously orchestrator-written; no agent delegation evidence
+
+combined_formula: weighted_average
+
+regression_thresholds:
+  combined_drop: 0.5
+  axis_drop: 1.0
+  critical:
+    from_min: 4
+    to_max: 2

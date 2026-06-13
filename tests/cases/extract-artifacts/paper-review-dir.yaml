@@ -1,0 +1,104 @@
+id: extract-artifacts-paper-review-dir
+skill: extract-artifacts
+mode: dir
+skill_version_min: "2.0.0"
+description: |
+  Tests extract-artifacts in --dir mode against the test fixture at
+  tests/fixtures/sources/extract_test_paper_review/. The fixture is a minimal
+  paper-review workspace with known entities (1 paper, 1 person, 1 org). Tests:
+  entity extraction completeness, deduplication (fixture has a pre-existing card),
+  index updates, and source marking.
+
+input:
+  type: dir
+  value: "tests/fixtures/sources/extract_test_paper_review"
+  prompt: "/extract-artifacts --dir tests/fixtures/sources/extract_test_paper_review"
+  mode_flags: "--dir"
+
+expected_behavior:
+  paper_cards_created: 1
+  person_cards_created_or_merged: 1
+  org_cards_created_or_merged: 1
+  indexes_updated: true
+  source_marked_extracted: true
+
+axes:
+  entity_extraction:
+    weight: 2.0
+    artifacts: []
+    rubric: |
+      Check the extraction workspace at OUTPUT_ROOT/extractions/extract-test-paper-{date}/
+      Specifically 00_source_parsed.md and 01_entities.md.
+      5: 00_source_parsed.md present with all raw entities extracted: paper (title, arXiv ID, authors, venue), person (Danaci, affiliation), organization (institution from fixture); 01_entities.md has canonical IDs for all entity types
+      4: all 3 entity types extracted; 1 entity missing a field (e.g., venue or affiliation)
+      3: paper extracted; person OR org missing; or canonical IDs partially assigned
+      2: only paper extracted; person and org not recognized as entities
+      1: entities partially extracted but canonical ID format violated
+      0: 00_source_parsed.md missing or empty; no entities extracted
+
+  deduplication:
+    weight: 2.0
+    artifacts: []
+    rubric: |
+      The fixture pre-seeds a person card at OUTPUT_ROOT/cards/persons/danaci-bayraktar.md.
+      The extraction should MERGE, not CREATE a new card for this person.
+      Check 02_write_report.md for merge vs create counts.
+      5: write report shows: papers created 1 OR merged (depending on whether the paper already exists); persons merged 1 (not created); orgs created 1 or merged; _conflicts.md not written or empty (no conflicts)
+      4: person correctly merged; paper status (create/merge) consistent with whether it pre-exists; minor mismatch in org status
+      3: person merged BUT also a duplicate card created (deduplication partially failed)
+      2: person NOT merged — new card created despite pre-existing card (deduplication failure)
+      1: all entities created anew ignoring pre-existing cards
+      0: 02_write_report.md missing; unknown if deduplication ran
+
+  index_completeness:
+    weight: 1.5
+    artifacts: []
+    rubric: |
+      Check OUTPUT_ROOT/indexes/: paper-registry.md, person-index.md, organization-index.md, topic-map.md
+      5: all 4 index files updated; the extracted paper appears in paper-registry.md; the person appears in person-index.md; the org appears in organization-index.md; paper linked to a topic in topic-map.md
+      4: 3 of 4 indexes updated; the missing one is topic-map (least critical)
+      3: paper-registry and person-index updated; org-index or topic-map not updated
+      2: only paper-registry updated; other indexes not touched
+      1: index files exist but no new entries added (extraction ran but indexing skipped)
+      0: index files not updated at all
+
+  source_marking:
+    weight: 1.5
+    artifacts: []
+    rubric: |
+      Check the fixture workspace files (00_paper_content.md, 01_claim_registry.md, 04_final_review.md) in tests/fixtures/sources/extract_test_paper_review/.
+      NOTE: extract-artifacts should NOT modify fixture files — it reads them as input. Source marking applies to the SKILL OUTPUT files, not the fixture. Check the extraction workspace for state.json phase progression.
+      5: state.json in extraction workspace shows phase: "phase-4-complete" or "done"; 02_write_report.md present with correct counts; the extraction completed without errors
+      4: state.json shows phase-3-complete or phase-4-complete; write report present
+      3: state.json shows phase-2-complete; write report present but index update not confirmed
+      2: state.json shows only phase-1-complete; extraction stopped early
+      1: state.json shows setup only; no phases completed
+      0: no state.json; extraction did not run or immediately errored
+
+  conflict_logging:
+    weight: 1.0
+    artifacts: []
+    rubric: |
+      The fixture is designed so the person card has a slightly different affiliation than the pre-seeded card — this should trigger a conflict.
+      Check OUTPUT_ROOT/_conflicts.md.
+      5: _conflicts.md exists and contains a conflict entry for the person card with: entity ID, conflicting field (affiliation), existing value, new value, date
+      4: conflict logged but missing the specific field comparison (just notes "conflict on danaci-bayraktar")
+      3: conflict logged but no detail; or _conflicts.md exists but is empty (conflict silently ignored)
+      2: conflict logged in 02_write_report.md but NOT in _conflicts.md (wrong location)
+      1: conflict not logged anywhere; existing card was silently overwritten
+      0: conflict not detected at all; _conflicts.md missing
+
+combined_formula: weighted_average
+
+regression_thresholds:
+  combined_drop: 0.5
+  axis_drop: 1.0
+  critical:
+    from_min: 4
+    to_max: 2
+
+notes: |
+  EVALUATOR NOTE: The runner must pre-seed a person card in OUTPUT_ROOT/cards/persons/danaci-bayraktar.md
+  before running this test to trigger the deduplication and conflict axes. The card is in
+  tests/fixtures/pre_seeds/danaci-bayraktar.md. Copy it to OUTPUT_ROOT before invoking the skill.
+  Restore original state after the test (remove the pre-seeded card if it did not already exist).

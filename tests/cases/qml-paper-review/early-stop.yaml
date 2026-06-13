@@ -1,0 +1,53 @@
+id: qml-paper-review-early-stop
+skill: qml-paper-review
+mode: full
+skill_version_min: "1.2.0"
+description: |
+  Tests the Phase 0 early-stop gate using a clearly non-QML paper. The skill should
+  detect QML Transfer Value = LOW and stop before Phase 1, emitting the early-stop
+  notice with the paper's actual domain. If it proceeds to full review, that is a
+  gate failure.
+  Input: a classical ML paper with no quantum content.
+
+input:
+  type: arxiv_id
+  value: "1706.03762"
+  prompt: "Review this paper: 1706.03762"
+  # "Attention Is All You Need" — definitively non-QML
+
+expected_behavior:
+  early_stop: true
+  qml_transfer_value: LOW
+  phase_1_not_reached: true
+
+axes:
+  early_stop_gate:
+    weight: 3.0
+    artifacts: [00_paper_content.md]
+    rubric: |
+      5: early-stop notice emitted; notice includes paper title; native domain identified correctly (NLP/sequence modeling); QML transfer value stated as LOW; explicit "provide corrected paper ID or ask me to continue" prompt present; Phase 1 artifacts (01_claim_registry.md) NOT present in workspace
+      4: early-stop emitted; title or domain slightly misidentified; transfer value stated LOW; no Phase 1 artifacts
+      3: early-stop emitted but notice is vague (no domain, no transfer value); no Phase 1 artifacts
+      2: early-stop emitted but Phase 1 artifacts ALSO present (gate fired but run continued)
+      1: no early-stop — skill ran Phase 1 and beyond on a non-QML paper
+      0: no early-stop and full review completed (complete gate failure)
+
+  stop_message_quality:
+    weight: 2.0
+    artifacts: [00_paper_content.md]
+    rubric: |
+      5: stop message follows exactly the SKILL.md template: paper title, arXiv ID, native domain, QML transfer value, one-paragraph "what it is about", explicit reason for stopping, next-step instruction
+      4: all key fields present but one is slightly off (e.g., arXiv formatted slightly wrong)
+      3: most fields present but "what it is about" paragraph is missing or very thin
+      2: partial stop message — title and reason present but missing domain or transfer value
+      1: minimal stop message — just says "stopped: not QML" with no detail
+      0: no stop message produced at all (or Phase 1 ran)
+
+combined_formula: weighted_average
+
+regression_thresholds:
+  combined_drop: 0.5
+  axis_drop: 1.0
+  critical:
+    from_min: 4
+    to_max: 2

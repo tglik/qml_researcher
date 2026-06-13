@@ -1,0 +1,96 @@
+id: qml-paper-review-full-strong-paper
+skill: qml-paper-review
+mode: full
+skill_version_min: "1.2.0"
+description: |
+  Full review of Danaci et al. 2605.21346 — "Evidence of Quantum Machine Learning Advantage
+  with Tens of Noisy Qubits". Known high-signal paper with a real QML advantage claim on
+  quantum-native data. Expected verdict: CREDIBLE or LANDMARK.
+  Tests: fetch quality, claim extraction, all 5 QML criteria, consensus, anti-hallucination.
+
+input:
+  type: arxiv_id
+  value: "2605.21346"
+  prompt: "Review this paper: 2605.21346"
+  # fixture: tests/fixtures/papers/danaci_2605_21346.md  # uncomment once cache is populated
+
+expected_behavior:
+  verdict_one_of: [LANDMARK, CREDIBLE]
+  falsification_condition: present
+  qml_criteria_all: true
+
+axes:
+  fetch_quality:
+    weight: 1.0
+    artifacts: [00_paper_content.md]
+    rubric: |
+      5: full text present (partial_fetch=false); abstract + intro + methods + results + conclusions all have content; fetch method recorded
+      4: full text present; one section thin or absent but others complete
+      3: partial_fetch=true but abstract + methods both present; clearly noted in file
+      2: only abstract available; methods/results absent
+      1: very thin — mostly metadata, abstract fragment
+      0: file missing or empty
+
+  claim_extraction:
+    weight: 1.5
+    artifacts: [01_claim_registry.md]
+    rubric: |
+      5: ≥3 TOP claims; each has crisp rephrased form (≤20 words) AND a direct supporting quote; SUPPORT and GENERAL categories also extracted; claim counts (TOP/MOTIVATIONAL/SUPPORT/GENERAL) reported; no VAGUE flags unaddressed
+      4: ≥3 TOP claims with quotes; SUPPORT or GENERAL thin but present; minor issues only
+      3: ≥2 TOP claims; supporting quotes present for some but not all; SUPPORT/GENERAL missing
+      2: claims listed but most lack supporting quotes; or only 1 TOP claim; or categories missing
+      1: file exists but claims are vague, unlabeled, or in free-form prose (not structured registry)
+      0: file missing or empty
+
+  qml_criteria:
+    weight: 2.0
+    artifacts: [02_analysis.md]
+    rubric: |
+      5: all 5 criteria evaluated (Classical Baseline, Dequantization, Native Data Fit, Trainability, Hardware); each has PASS/WARN/FAIL verdict; each verdict cites a quote from the paper; overall quality verdict (RIGOROUS/ADEQUATE/WEAK/UNSOUND) assigned
+      4: all 5 criteria evaluated; 1–2 verdicts lack paper-text citations
+      3: 4 of 5 criteria evaluated; or all 5 but no quality verdict assigned
+      2: only 3 criteria evaluated; or all 5 with vague verdicts not tied to paper content
+      1: criteria section present but most marked N/A without justification; or free-form prose only
+      0: file missing or no QML criteria section
+
+  verdict_specificity:
+    weight: 2.0
+    artifacts: [04_final_review.md]
+    rubric: |
+      5: verdict is exactly one of LANDMARK/CREDIBLE/MARGINAL/WEAK/REFUTED/UNSOUND; one-line verdict summary is specific (names the key finding); falsification condition is concrete (names a threshold, a method, or a failure mode — NOT "if future work shows otherwise"); no vague hedges ("interesting", "shows promise")
+      4: verdict present and appropriate; falsification condition present but slightly vague
+      3: verdict present; falsification condition is generic ("if stronger evidence emerges") or missing
+      2: verdict present but inconsistent with analysis in prior phases; no falsification condition
+      1: no clear verdict; vague conclusion only ("this paper has merit")
+      0: file missing or empty
+
+  consensus_evidence:
+    weight: 1.5
+    artifacts: [03_consensus_evidence.md]
+    rubric: |
+      5: ≥2 supporting papers AND ≥1 contradicting paper (or explicitly states none found after search); each paper has an evidence weight score; focused on TOP-claim verification
+      4: ≥2 supporting papers; contradicting papers absent but explicitly noted as not found
+      3: 1 supporting paper with evidence detail; OR ≥2 papers without evidence weight scores
+      2: papers mentioned by name but no supporting/contradicting structure; no evidence weights
+      1: file exists but is empty or just restates the reviewed paper's claims
+      0: file missing (this is NOT acceptable in full mode — 0 here, not N/A)
+
+  anti_hallucination:
+    weight: 2.0
+    artifacts: [00_paper_content.md, 01_claim_registry.md, 02_analysis.md, 03_consensus_evidence.md, 04_final_review.md]
+    rubric: |
+      5: no fabricated arXiv IDs found; all cited IDs follow valid format; numerical results in final review are consistent with results section; no results claimed that contradict the paper text
+      4: minor formatting inconsistency in 1 citation but ID appears real; results consistent
+      3: 1 citation unverifiable from fixture content — cannot confirm or deny (note as unverifiable, do not penalize to 0)
+      2: multiple unverifiable citations (≥3) OR a numerical result that inflates a value from the paper
+      1: at least 1 clearly fabricated arXiv ID (format violation, placeholder pattern) or invented result
+      0: pervasive fabrication; majority of citations unverifiable; results not traceable to paper
+
+combined_formula: weighted_average
+
+regression_thresholds:
+  combined_drop: 0.5
+  axis_drop: 1.0
+  critical:
+    from_min: 4
+    to_max: 2
