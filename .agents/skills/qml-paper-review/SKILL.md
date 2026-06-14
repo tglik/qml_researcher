@@ -116,7 +116,8 @@ WORKSPACE = {OUTPUT_ROOT}/sources/reports/paper-reviews/{slug}_{YYYY-MM-DD}/
 Create the workspace directory. Write `state.json`:
 `current_phase`, `fast_mode`, `target_claim` (if --claim), `paper_id`, `paper_title`,
 `partial_fetch`, `qml_transfer_value`, `claim_counts`, `quality_verdict`,
-`qml_criteria_summary`, `consensus_summary`, `final_verdict`, `final_docx_path`.
+`qml_criteria_summary`, `consensus_summary`, `final_verdict`, `primitive_transfer_recommendation`,
+`primitive_name` (if recommendation = PROCEED or HOLD), `final_docx_path`.
 
 **Agents directory:**
 ```
@@ -322,9 +323,14 @@ Add `## Links`: [[01_claim_registry.md]] (next), [[02_analysis.md]] (next), [[04
 - For supporting/contradicting papers: `[[cards/paper-cards/{arxiv_id}]]`
 - Add `## Workspace` table linking all workspace artifacts
 - Output: `{WORKSPACE}/04_final_review.md` and `{WORKSPACE}/04_final_review.docx`
-- Return both paths and the verdict (LANDMARK | CREDIBLE | MARGINAL | WEAK | REFUTED | UNSOUND)
+- Return both paths, the verdict (LANDMARK | CREDIBLE | MARGINAL | WEAK | REFUTED | UNSOUND), the Primitive Transfer Recommendation (PROCEED | HOLD | DO NOT PROCEED), and `primitive_name` (if PROCEED or HOLD)
 
 **Word export:** See `.agents/shared/protocol.md` → Word Export section.
+
+**Gate Phase 4 → Completion:**
+- `04_final_review.md` and `04_final_review.docx` exist and are non-empty ✓
+- Primitive Transfer Recommendation section present with a clear PROCEED / HOLD / DO NOT PROCEED decision ✓
+- Update `state.json`: `primitive_transfer_recommendation`, `primitive_name` (if PROCEED or HOLD) ✓
 
 ---
 
@@ -346,10 +352,15 @@ If any `skill_error` event was written during this run, set `outcome` to `"error
    - `qml_criteria` (N PASS / N WARN / N FAIL)
    - `consensus` (STRONG_SUPPORT | MIXED | CONTRADICTED | INSUFFICIENT | SKIPPED)
    - `falsification` (one sentence)
-   - Connector payload: `[{date}] [SOURCE: qml-paper-review] Paper review: "{title}" — Verdict: {verdict}. {one-sentence takeaway}. Word review: [[{WORKSPACE}/04_final_review.docx]]`
+   - `primitive_transfer` (PROCEED | HOLD | DO NOT PROCEED) + `primitive_name` if PROCEED or HOLD
+   - Connector payload: `[{date}] [SOURCE: qml-paper-review] Paper review: "{title}" — Verdict: {verdict}. {one-sentence takeaway}. Primitive transfer: {PROCEED | HOLD | DO NOT PROCEED}{if PROCEED or HOLD: " — primitive: {primitive_name}"}. Word review: [[{WORKSPACE}/04_final_review.docx]]`
 
 3. Report to user using the completion message format in `shared/protocol.md`. Lead with the
    verdict and one-line summary; include what-was-done checklist; attach the Word review.
+   After the checklist, add a one-line "Next step" callout:
+   - PROCEED → `→ Next: /qml-primitive-transfer --from-report {WORKSPACE}  [{primitive_name}]`
+   - HOLD → `→ Primitive transfer on hold: {one sentence on what needs to resolve}`
+   - DO NOT PROCEED → `→ Primitive transfer not recommended: {one sentence on the blocking gate}`
 
 ---
 

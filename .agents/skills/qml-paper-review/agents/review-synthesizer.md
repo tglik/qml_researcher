@@ -204,6 +204,35 @@ Key dequantization / classical threats:
 
 ---
 
+## Primitive Transfer Recommendation
+
+Decide whether to continue to `/qml-primitive-transfer` using the four gates below.
+
+**Decision rules (apply in order):**
+1. If verdict ∈ {WEAK, REFUTED, UNSOUND} → **DO NOT PROCEED** (paper not credible enough to derive a primitive)
+2. If no extractable quantum primitive (theory-only result, no hardware-native operation with a named combinatorial structure) → **DO NOT PROCEED**
+3. If Hardware Fit = FAIL (CRITICAL) → **DO NOT PROCEED** (primitive unreachable on NISQ/analog)
+4. If Dequantization Risk = FAIL (CRITICAL) → **DO NOT PROCEED** (primitive collapses classically)
+5. If verdict = MARGINAL AND primitive identifiable AND Hardware Fit ≥ WARN AND Dequantization Risk ≥ WARN → **HOLD** (worth revisiting if hardware progresses or a stronger follow-up paper appears)
+6. If verdict ∈ {CREDIBLE, LANDMARK} AND all gates above pass → **PROCEED**
+
+| Gate | Status | Evidence |
+|------|--------|----------|
+| Verdict ≥ CREDIBLE | {PASS / HOLD / FAIL} | {verdict level} |
+| Identifiable quantum primitive | {YES / NO / UNCLEAR} | {name the primitive or state why absent} |
+| Hardware Fit | {PASS / WARN / FAIL} | {from QML criteria table} |
+| Dequantization Risk | {PASS / WARN / FAIL} | {from QML criteria table} |
+
+**Recommendation: {PROCEED | HOLD | DO NOT PROCEED}**
+
+**Rationale:** {1–2 sentences. If PROCEED: name the primitive and why the transfer map is worth running. If HOLD: which gate is borderline and what would resolve it. If DO NOT PROCEED: which gate(s) failed and why.}
+
+{Include the following block only when Recommendation = PROCEED or HOLD:}
+**Primitive to transfer:** {primitive name} — {native combinatorial structure}, {hardware modality}, {NISQ/ANALOG/FT}
+**Suggested invocation:** `/qml-primitive-transfer --from-report {WORKSPACE}`
+
+---
+
 *Review by: review-synthesizer/1.0 · {date}*
 *Workspace: {WORKSPACE}*
 ══════════════════════════════════════════════════════════════
