@@ -177,7 +177,9 @@ Every quantum algorithm operates in a specific hardware context. When evaluating
 - **Circuit size:** Are qubit counts and gate depths within what the claimed hardware supports today or within a stated near-term timeline?
 - **Connectivity:** Does the circuit topology match the hardware's native connectivity constraints?
 
-The team works primarily with neutral-atom partners (Q-Factor, QuEra, Pasqal) but evaluates papers across all modalities. A paper on superconducting hardware is not automatically irrelevant — flag its hardware context and note what would be needed to transfer the approach.
+The team takes a co-design, full-stack philosophy: algorithms are evaluated across all hardware modalities and in light of noise-correction and compilation constraints. The team is currently exploring partnerships with Q-Factor (neutral-atom, Israel) and is actively tracking other hardware modalities, noise-correction companies, and quantum stack companies — particularly those in the Israeli quantum ecosystem. No single modality is treated as primary.
+
+A paper on any hardware modality (neutral-atom, superconducting, trapped-ion, photonic) is in scope. Flag the modality explicitly and note compatibility with the team's active partnership tracks.
 
 ### What a Failing Paper Looks Like
 - Requires fault-tolerant quantum computation (QFT, Shor, HHL, Grover) as a subroutine without acknowledging FTQC requirements
@@ -198,9 +200,9 @@ The team works primarily with neutral-atom partners (Q-Factor, QuEra, Pasqal) bu
 
 ### Hardware Reference Parameters by Modality
 
-Use these when assessing whether a circuit is realistic for a stated platform.
+Use these when assessing whether a circuit is realistic for a stated platform. All modalities are evaluated equally. Note which modalities are relevant to the team's active partnership tracks.
 
-**Neutral atom (Pasqal, QuEra, Atom Computing — primary team modality):**
+**Neutral atom (Pasqal, QuEra, Atom Computing, Q-Factor — active partnership track, Israel):**
 - Two-qubit gate fidelity: ~99.5% (Rydberg blockade)
 - Coherence time: T2 ~ 1–10 s (atomic clock transitions)
 - Max demonstrated qubits: ~256 (QuEra Aquila)
@@ -223,7 +225,9 @@ Use these when assessing whether a circuit is realistic for a stated platform.
 - Native gates: Mølmer–Sørensen (all-to-all connectivity)
 - Strengths: highest fidelity, all-to-all connectivity; limited qubit counts
 
-### Neutral-Atom NISQ Feasibility Thresholds (for Q-Factor / team hardware)
+### NISQ Feasibility Thresholds
+
+Apply the table below per modality. When no specific modality is stated by the paper, use the most permissive matching modality and flag the assumption. For neutral-atom specifically (active partnership track with Q-Factor, Israel), use the parameters below as the reference:
 
 **Qubit count:**
 
@@ -276,14 +280,25 @@ For triage: T4/T5 papers require stricter evidence before PASS. T1/T2 papers may
 
 ## Current Strong Directions (Update as Landscape Evolves)
 
-Papers in these directions should be read unless they fail a criterion outright:
-- Neutral-atom graph kernels and Rydberg-native ML
+Papers in these directions should be read unless they fail a criterion outright.
+
+### Hardware-specific (note modality; flag compatibility with active partnership tracks)
+- Neutral-atom graph kernels and Rydberg-native ML (Q-Factor partnership track)
 - Quantum reservoir computing on neutral-atom hardware
-- Hamiltonian kernels (kernel defined by quantum evolution)
-- Dynamic circuits with mid-circuit measurement and feedforward
+- Hamiltonian kernels (kernel defined by quantum evolution) — applicable across analog modalities
+- Dynamic circuits with mid-circuit measurement and feedforward — neutral-atom and superconducting
 - MBQC-style architectures for learning
-- Geometric quantum machine learning (equivariant circuits on molecular symmetry groups)
+- Trapped-ion high-fidelity kernel methods (high gate fidelity enables deeper circuits; all-to-all connectivity)
+- Superconducting-native circuit families with demonstrated QML applications (IBM, Google scale)
+- Photonic QML for continuous-variable and boson-sampling-based learning tasks
+
+### Hardware-agnostic (modality-independent; high transfer value across stack)
+- Geometric quantum machine learning (equivariant circuits on molecular and graph symmetry groups)
 - Quantum advantage for specific structured graph problems (graph isomorphism testing, graph property learning)
+- Noise-robust QML: learning algorithms designed to exploit or tolerate NISQ noise rather than fight it
+- Error-mitigated learning: zero-noise extrapolation, probabilistic error cancellation applied to QML training
+- QML primitives from quantum error correction — QECC-integrated learning, logical qubit-level ML
+- Pure QML algorithm theory: representation power, generalization bounds, quantum-classical separation proofs
 
 ---
 
@@ -370,7 +385,8 @@ the 2–3 year hardware roadmap directly governs which QML approaches are viable
 **What makes it PASS/TRIAGE (not SKIP):**
 - Reports gate fidelity, coherence times, or qubit counts relevant to QML circuit requirements
 - Identifies specific constraints or opportunities for QML (e.g., "this topology enables these kernels")
-- Covers neutral-atom hardware or another modality with a clear neutral-atom transfer path
+- Covers any hardware modality (neutral-atom, superconducting, trapped-ion, photonic) with a stated QML application path; note compatibility with active partnership tracks
+- Covers noise-correction, error-mitigation, or QEC approaches with implications for near-term QML
 - QML Transfer Value is HIGH or MEDIUM
 
 **What keeps it SKIP:**

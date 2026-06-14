@@ -100,7 +100,7 @@ Prioritize items related to:
 4. **Trainability and simulability** — barren plateaus, optimizer behavior, expressibility, tensor-network/stabilizer/matchgate simulability, gradient concentration.
 5. **Quantum kernels** — kernel estimation, geometric difference, classical kernel comparisons, dequantization risk, Nyström/RFF checks.
 6. **Hybrid QML workflows** — quantum-classical loops, differentiable quantum programming, hybrid inference/training pipelines, compiler/runtime integration.
-7. **Hardware-aware QML** — near-term constraints, noise/fidelity/resource accounting, especially neutral-atom relevance when applicable.
+7. **Hardware-aware QML** — near-term constraints, noise/fidelity/resource accounting across modalities (neutral-atom, superconducting, trapped-ion, photonic). Flag which modality and note relevance to the team's active partnership tracks (neutral-atom/Q-Factor, Israel; other Israel-based quantum stack companies). Also flag noise-correction and error-mitigation results with QML implications.
 8. **AI-accelerated quantum algorithm discovery** — LLM/RL/search systems that discover quantum circuits, encodings, Hamiltonians, measurements, or workflows relevant to QML.
 
 ---
@@ -144,7 +144,7 @@ Use date-bounded searches and source-specific recent pages. Query terms should i
 
 - `quantum machine learning`, `QML`, `quantum kernel`, `quantum neural network`, `variational quantum`, `hybrid quantum-classical`
 - `barren plateau`, `trainability`, `expressibility`, `dequantization`, `geometric difference`, `feature map`, `encoding`
-- `quantum reservoir`, `neutral atom`, `Rydberg`, `graph kernel`, `molecular`, `Hamiltonian learning`
+- `quantum reservoir`, `neutral atom`, `Rydberg`, `trapped ion`, `superconducting qubit`, `photonic quantum`, `graph kernel`, `molecular`, `Hamiltonian learning`, `quantum error mitigation`, `noise-robust quantum`, `QECC machine learning`
 - `AI quantum algorithm discovery`, `LLM quantum circuits`, `automated quantum algorithm`, `quantum circuit synthesis machine learning`
 
 ### Step 2 — Collect candidates

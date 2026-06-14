@@ -83,10 +83,10 @@ All skills that evaluate a QML direction or claim must screen against these 5 cr
 1. **Dequantization risk** — does a classical Nystrom/RFF approximation match performance?
 2. **Geometric difference** — is the quantum kernel genuinely different from RBF/polynomial?
 3. **Trainability/simulability trilemma** — barren plateau risk? classically simulable PQC?
-4. **Hardware fit** — NISQ-realistic on neutral-atom hardware (Q-Factor modality)?
+4. **Hardware fit** — NISQ-realistic on some near-term hardware modality? Flag which modality and note relevance to current partnership tracks (neutral-atom / Q-Factor, Israel) and other modalities under exploration.
 5. **Strong classical baseline** — TabPFN-2.5/XGBoost for tabular; GNN/SOAP/GAP for graphs — not toy baselines
 
-Current strong directions: neutral-atom graph/reservoir/Hamiltonian kernels, dynamic circuits, mid-circuit measurement/feedforward, MBQC-style architectures.
+Current strong directions: neutral-atom graph/reservoir/Hamiltonian kernels, dynamic circuits, mid-circuit measurement/feedforward, MBQC-style architectures, hardware-agnostic geometric/equivariant QML, noise-robust QML algorithms, error-mitigated learning on NISQ devices, trapped-ion high-fidelity kernel methods, superconducting-native circuit families with QML application paths.
 
 Deprioritized (do not re-suggest without new evidence): generic low-data tabular VQC demos, single-encoding PQC claims (= truncated Fourier), generic HHL linear-algebra speedups (dequantization-vulnerable).
 
