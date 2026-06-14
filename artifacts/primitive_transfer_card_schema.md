@@ -149,10 +149,10 @@ and timeline (NISQ near-term vs FT long-term).}
 
 ## Suggested Next Steps
 
-| Action | Type | Priority | Owner |
-|--------|------|----------|-------|
-| {action} | experiment / partnership / IP / literature | HIGH/MED/LOW | Tsahi/Adi/Meir |
-| ... | | | |
+| Action | Type | Priority |
+|--------|------|----------|
+| {action} | experiment / partnership / IP / literature | HIGH/MED/LOW |
+| ... | | |
 ```
 
 ---

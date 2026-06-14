@@ -128,7 +128,7 @@ Compact table from `02_ml_workloads.md`. Include chain length and NISQ feasibili
 
 ### Section 5: Business Value Ratings
 
-Full ratings table plus one paragraph of cross-workload interpretation.
+Start with the summary table, then write a **full per-workload business deep dive** — one subsection per workload. Pull the market intelligence, company names, and quantitative estimates from `03_business_ratings.md`. The goal is a document a non-technical reader (investor, BD, customer) can act on.
 
 ```markdown
 ## Business Value Ratings
@@ -137,9 +137,33 @@ Full ratings table plus one paragraph of cross-workload interpretation.
 |-------------|----|----|----|----|-----------|----------|-------------|
 | {name} | {0-3} | {0-3} | {0-3} | {0-3} | HIGH/MED/LOW | NOW/2-3YR/FT | HIGH/MED/LOW |
 
-{1 paragraph: which dimension drives the most value across HIGH opportunities,
-and what the cross-workload pattern implies for research focus.}
+---
+
+### {Workload Name} — {Aggregate}
+
+#### Market and paying customers
+
+{Market size with source. 3–6 named companies with revenue or operational scale. Why this
+workload is a real pain point for them — one concrete example workflow.}
+
+#### Cost / quality / latency impact estimates
+
+{At least one order-of-magnitude number: what does a meaningful improvement look like in
+dollars, percentage, milliseconds, or compound count? Show the math: e.g., "X% reduction
+× $Y/unit × Z units/year = $W M/year". Distinguish between speed, cost, and quality effects.
+If the quantum angle is representational quality (not latency), say so explicitly.}
+
+#### Risks (calibrated)
+
+{2–4 specific risks — name the classical competitor / method, state why it is hard to beat,
+and state what specific experimental result would change the risk assessment.}
+
+---
+
+### {next workload} — ...
 ```
+
+Repeat per-workload subsections for every workload, including LOW-rated ones. LOW workloads get shorter treatment (market context + one-line risk), but must still be present.
 
 If `--no-business` (ratings file absent): replace with:
 ```markdown
@@ -204,17 +228,43 @@ No vague "investigate further."
 ```markdown
 ## Next Steps
 
-| Action | Type | Priority | Owner |
-|--------|------|----------|-------|
-| {specific action} | experiment / partnership / IP / literature | HIGH/MED | Tsahi/Adi/Meir |
-| ... | | | |
+| Action | Type | Priority |
+|--------|------|----------|
+| {specific action} | experiment / partnership / IP / literature | HIGH/MED/LOW |
+| ... | | |
 
 ### Notes on next steps
 
 {Any dependency ordering between steps, or prerequisites that aren't obvious.}
 ```
 
+### Section 9: Sources
+
+Aggregate all sources cited in `03_business_ratings.md` plus any additional references from the
+equivalent problems or primitive profile. Every market size number, company claim, or
+quantitative estimate in the card must have a corresponding source here.
+
+```markdown
+## Sources
+
+### Market size
+- [{Title}]({URL}) — {what it supports}
+
+### Industry / company data
+- [{Title}]({URL}) — {what it supports}
+
+### Research / benchmarks
+- [{Title}]({URL}) — {what it supports}
+```
+
+If `03_business_ratings.md` has no sources (e.g., it was produced without the research phase),
+include a note: "Business ratings produced without web research; market figures are estimates."
+
+---
+
 ### Workspace table
+
+Use wiki link syntax (`[[filename]]`) for all artifact links — do NOT write absolute paths.
 
 ```markdown
 ## Workspace
@@ -251,9 +301,13 @@ Verify the `.docx` exists and is non-empty before returning.
 - "Each of these opportunities deserves careful consideration..." → pick one and say why
 - "This area shows promise..." → state HIGH / MED / LOW and the primary driver
 - "Further research would help clarify..." → name exactly what experiment would clarify it
+- Generic market descriptions without named companies — "the healthcare industry" → "Aidoc, Rad AI, Enlitic running NMS on radiology candidates"
+- Unattributed numbers in the business sections — every market size or quantitative claim needs a source in Section 9
 
 **Always:**
 - The recommended focus in Section 7 must name one workload, not a group
-- Every next step must have a single named owner (Tsahi / Adi / Meir)
+- Every next step must have a priority (HIGH / MED / LOW) — do not assign owners
 - Every risk must be a condition that could cause the opportunity to NOT materialize
 - Do not soften findings to avoid disappointing the reader — LOW ratings belong in the card
+- Section 5 per-workload business deep dives must include: named companies, market size, and at least one order-of-magnitude cost/latency/quality estimate
+- Section 9 (Sources) must be present and populated — a card without sources is incomplete

@@ -31,7 +31,7 @@ input:
   - Optional --from-report <path>: explicitly point to a prior research workspace to extract the primitive from.
 
 output:
-  - Transfer card workspace: {output_root}/sources/transfer-cards/{slug}_{YYYY-MM-DD}/
+  - Transfer card workspace: {output_root}/sources/reports/primitives-analysis/{slug}_{YYYY-MM-DD}/
     - 00_primitive.md           — structured primitive profile
     - 01_equivalent_problems.md — equivalent NP-hard / combinatorial problem map
     - 02_ml_workloads.md        — ML workload map per equivalent problem
@@ -106,7 +106,7 @@ If ANALYTICS_PATH does not exist yet, create it (empty file) before appending.
 
 **Workspace:**
 ```
-WORKSPACE = {OUTPUT_ROOT}/sources/transfer-cards/{slug}_{YYYY-MM-DD}/
+WORKSPACE = {OUTPUT_ROOT}/sources/reports/primitives-analysis/{slug}_{YYYY-MM-DD}/
 ```
 `slug` = primitive name → lowercase → hyphens → 40-char max.
 
@@ -366,7 +366,7 @@ Update `state.json`: `final_docx_path`.
 
 2. **Analytics — write end event** (append to ANALYTICS_PATH):
 ```json
-{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"qml-primitive-transfer","version":"1.0.0","outcome":"success","duration_s":{elapsed},"output_path":"sources/transfer-cards/{slug}_{YYYY-MM-DD}/"}
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"qml-primitive-transfer","version":"1.0.0","outcome":"success","duration_s":{elapsed},"output_path":"sources/reports/primitives-analysis/{slug}_{YYYY-MM-DD}/"}
 ```
 If any `skill_error` event was written, set `outcome` to `"error"` instead.
 
