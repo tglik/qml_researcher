@@ -49,18 +49,24 @@ TOOL_MAP = {
 
 SKILL_DESCRIPTIONS = {
     "fetch-arxiv": "Use when fetching an arXiv paper by ID, URL, or title for QML workflows or general research; returns structured metadata, abstract, intro text, venue tier, and partial-fetch status.",
-    "qml-paper-review": "Use when critically reviewing a QML paper for credibility, novelty, evidence quality, dequantization risk, baselines, hardware fit, and a falsifiable verdict.",
-    "qml-deep-research": "Use when doing systematic QML literature research or fact-checking: scope the question, sweep sources, apply QML criteria, challenge claims, audit evidence, and write a final report.",
+    "qml-paper-review": "Use when critically reviewing a QML paper for credibility, novelty, evidence quality, dequantization risk, baselines, hardware fit, and a falsifiable verdict. Issues a Primitive Transfer Recommendation (PROCEED / HOLD / DO NOT PROCEED) at the end of each review, with a ready-to-run /qml-primitive-transfer invocation when warranted.",
+    "qml-deep-research": "Use when doing systematic QML literature research or fact-checking: scope the question, sweep sources, apply QML criteria, challenge claims, audit evidence, and write a final report. Issues Next Step Recommendations at the end of each report: whether to run /qml-paper-review on a specific paper and/or /qml-primitive-transfer on the identified primitive, with ready-to-run invocations for each path.",
     "qml-daily-scout": "Use when running a recurring or ad-hoc QML research scout for new papers, technical posts, publications, or news; filters recent items for QML relevance, novelty, and evidence risk.",
     "qml-primitive-transfer": "Use after a research run surfaces a promising quantum primitive: maps it to equivalent NP-hard problems, identifies classical ML workloads that can use the primitive as an accelerator block, rates each workload on four business-value dimensions, and produces a ranked Primitive Transfer Card.",
+    "synthesize-hypotheses": "Use when consolidating cross-paper claim patterns into Research Hypothesis cards; applies a Pareto filter (support_count >= 2, >= 1 QML criterion, strategic_value in [directional, actionable]) and updates the hypothesis ledger.",
+    "extract-artifacts": "Use after any skill run or when ingesting raw inputs (meeting notes, paper reviews, news) to extract structured Layer 2 cards (paper, person, organization) into the knowledge base and update all Layer 3 indexes.",
+    "test-skills": "Use to evaluate completed skill run artifacts against quality axes and regression baselines; reports per-axis scores and flags regressions.",
 }
 
 RELATED = {
     "fetch-arxiv": ["qml-paper-review", "qml-deep-research", "qml-daily-scout", "arxiv"],
-    "qml-paper-review": ["fetch-arxiv", "qml-deep-research", "qml-daily-scout", "qml-primitive-transfer"],
-    "qml-deep-research": ["fetch-arxiv", "qml-paper-review", "qml-daily-scout", "qml-primitive-transfer"],
+    "qml-paper-review": ["fetch-arxiv", "qml-deep-research", "qml-daily-scout", "qml-primitive-transfer", "extract-artifacts"],
+    "qml-deep-research": ["fetch-arxiv", "qml-paper-review", "qml-daily-scout", "qml-primitive-transfer", "extract-artifacts"],
     "qml-daily-scout": ["fetch-arxiv", "qml-paper-review", "qml-deep-research", "arxiv"],
-    "qml-primitive-transfer": ["qml-paper-review", "qml-deep-research", "qml-daily-scout"],
+    "qml-primitive-transfer": ["qml-paper-review", "qml-deep-research", "extract-artifacts"],
+    "synthesize-hypotheses": ["qml-paper-review", "qml-deep-research", "extract-artifacts"],
+    "extract-artifacts": ["qml-paper-review", "qml-deep-research", "qml-primitive-transfer", "synthesize-hypotheses"],
+    "test-skills": ["qml-paper-review", "qml-deep-research", "qml-primitive-transfer", "qml-daily-scout"],
 }
 
 
