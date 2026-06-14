@@ -124,7 +124,9 @@ If ANALYTICS_PATH does not exist yet, create it (empty file) before appending.
 Create the workspace directory. Write `state.json` and update after each phase:
 `current_phase`, `fast_mode`, `blocking_issues_count`, `blocking_issues_resolved_count`,
 `evidence_audit_verdict`, `proceed_recommendation` (YES|NO|CONDITIONAL), `revision_cycle`
-(max 2), `last_progress_message`, `final_docx_path`.
+(max 2), `last_progress_message`, `paper_review_recommendation` (PROCEED|SKIP),
+`paper_review_target` (arXiv ID or null), `primitive_transfer_recommendation` (PROCEED|HOLD|SKIP),
+`primitive_name` (if PROCEED or HOLD, else null), `final_docx_path`.
 
 **Agents directory:**
 ```
@@ -513,7 +515,10 @@ draft. Max **2 total revision cycles**. If blocking issues persist after cycle 2
 
 **Word export:** See `.agents/shared/protocol.md` → Word Export section.
 
-**Gate:** Confirm both `06_final_report.md` and `06_final_report.docx` exist and are non-empty ✓
+**Gate:**
+- Confirm both `06_final_report.md` and `06_final_report.docx` exist and are non-empty ✓
+- Next Step Recommendation section present with PROCEED/HOLD/SKIP decisions for both paths ✓
+- Update `state.json`: `paper_review_recommendation`, `paper_review_target`, `primitive_transfer_recommendation`, `primitive_name` ✓
 
 ---
 
@@ -534,12 +539,19 @@ If `proceed_recommendation` is NO or CONDITIONAL, set `outcome` to `"done_with_c
    - `blockers_found`, `blockers_resolved`, `evidence_audit` (PASSED | PASSED_WITH_CONCERNS | FAILED)
    - `proceed_recommendation` (YES | NO | CONDITIONAL)
    - `strong_directions` (list)
+   - `paper_review_recommendation` (PROCEED | SKIP) + `paper_review_target` (arXiv ID or null)
+   - `primitive_transfer_recommendation` (PROCEED | HOLD | SKIP) + `primitive_name` (if applicable)
    - Executive summary bullets (3)
-   - Connector payload: `[{date}] [SOURCE: qml-deep-research] Deep research: {topic}. {bullet 1}. Proceed: {YES|NO|CONDITIONAL}. Word report: [[{WORKSPACE}/06_final_report.docx]]`
+   - Connector payload: `[{date}] [SOURCE: qml-deep-research] Deep research: {topic}. {bullet 1}. Proceed: {YES|NO|CONDITIONAL}. Next: paper-review={PROCEED|SKIP}{if PROCEED: " arxiv:{id}"} | primitive-transfer={PROCEED|HOLD|SKIP}{if PROCEED or HOLD: " primitive:{name}"}. Word report: [[{WORKSPACE}/06_final_report.docx]]`
 
 3. Report to user using the completion message format in `shared/protocol.md`. Lead with the
    executive summary and proceed recommendation; include a what-was-done checklist; attach the
    Word report. Mark `DONE_WITH_CONCERNS` if any blockers remain or the audit found concerns.
+   After the checklist, add a "Next steps" block:
+   - If paper_review = PROCEED: `→ /qml-paper-review {arxiv_id}  [{paper title}]`
+   - If primitive_transfer = PROCEED: `→ /qml-primitive-transfer --from-report {WORKSPACE}  [{primitive_name}]`
+   - If primitive_transfer = HOLD: `→ Primitive transfer on hold: {one sentence on blocking gate}`
+   - If both = SKIP: `→ No downstream skill recommended. {one sentence on what would change this.}`
 
 ---
 

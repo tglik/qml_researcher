@@ -155,6 +155,74 @@ Gap:      [          ] <Theme D> (0 sources — gap type: Empirical/Temporal/Reg
 
 ## References
 [Full bibliography: authors, title, venue, year, arXiv ID or DOI]
+
+---
+
+## Next Step Recommendation
+
+Decide which downstream skills, if any, to run after this research. Evaluate both paths independently using the gates below, then issue a combined recommendation.
+
+**Decision rules — Paper Review path:**
+1. If `proceed_recommendation = NO` → **SKIP paper review**
+2. If no specific paper with an arXiv ID appears in Key Papers with a novel advantage or architectural claim → **SKIP paper review**
+3. If the research is purely a survey with no single paper central to the direction → **SKIP paper review**
+4. Otherwise → **PROCEED to paper review** on the highest-signal paper(s)
+
+**Decision rules — Primitive Transfer path:**
+1. If `proceed_recommendation = NO` → **SKIP primitive transfer**
+2. If no concrete quantum primitive is identifiable (hardware-native, named combinatorial structure, not just a vague direction) → **SKIP primitive transfer**
+3. If dequantization risk for the identified primitive = HIGH → **SKIP primitive transfer** (primitive collapses classically)
+4. If hardware feasibility = FT-only (no NISQ/ANALOG path) → **HOLD primitive transfer** (revisit when hardware matures)
+5. Otherwise → **PROCEED to primitive transfer**
+
+### Paper Review
+
+**Recommendation: {PROCEED | SKIP}**
+
+| Gate | Status | Evidence |
+|------|--------|----------|
+| Proceed recommendation ≠ NO | {PASS / FAIL} | {value from state.json} |
+| Specific paper with novel claim identified | {YES / NO} | {paper title + arXiv ID, or "none"} |
+| Not a survey-only result | {YES / NO} | {one sentence} |
+
+{If PROCEED:}
+**Target paper(s):** {title — arXiv:ID — one sentence on what claim needs the audit}
+**Why paper review adds value here:** {one sentence — what the synthesis couldn't resolve that per-claim extraction will}
+**Invocation:** `/qml-paper-review {arxiv_id}`
+
+{If SKIP:}
+**Rationale:** {one sentence on which gate failed}
+
+---
+
+### Primitive Transfer
+
+**Recommendation: {PROCEED | HOLD | SKIP}**
+
+| Gate | Status | Evidence |
+|------|--------|----------|
+| Proceed recommendation ≠ NO | {PASS / FAIL} | {value from state.json} |
+| Concrete primitive identified | {YES / NO / UNCLEAR} | {name the primitive or state why absent} |
+| Dequantization risk | {LOW / MEDIUM / HIGH} | {from dequantization risk table} |
+| Hardware feasibility | {NISQ / ANALOG / FT-only} | {from hardware feasibility summary} |
+
+{If PROCEED or HOLD:}
+**Primitive to transfer:** {name} — {native combinatorial structure}, {hardware modality}, {NISQ/ANALOG/FT}
+**Why:** {one sentence on what ML workload map this will unlock}
+**Invocation:** `/qml-primitive-transfer --from-report {WORKSPACE}`
+
+{If SKIP:}
+**Rationale:** {one sentence on which gate failed}
+
+---
+
+### Combined Recommendation
+
+{One of:}
+- **Both paths: PROCEED** — Run `/qml-paper-review {arxiv_id}` first (to validate the core claim), then `/qml-primitive-transfer --from-report {WORKSPACE}` on the primitive.
+- **Paper Review only** — Run `/qml-paper-review {arxiv_id}`. Primitive transfer not applicable: {reason}.
+- **Primitive Transfer only** — Run `/qml-primitive-transfer --from-report {WORKSPACE}`. No single paper warrants full review: {reason}.
+- **Neither** — {one sentence: what needs to change before any downstream skill makes sense — direction drop, stronger evidence needed, scope revision, etc.}
 ```
 
 ## Memory Protocol
