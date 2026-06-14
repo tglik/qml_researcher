@@ -1,26 +1,31 @@
 id: qml-daily-scout-standard
 skill: qml-daily-scout
 mode: standard
-skill_version_min: "1.0.0"
+skill_version_min: "1.1.0"
 description: |
-  Standard daily scout run over a 48-hour window. Tests source breadth, filter
-  precision (no non-QML junk selected), scoring quality, skepticism specificity,
+  Standard daily scout run over a 24-hour window. Tests source breadth, filter
+  precision (no non-QML junk selected), scoring calibration (scores should not be
+  uniformly high — most papers rejected), skepticism specificity, deduplication,
   and output structure. Note: scout is non-deterministic (live web). Structural
   axes are deterministic; content axes have wider regression thresholds.
+  Zero selected items is a valid, expected outcome.
 
 input:
   type: prompt
   value: "Run today's QML research scout"
   prompt: |
-    Run the QML daily scout for the last 48 hours.
+    Run the QML daily scout for the last 24 hours.
     Audience: QML startup research team (Tsahi, Meir, Adi).
     Topic priorities: neutral-atom QML, graph kernels, dequantization, dynamic circuits.
 
 expected_behavior:
-  max_items: 7
+  max_items: 3
   each_item_has_link: true
   each_item_has_skepticism_gate: true
+  each_item_has_team_value_trigger: true
+  each_item_has_paper_review_recommendation: true
   scout_verdict_present: true
+  zero_items_valid: true
 
 axes:
   source_breadth:
@@ -47,7 +52,9 @@ axes:
       - Press release or vendor announcement with no technical content
       - Non-quantum AI paper with no QML relevance
       - FTQC-only algorithmic speedup with no near-term path
-      Floor at 0. A scout with 0 items selected gets 5 (perfect filter — nothing was let through).
+      - Item that does not match any of the 6 Team Value Triggers
+      - Item with relevance < 5 or novelty < 4 that was selected anyway
+      Floor at 0. A scout with 0 items selected gets 5 (perfect filter — expected outcome).
       NOTE: evaluated from briefing text.
 
   scoring_quality:
@@ -55,11 +62,11 @@ axes:
     artifacts: []
     rubric: |
       Score from briefing text.
-      5: every selected item has both a relevance score (1–5) and novelty score (1–5); scores are differentiated (not all 4/5); scores appear calibrated to item descriptions (a clearly incremental result scored 3 or less)
-      4: all items scored; some minor calibration issues (e.g., press release scored 4/5 relevance)
-      3: all items scored; but all relevance scores are 4 or 5 (no differentiation)
-      2: some items lack scores; or scores are placeholders (all 5/5)
-      1: scores present but clearly misaligned with item content
+      5: every selected item has both relevance (1–5) and novelty (1–5) scores; all pass relevance=5 AND novelty>=4 threshold; scores reflect genuine calibration (not blanket 5/5 for all); 0-item scout gets 5 (no over-scoring possible)
+      4: all items scored and at threshold; minor calibration concern on one item (e.g., novelty arguably 3 not 4)
+      3: all items scored; any item below threshold was still included (threshold not enforced)
+      2: scores present but items with relevance < 5 were selected; threshold ignored
+      1: scores present but clearly misaligned with item content or all items scored identically
       0: no scores on any item
       NOTE: evaluated from briefing text.
 
@@ -81,23 +88,49 @@ axes:
     artifacts: []
     rubric: |
       Score from briefing text.
-      5: briefing starts with "Daily QML Research Scout — {date}" + scan summary line; ≤7 selected items; each item block has title, authors/institute, source/date, link, summary, top claims, why-it-matters, scores, skepticism gate; ends with "Scout verdict:" sentence
-      4: all sections present; 1–2 items missing a field (e.g., institute "not available"); item count ≤7
-      3: structure present but scout verdict missing; or 1 item over the 7-item cap
-      2: structure partially present; items lack "why it matters" or "top claims" sections
+      5: briefing starts with "Daily QML Research Scout — {date}" + scan summary line; ≤3 selected items; each item block has title, authors/institute, source/date, link, team-value-trigger, summary, top claims, why-it-matters, scores, skepticism gate, paper-review recommendation; ends with "Scout verdict:" sentence; 0-item briefing uses the correct no-signal format
+      4: all sections present; 1–2 items missing a minor field (e.g., institute "not available"); item count ≤3
+      3: structure present but scout verdict missing; or paper-review recommendation absent; or 1 item over the 3-item cap
+      2: structure partially present; items lack "why it matters", "top claims", or "team value trigger" sections
       1: briefing is free-form prose without the structured item format
       0: output is empty or just a list of URLs
+
+  team_value_trigger:
+    weight: 2.0
+    artifacts: []
+    rubric: |
+      Score from briefing text.
+      5: every selected item explicitly names one of the 6 triggers (New algo / Quantum advantage evidence / Advantage measurement / Business application / Domain survey / High-traction signal); the named trigger is plausibly correct given the item description
+      4: all items have a trigger named; one trigger label is slightly off but the reasoning is sound
+      3: triggers listed but unlabeled (e.g., "this is important because...") without using the category name
+      2: no trigger field present, but items are genuinely high-value
+      1: trigger field absent and items appear to bypass the gate
+      0: items selected that clearly don't match any trigger category
+      NOTE: evaluated from briefing text. A 0-item scout gets 5 — the gate worked.
+
+  paper_review_recommendation:
+    weight: 1.5
+    artifacts: []
+    rubric: |
+      Score from briefing text.
+      5: every selected item has a "Paper review: yes/no — reason" field; yes/no is clearly justified (yes = actionable new claim or business application worth auditing; no = survey/context/conditional result); 0-item scout gets 5
+      4: all items have a recommendation; one rationale is thin ("might be interesting")
+      3: recommendations present but yes/no not calibrated (all "yes" regardless of item type, or all "no")
+      2: field present but rationale missing or generic
+      1: field absent on most items
+      0: no paper review recommendations at all
+      NOTE: evaluated from briefing text.
 
   item_count:
     weight: 1.0
     artifacts: []
     rubric: |
       Score from briefing text.
-      5: 1–6 items (right-sized for quality over quantity)
-      4: 7 items (at the cap — acceptable)
-      3: 0 items with a clear no-signal explanation
-      2: 8–9 items (slightly over cap — filter wasn't strict enough)
-      1: 10+ items (cap ignored)
+      5: 0 items (empty briefing with clear explanation — calibration is working as intended) OR 1–3 items that are genuinely exceptional
+      4: 4 items (slightly over cap but each item is high quality)
+      3: 5–6 items (filter is too loose but not broken)
+      2: 7–9 items (cap ignored; team is being overloaded)
+      1: 10+ items (cap ignored; calibration has failed)
       0: no items and no explanation
 
 combined_formula: weighted_average
@@ -115,6 +148,12 @@ notes: |
   text and pass it to the skill-evaluator as the "artifact" content. Paste or attach the
   full briefing text to the evaluator prompt in place of artifact file paths.
 
+  ZERO-ITEM NOTE: A briefing with 0 selected items is a valid, expected outcome and should
+  score 5 on filter_precision, team_value_trigger, paper_review_recommendation, and item_count.
+  Do not penalize a zero-item run. Penalize only if the zero-item format is incorrect (missing
+  scan summary or scout verdict).
+
   REGRESSION THRESHOLD NOTE: Thresholds are looser than other skills because content varies
   with the live web. A 0.7 combined drop is required to flag regression (vs 0.5 for others).
-  Only structural failures (output_structure, item_count) should trigger critical regressions.
+  Critical regressions are triggered by structural failures (output_structure, item_count above
+  cap) and calibration failures (items selected that don't pass the Team Value Trigger gate).

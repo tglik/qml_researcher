@@ -1,6 +1,6 @@
 ---
 name: qml-daily-scout
-version: 1.0.0
+version: 1.1.0
 description: |
   Agent-agnostic daily QML research scouting workflow. Scans recent papers,
   technical posts, and publication/news sources for high-signal QML items,
@@ -9,6 +9,10 @@ description: |
 
   Use when running a recurring or ad-hoc QML research scout for new papers,
   publications, technical blog posts, or news from the last 24-72 hours.
+
+  Designed for sparse output: most daily runs should emit zero items.
+  Only truly exceptional papers — those that alter research priors, expose
+  a new advantage signal, or demand the team's immediate attention — pass.
 triggers:
   - daily qml scout
   - qml research scout
@@ -18,7 +22,7 @@ triggers:
   - quantum machine learning watch
   - daily research briefing
 input:
-  - Time window, default 48 hours
+  - Time window, default 24 hours
   - Audience or organization context
   - Topic priorities
   - Source list
@@ -26,7 +30,7 @@ input:
   - Delivery/output constraints, supplied by the caller or platform wrapper
 output:
   - Concise scout briefing with selected items or a no-high-signal result
-  - For every selected item: title, authors/institute, source/link, date, summary, top claims, why it matters, relevance score, novelty score, and skepticism/evidence gate
+  - For every selected item: title, authors/institute, source/link, date, summary, top claims, why it matters, relevance score, novelty score, skepticism/evidence gate, and paper-review recommendation
 allowed-tools:
   - WebSearch
   - WebFetch
@@ -44,15 +48,22 @@ This skill is intentionally **agent-agnostic**. It defines the research/scouting
 
 Read `config/workspace.json` → CONFIG.
 ```
-ANALYTICS_PATH = CONFIG.analytics_folder + "/events.jsonl"
+ANALYTICS_PATH   = CONFIG.analytics_folder + "/events.jsonl"
+SEEN_PAPERS_PATH = CONFIG.analytics_folder + "/scout_seen.jsonl"
 RUN_ID = "sc-{YYYYMMDD-HHMMSS}"
 ```
 
 **Analytics — write start event** (append to ANALYTICS_PATH via `write_file` mode=append):
 ```json
-{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_start","skill":"qml-daily-scout","version":"1.0.0","mode":"full","input_summary":"QML scout {time_window}"}
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_start","skill":"qml-daily-scout","version":"1.1.0","mode":"full","input_summary":"QML scout {time_window}"}
 ```
 If ANALYTICS_PATH does not exist yet, create it (empty file) before appending.
+
+**Load seen-paper dedup log** (read SEEN_PAPERS_PATH if it exists):
+- Parse each line as JSON. Keep entries where `ts` is within the last 7 days.
+- Build a dedup set: a set of `link` values and `arxiv_id` values from these entries.
+- Items in the dedup set will be skipped during selection (Step 3 of Search strategy).
+- If SEEN_PAPERS_PATH does not exist, treat the dedup set as empty.
 
 ---
 
@@ -70,10 +81,10 @@ If a caller does not provide a value, use the defaults below.
 
 | Field | Default | Notes |
 |---|---:|---|
-| Time window | last 48 hours | Use source publication/submission date where possible. |
-| Max selected items | 7 | Fewer is better when signal is weak. |
-| Relevance threshold | 4/5 | Item must matter to QML research, not just quantum/AI generally. |
-| Novelty threshold | 3/5 | Item should contain new technical content or materially new positioning. |
+| Time window | last 24 hours | Use source publication/submission date where possible. |
+| Max selected items | 3 | This is a hard cap, not a target. Zero is expected most days. |
+| Relevance threshold | 5/5 | Item must directly impact core QML architecture, advantage, or positioning. |
+| Novelty threshold | 4/5 | Item must contain meaningful new technical content or prior-updating evidence. |
 | Audience | QML research team | Caller should provide organization-specific context when available. |
 | Output format | concise briefing | Caller/platform wrapper may add channel-specific formatting. |
 
@@ -159,12 +170,28 @@ Skip immediately if the item is:
 - business/funding/product news without technical content
 - FTQC-only algorithmic speedup with no plausible near/intermediate-term QML relevance
 - a recycled press release with no new paper, method, benchmark, code, or technical claim
+- already in the dedup set (link or arxiv_id matches a seen paper from the last 7 days)
+
+---
+
+## Team Value Trigger
+
+Before scoring, apply this mandatory gate. Each candidate must match **at least one** of the following six triggers to proceed. If none apply, skip the item immediately — do not score it.
+
+| Trigger | Passes if… |
+|---|---|
+| **New algo** | Introduces an algorithm, circuit family, or architecture the team has not seen demonstrated in this form. Not an incremental tweak — a conceptually distinct approach. |
+| **Quantum advantage evidence** | Provides new experimental or theoretical evidence of quantum advantage in a learning, classification, regression, or kernel task vs. a strong classical baseline. |
+| **Advantage measurement** | Introduces a new method, framework, or complexity argument for measuring or certifying quantum advantage, geometric difference, or classical separability. |
+| **Business application** | Demonstrates a concrete business-domain application (finance, drug discovery, logistics, materials, etc.) of a known QML algorithm with credible benchmark results. |
+| **Domain survey** | A comprehensive survey or position paper that synthesizes the current state of a QML subfield in a way that would update the team's priors or research roadmap. |
+| **High-traction signal** | A paper already generating unusually high early community attention (citations, forks, HN/Twitter discussion, workshop spotlight) that the field is converging on. |
 
 ---
 
 ## Scoring rubric
 
-Score each surviving candidate on **relevance** and **novelty**, both 1-5.
+Score each candidate that passed the Team Value Trigger on **relevance** and **novelty**, both 1-5.
 
 ### Relevance score
 
@@ -172,9 +199,9 @@ Score each surviving candidate on **relevance** and **novelty**, both 1-5.
 |---:|---|
 | 5 | Directly impacts core QML architecture/advantage/encoding/trainability/kernel/hardware-aware research. |
 | 4 | Strong QML transfer value; likely worth a researcher reading soon. |
-| 3 | Adjacent but possibly useful; include only if unusually novel. |
-| 2 | Mostly adjacent quantum/AI content; normally skip. |
-| 1 | Not QML-relevant; skip. |
+| 3 | Adjacent but possibly useful. |
+| 2 | Mostly adjacent quantum/AI content. |
+| 1 | Not QML-relevant. |
 
 ### Novelty score
 
@@ -186,7 +213,7 @@ Score each surviving candidate on **relevance** and **novelty**, both 1-5.
 | 2 | Mostly repackaging or weak novelty. |
 | 1 | No clear new technical content. |
 
-Default selection rule: include only `relevance >= 4` and `novelty >= 3`, unless the caller sets a different threshold.
+**Selection rule:** include only `relevance >= 5` AND `novelty >= 4`. An item scoring 5/5 relevance + 4/5 novelty is the minimum bar. When in doubt, skip — a false negative is better than a false positive. Zero items selected is a valid, expected outcome on most days.
 
 ---
 
@@ -223,12 +250,18 @@ Then include numbered selected items. For each item:
 Authors/institute: <authors/institute or "not available">
 Source/date: <source>, <date>
 Link: <url>
+Team value trigger: <which of the 6 triggers this matched>
 Summary: <2-5 concise technical lines>
 Top claims: <1-3 claims>
 Why it matters: <specific audience-relevant implication>
 Scores: relevance <1-5>/5; novelty <1-5>/5
 Skepticism/evidence gate: <one precise sentence>
+Paper review: <yes/no> — <one sentence explaining why or why not>
 ```
+
+For `Paper review: yes` examples: the paper claims a new quantum advantage — if the claims hold this changes our roadmap; the paper proposes a business application in [domain] — worth verifying with a full evidence audit before pitching to a customer.
+
+For `Paper review: no` examples: incremental experiment, advantage claim is narrow and conditional on FTQC — not actionable now; survey is broad context but no specific claim worth auditing.
 
 End with:
 
@@ -245,6 +278,12 @@ No high-signal QML items found in the last <window>.
 Scout verdict: <one sentence explaining whether to keep watching a source/theme or take no action.>
 ```
 
+**After finalizing selected items**, write each selected item to SEEN_PAPERS_PATH (append, one JSON object per line):
+```json
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","link":"{url}","arxiv_id":"{arxiv_id or null}","title":"{title}"}
+```
+This prevents the same paper from appearing in future runs within the 7-day dedup window.
+
 ---
 
 ## Evidence and citation requirements
@@ -259,12 +298,15 @@ Scout verdict: <one sentence explaining whether to keep watching a source/theme 
 
 ## Common pitfalls
 
-1. **Dumping every QML-adjacent arXiv result.** The scout is a filter. Weak relevance or weak novelty should be skipped.
-2. **Overweighting press releases.** A vendor announcement without technical detail is usually not selected.
-3. **Missing dequantization risk.** Any kernel/feature-map/advantage claim needs a classical approximation/baseline evidence gate.
-4. **Confusing quantum optimization with QML.** Optimization papers are included only when they transfer to QML architecture discovery, training, or representation learning.
-5. **Ignoring hardware realism.** Near-term QML claims need resource/fidelity/noise sanity checks.
-6. **Writing long literature reviews.** This is a daily briefing. Keep it compact.
+1. **Inflated scores.** Every paper is not 4/5 relevance. Scores must be calibrated: incremental extensions are 3 or below, and only papers that genuinely move the needle reach 5/5 relevance. When in doubt, score down and skip.
+2. **Bypassing the Team Value Trigger.** All 6 trigger categories are specific. "Interesting QML paper" is not a trigger. If you cannot name which trigger it matches and why, the item fails.
+3. **Dumping every QML-adjacent arXiv result.** The scout is a filter. Most days should produce zero items. Quantity is a bug, not a feature.
+4. **Overweighting press releases.** A vendor announcement without technical detail is not selected.
+5. **Missing dequantization risk.** Any kernel/feature-map/advantage claim needs a classical approximation/baseline evidence gate.
+6. **Confusing quantum optimization with QML.** Optimization papers are included only when they transfer to QML architecture discovery, training, or representation learning.
+7. **Ignoring hardware realism.** Near-term QML claims need resource/fidelity/noise sanity checks.
+8. **Writing long literature reviews.** This is a daily briefing. Keep it compact.
+9. **Skipping dedup.** Always load SEEN_PAPERS_PATH before filtering. Sending the same paper twice breaks team trust in the briefing.
 
 ---
 
@@ -272,13 +314,18 @@ Scout verdict: <one sentence explaining whether to keep watching a source/theme 
 
 Before finalizing:
 
+- [ ] Dedup log loaded; no selected item appears in SEEN_PAPERS_PATH within the last 7 days.
+- [ ] Every selected item passed the Team Value Trigger; the trigger name is stated in the output.
+- [ ] Scores are calibrated: no item scores 5/5 relevance unless it truly alters research priorities.
+- [ ] Selected item count is 0–3. If 0, the no-signal output is used.
 - [ ] Sources checked include at least arXiv plus one other source class when available.
 - [ ] All selected items have direct links.
 - [ ] Dates are within the configured window or clearly labeled otherwise.
-- [ ] Each selected item has relevance and novelty scores.
 - [ ] Each selected item has a specific skepticism/evidence gate.
+- [ ] Each selected item has a paper-review recommendation with a rationale.
 - [ ] Generic quantum/AI/business-only items were skipped.
 - [ ] Final output is concise enough for a daily briefing.
+- [ ] Selected items appended to SEEN_PAPERS_PATH.
 - [ ] No platform-specific delivery/channel details are embedded in the skill itself.
 
 ---
@@ -287,6 +334,6 @@ Before finalizing:
 
 **Analytics — write end event** (append to ANALYTICS_PATH after sending the briefing):
 ```json
-{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"qml-daily-scout","version":"1.0.0","outcome":"success","duration_s":{elapsed},"output_path":null}
+{"ts":"{ISO_NOW}","run_id":"{RUN_ID}","event":"skill_end","skill":"qml-daily-scout","version":"1.1.0","outcome":"success","duration_s":{elapsed},"items_selected":{count},"output_path":null}
 ```
-An empty-result scout (0 items selected) is still `outcome: "success"` — it is a valid run, not an error.
+An empty-result scout (0 items selected) is still `outcome: "success"` — it is a valid, expected run, not an error.
