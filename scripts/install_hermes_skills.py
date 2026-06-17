@@ -133,19 +133,24 @@ def q(s: str) -> str:
 
 
 def canonicalize_body_paths(body: str) -> str:
-    """Make generated Hermes copy point at the canonical .agents tree.
+    """Rewrite .claude/skills references to .agents/skills in agent role files.
 
-    The repository keeps .claude/skills symlinks for Claude Code compatibility,
-    but .agents/skills is now source of truth. Generated Hermes skills should not
-    teach future agents that .claude is canonical.
+    Used by converted_agent() when copying agent role prompts into references/agents/.
+    Skills use read-at-runtime strategy so their bodies are not copied.
     """
     return body.replace(".claude/skills", ".agents/skills")
 
 
 def converted_skill(skill_dir: Path) -> str:
+    """Generate a thin Hermes wrapper that reads the canonical source at runtime.
+
+    The wrapper contains only Hermes-specific metadata and execution contract.
+    The workflow body is NOT copied inline — Hermes reads the source file at
+    skill execution time, so updates to .agents/skills propagate immediately
+    without re-running this installer.
+    """
     text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
-    fm, body = split_fm(text)
-    body = canonicalize_body_paths(body)
+    fm, _ = split_fm(text)
     name = scalar_from_fm(fm, "name", skill_dir.name)
     version = scalar_from_fm(fm, "version", "1.0.0")
     desc = SKILL_DESCRIPTIONS.get(name) or scalar_from_fm(fm, "description")[:900]
@@ -154,8 +159,9 @@ def converted_skill(skill_dir: Path) -> str:
     agent_dir = skill_dir / "agents"
     agent_names = sorted(p.stem for p in agent_dir.glob("*.md")) if agent_dir.exists() else []
     has_openai_yaml = (skill_dir / "openai.yaml").exists()
+    source_path = skill_dir / "SKILL.md"
 
-    tags = ["qml", "research", "hermes-converted", "agent-neutral-source"]
+    tags = ["qml", "research", "hermes-wrapper", "agent-neutral-source"]
     if "paper" in name:
         tags.append("paper-review")
     if "deep" in name:
@@ -172,7 +178,7 @@ def converted_skill(skill_dir: Path) -> str:
         f"name: {name}",
         f"description: {q(desc)}",
         f"version: {version}",
-        "author: QML Researcher repo; converted for Hermes Agent labs profile",
+        "author: QML Researcher repo; Hermes thin wrapper",
         "license: MIT",
         "platforms: [macos, linux, windows]",
         "metadata:",
@@ -182,7 +188,7 @@ def converted_skill(skill_dir: Path) -> str:
         f"    source_repo: {q(str(REPO))}",
         f"    source_skill: {q(str(skill_dir.relative_to(REPO)))}",
         "    source_layout: agent-neutral-.agents",
-        "    converted_from: agent-neutral-skill",
+        "    wrapper_strategy: read-at-runtime",
     ]
     if triggers:
         header += ["    source_triggers:"] + [f"      - {q(t)}" for t in triggers]
@@ -194,35 +200,46 @@ def converted_skill(skill_dir: Path) -> str:
         header += ["    source_openai_yaml: references/openai.yaml"]
     header.append("---")
 
-    notes = [
+    body_lines = [
         f"# {name}\n",
-        "## Hermes Conversion Contract\n",
-        f"This Hermes skill is generated from `{skill_dir.relative_to(REPO)}/SKILL.md` in the qml_researcher repo. Treat `.agents/skills/` as the canonical source of truth; `.claude/skills/` is only a symlink bridge for Claude Code.\n",
-        f"Canonical repo root:\n\n`{REPO}`\n",
-        "Before executing the workflow, read these linked references when relevant:\n",
-        "- `references/shared/protocol.md` — agent spawn convention, Hermes I/O policy, progress update format, Word export instructions, session memory format, and completion message format. Read once during Setup before spawning any agents.\n",
-        "- `references/criteria/qml_domain.md` — authoritative QML criteria; do not rely on stale inline copies.\n",
+        "\n## Hermes Execution Contract\n",
+        "\nThis is a thin Hermes wrapper. The canonical workflow is maintained in the qml_researcher repo. "
+        "The source is read at runtime — updates to `.agents/skills/` take effect immediately without re-running the installer.\n",
+        f"\n**Read the canonical source skill before executing any phase:**\n\n`{source_path}`\n",
+        "\nExecute the workflow defined in that file. The Hermes-specific overrides in this wrapper take precedence "
+        "over any tool names, agent spawn mechanisms, or path references in the source.\n",
+        "\n### Shared References (symlinked — always current)\n\n",
+        "- `references/shared/protocol.md` — agent spawn convention, Hermes I/O policy, progress update format, "
+        "Word export instructions, session memory format, and completion message format. "
+        "Read once during Setup before spawning any agents.\n",
+        "- `references/criteria/qml_domain.md` — authoritative QML criteria.\n",
         "- `references/config/workspace.json` — output root configuration.\n",
         "- `references/artifacts/` — schemas for paper cards, triage logs, evidence records, and other outputs.\n",
     ]
     if agent_names:
-        notes.append("- `references/agents/*.md` — converted Hermes subagent role prompts for this skill.\n")
+        body_lines.append("- `references/agents/*.md` — Hermes subagent role prompts for this skill.\n")
     if has_openai_yaml:
-        notes.append("- `references/openai.yaml` — optional OpenAI/Codex CLI metadata from the source skill. It is preserved for auditability; Hermes does not consume it directly.\n")
-    notes.append("\nHermes tool mapping for the source skill metadata:\n")
-    for tool in allowed:
-        notes.append(f"- `{tool}` → {TOOL_MAP.get(tool, 'Use the closest Hermes tool; if none exists, state the limitation explicitly.')}\n")
+        body_lines.append("- `references/openai.yaml` — optional OpenAI/Codex CLI metadata; Hermes does not consume it directly.\n")
+
+    if allowed:
+        body_lines.append("\n### Hermes Tool Mappings\n\n| Source tool | Hermes equivalent |\n|---|---|\n")
+        for tool in allowed:
+            mapping = TOOL_MAP.get(tool, "Use the closest Hermes tool; if none exists, state the limitation explicitly.")
+            body_lines.append(f"| `{tool}` | {mapping} |\n")
+
     if agent_names:
-        notes.append("\nSubagent conversion rule: spawn these roles with `delegate_task`; paste the relevant `references/agents/<name>.md` content into the child context. The agent that generates a claim must not be the agent that verifies it.\n")
-        notes.append("\nConverted subagents:\n")
+        body_lines.append("\n### Subagent Roles\n\n")
+        body_lines.append(
+            "Spawn via Hermes `delegate_task`; paste the relevant role file content into the child context. "
+            "The agent that generates a claim must not be the agent that verifies it.\n\n"
+        )
         for agent in agent_names:
-            notes.append(f"- `{agent}` → `references/agents/{agent}.md`\n")
-    notes.extend([
-        f"\nOutput path rule: resolve `output_root` from `references/config/workspace.json`; relative paths are relative to `{REPO}`.\n",
-        "\n## Original Source Skill Metadata\n\n```yaml\n" + fm.strip() + "\n```\n",
-        "\n## Original Workflow Body, with Hermes Notes Above Taking Precedence\n",
-    ])
-    return "\n".join(header) + "\n\n" + "".join(notes) + "\n" + body.lstrip()
+            body_lines.append(f"- `{agent}` → `references/agents/{agent}.md`\n")
+
+    body_lines.append(f"\n### Output Path\n\nResolve `output_root` from `references/config/workspace.json`; "
+                      f"relative paths are relative to `{REPO}`.\n")
+
+    return "\n".join(header) + "\n\n" + "".join(body_lines)
 
 
 def converted_agent(agent_path: Path) -> str:
