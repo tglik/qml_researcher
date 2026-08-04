@@ -36,6 +36,29 @@ Claude reads the skill, runs the 7-phase workflow (scope → literature → doma
 
 ---
 
+## Three-repo layout
+
+The lab runs across three repos with deliberately different lifecycles — none of them merge into another:
+
+| Repo | Contents | Configured as | Written by |
+|------|----------|---------------|------------|
+| **`qml_researcher`** (this repo) | Skills, agents, criteria — the harness | — | hand-authored, versioned like normal code |
+| **`qml_artifacts`** | Markdown knowledge base: paper cards, hypothesis cards, experiment cards, indexes | `output_root` in `config/workspace.json` | research skills write Layer 1 sources; `/extract-artifacts` promotes them to cards |
+| **`qml_experiments`** | Python code, data, figures, and a hand-written `VERDICT.md` per self-run falsifiable experiment | `experiments_root` in `config/workspace.json` | the team, directly — code and data never leave this repo |
+
+`qml_experiments` is intentionally not markdown and not merged into the vault — code/data
+have a different lifecycle than research prose. The bridge between them is two-way:
+
+- **Mirrored summary →** `/extract-artifacts` reads a human-written experiment-report source
+  and produces an Experiment Card in `qml_artifacts/cards/experiments/`, which links back to
+  the full record via `canonical_source` (a path into `qml_experiments`, never inlined content).
+- **Direct access →** `/qml-experiments` reads `qml_experiments` itself for live context
+  (what's been run, verdicts, whether results are stale relative to the code) and can rerun
+  an experiment's reproduce command or make a scoped code edit — always confirmed first, and
+  it never writes a card or a verdict itself; that stays a human + `/extract-artifacts` step.
+
+---
+
 ## Skill catalog
 
 ### Research workflows
@@ -91,6 +114,13 @@ Claude reads the skill, runs the 7-phase workflow (scope → literature → doma
 | `/integrity-check` | Verifies citations, claim-to-evidence alignment, figure/table provenance, and that wording matches claim strength |
 | `/reproducibility-audit` | Checks QML reproducibility fields: code commit, seeds, dataset version, backend, circuit family, qubit count, depth, shots, noise model, optimizer, hyperparameters |
 | `/negative-result` | Structures a failed experiment as a durable artifact: what failed, hypothesis status, what was learned, what should not be retried |
+
+### Experiments bridge
+*Direct context and bounded actions on the `qml_experiments` code repo — see [Three-repo layout](#three-repo-layout) below.*
+
+| Skill | What it does |
+|-------|-------------|
+| `/qml-experiments` | Reads `qml_experiments` directly: status table across every experiment (question, verdict, results freshness, git state, card-extraction state), full detail for one experiment, run-status diagnosis (is a rerun needed?), rerun an experiment's own reproduce command (always confirmed first), or make a scoped code edit inside one experiment's folder |
 
 ---
 
@@ -179,18 +209,20 @@ The plugin encodes 17 known failure modes in QML research claims:
 
    Verify:
    ```bash
-   ls -la .claude/skills/        # should show 3 symlinks → ../../.agents/skills/
+   ls -la .claude/skills/        # should show symlinks → ../../.agents/skills/ (no plain-text entries)
    cat .claude/skills/fetch-arxiv/SKILL.md  # should show actual SKILL.md content
    ```
 
    - **Codex, Hermes, Gemini** read `.agents/skills/` directly — no setup needed.
    - **Claude Code** reads `.claude/skills/` via the committed symlinks — no setup needed.
 
-3. Configure output path (first time only):
+3. Configure paths (first time only) in `config/workspace.json`:
    ```bash
-   # Default output_root is output/ (repo-local, gitignored)
-   # To sync to cloud storage, edit config/workspace.json:
-   #   "output_root": "/absolute/path/to/your/output/dir"
+   # output_root: default is output/ (repo-local, gitignored)
+   #   To sync to the qml_artifacts vault: "output_root": "/path/to/qml_artifacts"
+   # experiments_root: path to your local qml_experiments clone
+   #   Required for /qml-experiments — status/rerun/edit against that repo
+   #   "experiments_root": "/path/to/qml_experiments"
    ```
 
 4. Run your first skill:

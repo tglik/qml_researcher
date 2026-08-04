@@ -21,6 +21,8 @@ Skills live in `.agents/skills/` (canonical). Invoke by name:
 | `/fetch-arxiv` | Fetch any arXiv paper by ID, URL, or title |
 | `/qml-deep-research` | Multi-phase literature research for a QML topic |
 | `/qml-paper-review` | Deep critical review of a single QML paper |
+| `/extract-artifacts` | Promote a Layer 1 source into cards in the `qml_artifacts` vault |
+| `/qml-experiments` | Read the `qml_experiments` code repo directly (status/show/run-status) and take confirmed actions (rerun/edit) |
 
 Always invoke skills from the **repository root** — skills use repo-root-relative paths (`criteria/qml_domain.md`, `config/workspace.json`).
 
@@ -41,6 +43,10 @@ The task prompts in each skill are agent-agnostic — inject them into Codex's s
 Output path is controlled by `config/workspace.json` → `output_root`.
 Default: `output/` (repo-local, gitignored).
 To sync to cloud storage, set `output_root` to an absolute path.
+
+`config/workspace.json` → `experiments_root` points at the local `qml_experiments` clone.
+Required for `/qml-experiments`; unset it and that skill will error with instructions
+instead of guessing a path.
 
 ---
 

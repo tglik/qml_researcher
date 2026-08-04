@@ -3,6 +3,10 @@
     "Configure all output paths for qml-researcher skills.",
     "Set output_root to the qml-artifacts repo path on the current machine.",
     "Skills write Layer 1 sources here; /extract-artifacts populates cards/ and indexes/.",
+    "Set experiments_root to the qml_experiments repo path on the current machine.",
+    "The /qml-experiments skill reads it for context (what's been run, verdicts, status)",
+    "and can rerun / edit code there directly. That repo stays the source of truth for",
+    "code, data, and figures — never copy them into qml_artifacts (see experiment_card_schema.md).",
     "",
     "Per-machine paths:",
     "  Windows dev:  \"C:/Users/tmgli/Documents/Source/qml_artifacts\"",
@@ -14,5 +18,6 @@
     "  Google Drive (Mac):     \"/Users/tmgli/Library/CloudStorage/GoogleDrive-.../QML Research\""
   ],
   "output_root": "/Users/tsahi/repos/qml_artifacts",
-  "analytics_folder": "/Users/tsahi/repos/qml_artifacts/analytics"
+  "analytics_folder": "/Users/tsahi/repos/qml_artifacts/analytics",
+  "experiments_root": "/Users/tsahi/repos/qml_experiments"
 }
