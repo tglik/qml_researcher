@@ -48,7 +48,7 @@ axes:
       Score this axis from the briefing text.
       Start at 5. Subtract 1 for each selected item that is:
       - Generic quantum hardware news with no QML content
-      - Quantum optimization paper with no ML/learning relevance
+      - Quantum optimization paper with no ML/ling relevance
       - Press release or vendor announcement with no technical content
       - Non-quantum AI paper with no QML relevance
       - FTQC-only algorithmic speedup with no near-term path

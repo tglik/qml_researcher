@@ -56,6 +56,7 @@ Card type to folder mapping:
 - `claim-card` → `cards/claims/`
 - `evidence-card` → `cards/evidence/`
 - `research-question` → `cards/research-questions/`
+- `experiment-card` → `cards/experiments/`
 
 ### 2. Check if card exists
 
@@ -77,7 +78,7 @@ Read the existing card. Compare field by field:
 | `title`, `name` (factual identity) | Keep existing if different — conflict-log |
 | `venue` (factual) | Keep existing if different — conflict-log |
 | `persons`, `organizations`, `papers`, `topics`, `claims`, `evidence` (lists) | Union: add new items not already present |
-| `verdict` (paper card) | Keep existing — conflict-log if different |
+| `verdict` (paper card or experiment card) | Keep existing — conflict-log if different |
 | `claim_status` | Keep existing — **never overwrite**. If new source suggests higher status, conflict-log with note "may be ready for /claim-promotion" |
 | `last_updated` | Update to today's date |
 | Papers table in person card | Append new row if paper not already listed |

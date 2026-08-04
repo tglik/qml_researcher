@@ -48,6 +48,7 @@ Your job: read the parsed source document, generate canonical IDs for paper, per
 | Claim Card | `{paper_id}-claim-{NN}` or `{source_slug}-claim-{NN}` for non-paper sources | `2405.12345-claim-01`, `meeting-20260604-claim-01` |
 | Evidence Card | `{claim_id}-ev-{NN}` | `2405.12345-claim-01-ev-01` |
 | Research Question | topic slug — 3-5 meaningful words, hyphens | `neutral-atom-graph-kernels`, `barren-plateau-mitigation` |
+| Experiment Card | source experiment folder name, numeric prefix stripped, hyphens | `04_recsys_classical_twin` → `recsys-classical-twin` |
 
 For non-paper sources (meeting, discussion, news, document), use source slug:
 - `meeting-{YYYYMMDD}` for meeting-note
@@ -94,6 +95,17 @@ Do NOT generate separate claim or evidence card files. Instead, embed claims and
 ### For each research question:
 
 Generate one Research Question card stub. Check whether the question matches an existing common topic (neutral-atom, graph-ml, tabular, hardware-fit, dequantization) — if so, use the standard topic slug.
+
+### For an experiment-report source (one Experiment Card only):
+
+Generate one Experiment Card body per `experiment_card_schema.md`. Set:
+- `id` = experiment folder slug (numeric prefix stripped, per Canonical ID Rules)
+- `program` = the program slug from the parsed source's Experiment table — reuse an existing program slug, never invent a new one for an experiment that belongs to a known program
+- `verdict` = exactly as stated in the parsed source (GO / NO_GO / CLOSED_NO / CLOSED_YES / PROVISIONAL) — do not infer a verdict the source did not state
+- `claim_status` = `observed`, capped by `claim_status_ceiling` — never higher, regardless of how decisive the experiment reads
+- `canonical_source` = the path from the parsed source's Experiment table (plain text, points outside the vault into `qml_experiments`)
+- Related hypotheses / related papers links: leave empty unless the parsed source explicitly names a hypothesis or paper this experiment was designed to test — do not force a link on topic similarity alone
+- Do NOT generate paper, person, or organization cards from an experiment-report unless the source explicitly named one
 
 ---
 
@@ -145,6 +157,14 @@ Write `{workspace}/01_entities.md`:
 
 ---
 
+## EXPERIMENT_CARDS
+
+### {canonical_id}
+
+{complete card body — only present when source_type is experiment-report}
+
+---
+
 ## ID Assignment Log
 
 | Entity name | Card type | Canonical ID | Derivation |
@@ -152,4 +172,5 @@ Write `{workspace}/01_entities.md`:
 | {name} | paper-card | {id} | arXiv ID from source |
 | {name} | person-card | {id} | lastname-firstname rule |
 | {name} | organization-card | {id} | name-slug rule |
+| {name} | experiment-card | {id} | experiment folder slug rule |
 ```
