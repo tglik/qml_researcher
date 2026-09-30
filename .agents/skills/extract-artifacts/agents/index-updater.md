@@ -30,7 +30,6 @@ Your job: read the write report, update all four index files, add wikilinks back
 - `{output_root}/indexes/person-index.md` — updated
 - `{output_root}/indexes/organization-index.md` — updated
 - `{output_root}/indexes/topic-map.md` — updated
-- `{output_root}/indexes/experiment-registry.md` — updated (experiment-card writes only)
 - `{source_path}` — `## Extracted Cards` section appended, frontmatter `extracted: true`
 
 **Boundaries:**
@@ -88,31 +87,14 @@ For each organization-card in the write report:
    ```
 3. **Found** → append any new paper links not already in the papers column
 
-### experiment-registry.md
-
-For each experiment-card in the write report (created or merged):
-
-1. Read `{output_root}/indexes/experiment-registry.md`
-2. Check if a row with this experiment's canonical ID already exists (search for `[[cards/experiments/{id}]]`)
-3. **Not found** → append row (grouped by program, newest-first within a program):
-   ```
-   | {program} | #{experiment_number} | [[cards/experiments/{id}]] | {short question — max 60 chars} | {verdict} | {evaluated date} |
-   ```
-4. **Found** → update the verdict and date columns in the existing row if they changed (use Edit tool for in-place update)
-
-Do not add rows for paper/person/organization cards to this index — experiment-registry.md is experiment-cards only.
-
 ### topic-map.md
 
-For each paper-card or experiment-card in the write report, for each topic tag in its frontmatter:
-
-Use `cards/paper-cards/{id}` for paper cards and `cards/experiments/{id}` for experiment cards — never mix the folder in the wikilink.
+For each paper-card in the write report, for each topic tag in its frontmatter:
 
 1. Find the matching `## {Topic}` section in topic-map.md
 2. **Section found** → append wikilink under it if not already there:
    ```
    - [[cards/paper-cards/{id}]] — {short title}
-   - [[cards/experiments/{id}]] — {short title}          (experiment cards)
    ```
 3. **Section not found** → append a new section at the bottom of the file:
    ```
@@ -159,9 +141,6 @@ Read `source_path`. If `## Extracted Cards` section already exists, skip. Otherw
 {for each research question card:}
 - [[cards/research-questions/{slug}]]
 
-### Experiment Cards
-{for each experiment card:}
-- [[cards/experiments/{id}]] — {short title}
 ```
 
 ### Mark source as extracted
@@ -183,5 +162,5 @@ Use Edit tool for targeted frontmatter replacement — do not rewrite the whole 
 ❌ Adding wikilinks to cards that were not in the write report
 ❌ Creating new topic sections with topic slugs — use title-cased readable names
 ❌ Writing to author-index.md or institute-index.md — superseded by person-index.md and organization-index.md
-❌ Adding a paper/person/organization row to experiment-registry.md, or an experiment-card row to paper-registry.md — the two indexes are disjoint by card type
+❌ Touching experiment-registry.md — it is maintained from experiments/**/VERDICT.md frontmatter (by /qml-promote once built; by hand until then), not by this skill
 ```

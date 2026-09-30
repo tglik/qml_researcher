@@ -1,25 +1,25 @@
 ---
 name: qml-experiments
-version: 1.0.0
+version: 2.0.0
 description: |
-  Bridge into the qml_experiments repo — a separate code/data repo (path configured as
-  experiments_root in config/workspace.json) that is intentionally not merged into the
-  markdown-only qml_artifacts vault. Gives research skills and the researcher direct
-  context on what has actually been run there: questions, verdicts, reproduce commands,
-  and whether results are fresh relative to the code that produced them. Also supports
-  three bounded actions on that repo: check run status, rerun an experiment's own
-  reproduce command, and make a scoped code change inside one experiment's folder.
-  Read-heavy by default — the write/execute actions always show what they're about to
-  do and confirm before touching anything. Never writes an Experiment Card itself; card
-  creation stays the job of /extract-artifacts working from a human-authored VERDICT.md.
+  Direct context and bounded actions on the team's self-run experiments, which live in the
+  qml_artifacts vault under `experiments/<thread>/<NN_name>/` (moved there from the retired
+  qml_experiments repo on 2026-09-30). Gives research skills and the researcher direct
+  context on what has actually been run: questions, verdicts, reproduce commands, and
+  whether results are fresh relative to the code that produced them. Also supports three
+  bounded actions: check run status, rerun an experiment's own reproduce command (after
+  re-creating any large data with data/fetch.py), and make a scoped code change inside one
+  experiment's folder. Read-heavy by default — the write/execute actions always show what
+  they're about to do and confirm before touching anything. Never writes a verdict: each
+  VERDICT.md (and its frontmatter, the experiment's graph entity) is human-authored.
 triggers:
   - qml-experiments
-  - what happened in qml_experiments
+  - what experiments have we run
   - what have we run for <experiment/topic>
   - rerun this experiment
   - check experiment run status
   - has this experiment been rerun since the code changed
-  - make a code change in qml_experiments
+  - make a code change in an experiment
 
 input:
   - subcommand: status (default, no slug) | show <slug> | run-status <slug> | rerun <slug> [--yes] | edit <slug> "<change description>"
@@ -28,11 +28,9 @@ input:
     or a plain number if unambiguous across threads. See Slug Resolution.
 
 output:
-  - status: one table across every experiment in qml_experiments — question, verdict,
-    results freshness, uncommitted-changes flag, and whether an Experiment Card exists
-    for it yet in qml_artifacts
-  - show: the experiment's README.md + VERDICT.md content, its git log, and its card
-    (if extracted) side by side
+  - status: one table across every experiment — question, verdict, results freshness,
+    uncommitted-changes flag, and whether VERDICT.md has entity frontmatter
+  - show: the experiment's README.md + VERDICT.md content (frontmatter included) and its git log
   - run-status: a freshness/staleness diagnosis for one experiment — no execution
   - rerun: the reproduce command that was run, a saved log, and a before/after diff of
     results/ — never a verdict, never a commit
@@ -50,22 +48,21 @@ allowed-tools:
 
 # /qml-experiments
 
-Direct, read-first context into the qml_experiments repo, plus three bounded actions:
-check whether a run is stale, rerun it, or make a scoped code edit. This skill never
-touches `qml_artifacts` cards — it only reads them (to report extraction state) and
-never writes them.
+Direct, read-first context into the team's experiments (`{output_root}/experiments/`), plus
+three bounded actions: check whether a run is stale, rerun it, or make a scoped code edit.
+This skill never writes a `VERDICT.md` or any file outside the one experiment folder it was
+asked about.
 
 ---
 
 ## Why this exists
 
-`qml_experiments` is where the team's own falsifiable experiments live — code, data,
-figures, and a hand-written `VERDICT.md` per experiment (see `artifacts/experiment_card_schema.md`
-for the full rationale). Research skills in this repo can already discover *summaries* of
-that work through Experiment Cards in `qml_artifacts` once `/extract-artifacts` has run —
-but that's a lagging, human-gated mirror. This skill is the direct line: read the repo
-itself for what's actually there right now, and take small, confirmed actions in it
-without pretending to replace the human verdict-writing step.
+`{output_root}/experiments/` is where the team's own falsifiable experiments live — code,
+results, figures, small data, and a hand-written `VERDICT.md` per experiment whose
+frontmatter is the experiment's entity in the knowledge graph (see
+`artifacts/lab/experiment_entity_schema.md`). This skill reads what is actually there right
+now and takes small, confirmed actions in it without pretending to replace the human
+verdict-writing step.
 
 ---
 
@@ -74,48 +71,40 @@ without pretending to replace the human verdict-writing step.
 Read `config/workspace.json` → CONFIG.
 
 ```
-EXPERIMENTS_ROOT = resolve(CONFIG.experiments_root)
-ARTIFACTS_ROOT    = resolve(CONFIG.output_root)
-```
-
-If `experiments_root` is missing from `config/workspace.json`, stop:
-```
-Error: experiments_root not set in config/workspace.json.
-Add the qml_experiments repo path for this machine (see the _comment block for the
-per-machine pattern already used by output_root) and retry.
+ARTIFACTS_ROOT   = resolve(CONFIG.output_root)
+EXPERIMENTS_ROOT = ARTIFACTS_ROOT / "experiments"
 ```
 
 If `EXPERIMENTS_ROOT` does not exist on disk, stop:
 ```
-Error: experiments_root path does not exist: {EXPERIMENTS_ROOT}
-Check config/workspace.json — this is a per-machine path.
+Error: {EXPERIMENTS_ROOT} does not exist. Experiments live in the qml_artifacts vault under
+experiments/ — check output_root in config/workspace.json (a per-machine path).
 ```
 
-Verify it's a git repo (`{EXPERIMENTS_ROOT}/.git` exists). If not, warn but proceed —
-git-derived fields (freshness, uncommitted changes) will be reported as "unknown".
+Git commands run in `ARTIFACTS_ROOT` (the vault is the git repo). If it isn't a git repo,
+warn but proceed — git-derived fields (freshness, uncommitted changes) are reported as "unknown".
 
 ---
 
-## Repo shape (recap — inline so this skill doesn't depend on qml_experiments/README.md staying in this exact form)
+## Folder shape (recap — inline so this skill doesn't depend on experiments/README.md staying in this exact form)
 
 ```
-{EXPERIMENTS_ROOT}/
-├── README.md                        root index: table of every experiment, question, verdict
-├── requirements.txt / .venv/        shared Python env
-└── experiments/
-    └── <thread>/                    e.g. boosting_trees/, spectral_graph/
-        ├── EXPERIMENT_INDEX.md      narrative walkthrough of the thread (thread-level, not per-experiment)
-        ├── INSIGHTS.md              cross-experiment takeaways (thread-level)
-        └── NN_short_name/           one experiment
-            ├── README.md            question, design, key result, Reproduce section
-            ├── VERDICT.md           full write-up + verdict (human-authored)
-            ├── src/                 code
-            ├── data/                preprocessed inputs (often gitignored)
-            ├── results/             tables / raw metric dumps
-            └── figures/
+{EXPERIMENTS_ROOT}/                  = {output_root}/experiments/
+├── README.md                        index: table of every experiment, question, verdict
+├── requirements.txt / .venv/        shared Python env (.venv gitignored)
+└── <thread>/                        e.g. boosting_trees/, spectral_graph/, fraud_aml/
+    ├── EXPERIMENT_INDEX.md          narrative walkthrough of the thread (thread-level, not per-experiment)
+    ├── INSIGHTS.md                  cross-experiment takeaways (thread-level)
+    └── NN_short_name/               one experiment
+        ├── README.md                question, design, key result, Reproduce section
+        ├── VERDICT.md               frontmatter (graph entity) + full write-up (human-authored)
+        ├── src/                     code
+        ├── data/                    manifest.json + fetch.py; files > 5 MB gitignored
+        ├── results/                 tables / raw metric dumps
+        └── figures/
 ```
 
-The **root `README.md`** already contains a per-thread table (# | folder | question | verdict)
+The **`README.md`** at `{EXPERIMENTS_ROOT}` already contains a per-thread table (# | folder | question | verdict)
 that is the cheapest, most authoritative status source — read it first in every mode below
 rather than re-deriving verdicts from each experiment's files.
 
@@ -125,7 +114,7 @@ rather than re-deriving verdicts from each experiment's files.
 
 Given a user-supplied slug, find exactly one experiment folder:
 
-1. Glob `{EXPERIMENTS_ROOT}/experiments/*/*/README.md` → candidate folders (thread/NN_name).
+1. Glob `{EXPERIMENTS_ROOT}/*/*/README.md` → candidate folders (thread/NN_name).
 2. Normalize the input and each candidate's `NN_name` the same way: lowercase, strip a
    leading numeric prefix + underscore, replace `_` with `-` (e.g. `04_recsys_classical_twin`
    → `recsys-classical-twin`).
@@ -145,17 +134,17 @@ Given a user-supplied slug, find exactly one experiment folder:
    - **Results freshness**: compare the newest mtime under `results/` (if it exists) to the
      newest mtime under `src/`. Label: `fresh` (results newer than src) | `stale — src changed
      after results` | `no results/ yet`.
-   - **Uncommitted changes**: `git status --porcelain -- {folder}` in `EXPERIMENTS_ROOT` →
+   - **Uncommitted changes**: `git status --porcelain -- {folder}` in `ARTIFACTS_ROOT` →
      `clean` | `dirty (N files)`.
-   - **Card extraction state**: does `{ARTIFACTS_ROOT}/cards/experiments/{slug}.md` exist?
-     → `extracted` | `not extracted`.
-3. Print one table, columns: `#  Thread  Question (truncated)  Verdict  Freshness  Git  Card`.
+   - **Entity state**: does `{folder}/VERDICT.md` start with frontmatter containing `id` and
+     `verdict`? → `entity` | `no frontmatter` | `no VERDICT.md`.
+3. Print one table, columns: `#  Thread  Question (truncated)  Verdict  Freshness  Git  Entity`.
 4. Below the table, call out anything that needs attention:
    ```
    ⚠ Stale results (code changed since last run): {list}
    ⚠ Uncommitted changes: {list}
-   ⚠ Verdict exists but no Experiment Card yet: {list} — run /extract-artifacts on an
-     experiment-report source for these once ready
+   ⚠ VERDICT.md without entity frontmatter: {list} — add it per
+     artifacts/lab/experiment_entity_schema.md so the registry and topic map can link it
    ```
    Omit any section with nothing to report.
 
@@ -165,14 +154,11 @@ Given a user-supplied slug, find exactly one experiment folder:
 
 1. Resolve `slug` → `{thread}/{folder}`.
 2. Print, in order:
-   - Path, canonical thread table row (question + verdict from root README.md)
+   - Path, thread table row (question + verdict from experiments/README.md)
    - Full contents of `{folder}/README.md`
-   - Full contents of `{folder}/VERDICT.md` if it exists, else note it's missing
+   - Full contents of `{folder}/VERDICT.md` if it exists, else note it's missing — flag
+     explicitly if its frontmatter `verdict` disagrees with the README table's verdict text
    - `git log --oneline -5 -- {folder}` (last 5 commits touching this experiment)
-   - If `{ARTIFACTS_ROOT}/cards/experiments/{slug}.md` exists: print its frontmatter
-     (`verdict`, `claim_status`, `evaluated`) so the two records sit side by side —
-     flag explicitly if the card's `verdict` disagrees with the root README's verdict text
-     (stale card) or predates the folder's latest commit (card may be behind the code).
 
 ---
 
@@ -207,7 +193,7 @@ Diagnostic only — never executes anything.
    ```
 4. Print, before doing anything:
    ```
-   About to run in {EXPERIMENTS_ROOT}/experiments/{thread}/{folder}:
+   About to run in {EXPERIMENTS_ROOT}/{thread}/{folder}:
      {command(s), verbatim}
    Current git status: {clean | dirty (N files) — results will reflect these uncommitted changes}
    ```
@@ -216,19 +202,21 @@ Diagnostic only — never executes anything.
    this can be a long-running job (see the multi-hour sweep logs already in
    `boosting_trees/01_boosting_split_headroom/`) and it will overwrite `results/`.
 6. On confirmation: activate the shared venv (`source {EXPERIMENTS_ROOT}/.venv/bin/activate`,
-   falling back to an experiment-local `.venv` if the folder has its own), `cd` into the
-   experiment folder, run the command(s), teeing output to
+   falling back to an experiment-local `.venv` if the folder has its own). If
+   `{folder}/data/fetch.py` exists, run `python data/fetch.py --verify` first — it re-creates
+   gitignored large files and checks their sha256 against `data/manifest.json`; stop on a
+   mismatch. Then `cd` into the experiment folder, run the command(s), teeing output to
    `{folder}/rerun_{YYYYMMDD-HHMMSS}.log` (same naming pattern as the existing `*_sweep.log`
    files in `01_boosting_split_headroom` — gitignored, so this matches repo convention).
 7. Report: exit code, tail of the log, and `git status --porcelain -- {folder}/results`
    (what actually changed on disk).
 8. Always close with:
    ```
-   This did not update VERDICT.md, the root README table, or any Experiment Card — those
-   are human-authored. If these numbers materially change the verdict, update VERDICT.md
-   by hand, then re-run /extract-artifacts on a fresh experiment-report source.
+   This did not update VERDICT.md (or its frontmatter) or the experiments/README.md table —
+   those are human-authored. If these numbers materially change the verdict, update
+   VERDICT.md by hand.
    ```
-9. Never commit or push inside `qml_experiments`. That repo's git history is the user's to
+9. Never commit or push in the vault from this skill. Its git history is the user's to
    manage, same as this repo's own commit policy.
 
 ---
@@ -256,19 +244,16 @@ Diagnostic only — never executes anything.
 ## Failure Modes to Avoid
 
 ```
-❌ Copying code, data, or figures out of qml_experiments into qml_artifacts — the artifact
-   repo stays markdown-only; canonical_source is always a path, never inlined content
-   (same rule as artifacts/experiment_card_schema.md)
-❌ Auto-committing or auto-pushing inside qml_experiments — separate repo, separate
-   history, human decides when
+❌ Committing a data file > 5 MB — list it in data/manifest.json as untracked and make
+   data/fetch.py re-create it instead
+❌ Auto-committing or auto-pushing in the vault — human decides when
 ❌ Rerunning without printing the exact command and getting confirmation first — these can
    be long, real compute jobs that overwrite results/
 ❌ Treating a rerun's fresh numbers as an updated verdict — VERDICT.md and claim_status are
    human-authored; a rerun produces new numbers, not a new verdict
-❌ Writing or editing an Experiment Card directly from this skill — that stays
-   /extract-artifacts's job, working from a human-authored VERDICT.md
+❌ Writing or editing VERDICT.md or its frontmatter from this skill — human-authored
 ❌ Editing thread-level files (EXPERIMENT_INDEX.md, INSIGHTS.md, thread README.md) under an
    edit request scoped to one experiment
-❌ Guessing experiments_root instead of reading it from config/workspace.json
+❌ Guessing the vault path instead of reading output_root from config/workspace.json
 ❌ Silently picking one match when a slug is ambiguous across threads — ask
 ```

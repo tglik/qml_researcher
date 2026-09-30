@@ -36,26 +36,24 @@ Claude reads the skill, runs the 7-phase workflow (scope → literature → doma
 
 ---
 
-## Three-repo layout
+## Two-repo layout
 
-The lab runs across three repos with deliberately different lifecycles — none of them merge into another:
+The lab runs across two repos with deliberately different roles:
 
 | Repo | Contents | Configured as | Written by |
 |------|----------|---------------|------------|
-| **`qml_researcher`** (this repo) | Skills, agents, criteria — the harness | — | hand-authored, versioned like normal code |
-| **`qml_artifacts`** | Markdown knowledge base: paper cards, hypothesis cards, experiment cards, indexes | `output_root` in `config/workspace.json` | research skills write Layer 1 sources; `/extract-artifacts` promotes them to cards |
-| **`qml_experiments`** | Python code, data, figures, and a hand-written `VERDICT.md` per self-run falsifiable experiment | `experiments_root` in `config/workspace.json` | the team, directly — code and data never leave this repo |
+| **`qml_researcher`** (this repo) | Skills, agents, criteria, schemas, lab tools — the system | — | hand-authored, versioned like normal code |
+| **`qml_artifacts`** | Everything the system produces: paper cards, hypothesis cards, indexes, sources — **and every self-run experiment** under `experiments/<thread>/<NN_name>/` (README, `VERDICT.md`, `src/`, `results/`, `figures/`, `data/`) | `output_root` in `config/workspace.json` | research skills write Layer 1 sources; `/extract-artifacts` promotes them to cards; the team (and the lab skills) write experiments |
 
-`qml_experiments` is intentionally not markdown and not merged into the vault — code/data
-have a different lifecycle than research prose. The bridge between them is two-way:
+Each experiment's `VERDICT.md` frontmatter is its entity in the knowledge graph
+(`artifacts/lab/experiment_entity_schema.md`) — there are no separate experiment cards.
+Quartz publishes the markdown and figures but not code or data. Data files over 5 MB are
+gitignored and re-created by each experiment's `data/fetch.py` (hashes in `data/manifest.json`).
+`/qml-experiments` reads experiments directly for live context and can rerun an experiment's
+reproduce command or make a scoped code edit — always confirmed first; it never writes a verdict.
 
-- **Mirrored summary →** `/extract-artifacts` reads a human-written experiment-report source
-  and produces an Experiment Card in `qml_artifacts/cards/experiments/`, which links back to
-  the full record via `canonical_source` (a path into `qml_experiments`, never inlined content).
-- **Direct access →** `/qml-experiments` reads `qml_experiments` itself for live context
-  (what's been run, verdicts, whether results are stale relative to the code) and can rerun
-  an experiment's reproduce command or make a scoped code edit — always confirmed first, and
-  it never writes a card or a verdict itself; that stays a human + `/extract-artifacts` step.
+The third repo, `qml_experiments`, was retired on 2026-09-30 and its contents copied into
+`qml_artifacts/experiments/` (see `docs/lab/components/C11_repo_consolidation.md`).
 
 ---
 
@@ -116,11 +114,11 @@ have a different lifecycle than research prose. The bridge between them is two-w
 | `/negative-result` | Structures a failed experiment as a durable artifact: what failed, hypothesis status, what was learned, what should not be retried |
 
 ### Experiments bridge
-*Direct context and bounded actions on the `qml_experiments` code repo — see [Three-repo layout](#three-repo-layout) below.*
+*Direct context and bounded actions on the experiments in the vault — see [Two-repo layout](#two-repo-layout) below.*
 
 | Skill | What it does |
 |-------|-------------|
-| `/qml-experiments` | Reads `qml_experiments` directly: status table across every experiment (question, verdict, results freshness, git state, card-extraction state), full detail for one experiment, run-status diagnosis (is a rerun needed?), rerun an experiment's own reproduce command (always confirmed first), or make a scoped code edit inside one experiment's folder |
+| `/qml-experiments` | Reads `{output_root}/experiments/` directly: status table across every experiment (question, verdict, results freshness, git state, entity frontmatter), full detail for one experiment, run-status diagnosis (is a rerun needed?), rerun an experiment's own reproduce command (always confirmed first), or make a scoped code edit inside one experiment's folder |
 
 ---
 
@@ -220,9 +218,7 @@ The plugin encodes 17 known failure modes in QML research claims:
    ```bash
    # output_root: default is output/ (repo-local, gitignored)
    #   To sync to the qml_artifacts vault: "output_root": "/path/to/qml_artifacts"
-   # experiments_root: path to your local qml_experiments clone
-   #   Required for /qml-experiments — status/rerun/edit against that repo
-   #   "experiments_root": "/path/to/qml_experiments"
+   # Experiments live in the vault under {output_root}/experiments/ — no separate path to set.
    ```
 
 4. Run your first skill:

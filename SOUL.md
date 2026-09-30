@@ -105,10 +105,10 @@ The artifacts repo path is configured in `config/workspace.json` (`output_root`)
 current strong directions and deprioritized approaches are maintained in
 `criteria/qml_domain.md`.
 
-What the team has actually *run* — code, data, figures, hand-written verdicts — lives in a
-third repo, `qml_experiments` (`experiments_root` in the same config file). I read it directly
-through `/qml-experiments` for live status, not just through the lagging Experiment Card
-mirror in the artifacts repo. I can also rerun an experiment's own reproduce command or make
+What the team has actually *run* — code, results, figures, hand-written verdicts — lives in
+the same artifacts repo, under `experiments/`, one folder per experiment; each `VERDICT.md`'s
+frontmatter is that experiment's entity in the graph. I read it directly through
+`/qml-experiments` for live status. I can also rerun an experiment's own reproduce command or make
 a scoped code edit there — always shown and confirmed before anything executes — but I never
 write the verdict myself. A run produces numbers; a verdict is a human judgment about what
 those numbers mean, and I don't blur that line.

@@ -26,8 +26,9 @@ output:
   - cards/paper-cards/ — new and updated paper cards (claims/evidence inline in card body)
   - cards/persons/ — new and updated person cards
   - cards/organizations/ — new and updated organization cards
-  - cards/experiments/ — new and updated experiment cards (from experiment-report sources only)
-  - indexes/ — paper-registry, person-index, organization-index, topic-map, experiment-registry updated
+  - indexes/ — paper-registry, person-index, organization-index, topic-map updated
+    (experiment-registry is not maintained here — experiments live in the vault's experiments/
+    folder and their VERDICT.md frontmatter is the entity; maintained by /qml-promote, by hand until it exists)
   - _conflicts.md — any conflicts appended for human review
   - source file — Extracted Cards section added, frontmatter marked extracted: true
   - extractions/{slug}_{date}/ — phase workspace with intermediate artifacts
@@ -111,12 +112,21 @@ SOURCE_TYPE  = frontmatter.source_type
 SOURCE_DATE  = frontmatter.source_date
 CLAIM_CEILING = {
   skill-report      → observed,
-  experiment-report → observed,
   document          → plausible,
   meeting-note      → speculative,
   discussion        → speculative,
   news-item         → speculative
 }[SOURCE_TYPE]
+```
+
+If `SOURCE_TYPE == experiment-report`, stop:
+```
+experiment-report sources are retired (2026-09-30). Experiments now live in the vault under
+experiments/<thread>/<NN_name>/, and each VERDICT.md's frontmatter is the experiment's entity
+in the graph — there is nothing to extract. See artifacts/lab/experiment_entity_schema.md.
+```
+
+```
 
 SOURCE_SLUG = {first 4 significant words of filename, hyphens, lowercase}
 WORKSPACE   = {OUTPUT_ROOT}/extractions/{SOURCE_SLUG}_{SOURCE_DATE}/
@@ -301,11 +311,6 @@ Read: artifacts/person_card_schema.md       → PERSON_SCHEMA
 Read: artifacts/organization_card_schema.md → ORG_SCHEMA
 ```
 
-If `SOURCE_TYPE == experiment-report`, also read:
-```
-Read: artifacts/experiment_card_schema.md → EXPERIMENT_SCHEMA
-```
-
 Note: claim_card_schema and evidence_card_schema are retired. Claims and evidence are embedded inline in paper card bodies.
 
 ```
@@ -338,12 +343,8 @@ output_root: {OUTPUT_ROOT}
 ### Organization Card Schema
 {ORG_SCHEMA}
 
-### Experiment Card Schema (only if source_type is experiment-report)
-{EXPERIMENT_SCHEMA}
-
 Read: {WORKSPACE}/00_source_parsed.md
-Generate canonical IDs and complete card bodies for paper, person, and organization entities (or,
-if source_type is experiment-report, for the experiment entity) only.
+Generate canonical IDs and complete card bodies for paper, person, and organization entities only.
 Claims and evidence are embedded inline in the paper card body — do NOT create separate claim or evidence cards.
 Write output to: {WORKSPACE}/01_entities.md
 """

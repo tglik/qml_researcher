@@ -93,18 +93,6 @@ Extract:
 - **Research directions / topics**: any technical or research areas covered
 - **Key arguments**: the document's main line of reasoning
 
-#### For `experiment-report` (a mirrored summary of a self-run experiment from `qml_experiments`):
-
-Extract exactly one experiment entity:
-- **Question**: the falsifiable question the experiment was pre-registered to answer
-- **Program**: the `program` frontmatter field — the slug grouping this experiment with its siblings testing the same claim/construction
-- **Method**: datasets used, classical baseline(s), matched-budget conditions
-- **Verdict**: the stated verdict (GO / NO_GO / CLOSED_NO / CLOSED_YES / PROVISIONAL) and the key numbers backing it, exactly as stated — do not soften or strengthen
-- **Gate result**: pre-registered pass bar and how many checks cleared, if stated
-- **Caveats**: any explicitly flagged scope limitation (e.g. modeled cost not hardware-measured, restricted construction family)
-- **canonical_source**: the `canonical_source` frontmatter field — the path in `qml_experiments` this summary was mirrored from
-- Do NOT extract papers/persons/organizations from an experiment-report unless the source text explicitly names a paper this experiment was designed to test
-
 ### Step 3: Organize into structured output
 
 Write `{workspace}/00_source_parsed.md` using the format below. Every section is required; write "(none found)" if empty.
@@ -171,20 +159,6 @@ Write `{workspace}/00_source_parsed.md` using the format below. Every section is
 | # | Linked claim # | Dataset | Metric | Quantum result | Classical result | Seeds | Significance |
 |---|---------------|---------|--------|----------------|-----------------|-------|-------------|
 | 1 | {claim #} | {name} | {metric} | {value} | {value} | {N or "not reported"} | {reported | not reported} |
-
-## Experiment (experiment-report only)
-
-| Field | Value |
-|-------|-------|
-| Program | {program slug} |
-| Experiment number | {experiment_number} |
-| Question | {falsifiable question} |
-| Method | {datasets, baselines, matched-budget conditions} |
-| Verdict | {GO \| NO_GO \| CLOSED_NO \| CLOSED_YES \| PROVISIONAL} |
-| Key numbers | {metric: quantum/construction result vs classical result} |
-| Gate result | {pass bar → N/M cleared, if stated} |
-| Caveats | {scope limitations explicitly flagged in source} |
-| Canonical source | {canonical_source path} |
 
 ## Raw Excerpts (key quotes to preserve)
 
