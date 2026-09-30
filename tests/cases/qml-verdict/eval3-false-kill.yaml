@@ -1,0 +1,40 @@
+id: qml-verdict-eval3-false-kill
+skill: qml-verdict
+mode: replay
+skill_version_min: "0.1.0"
+eval_id: eval3-false-kill
+description: |
+  False-kill test (docs/lab C10 eval 3). The system must not discard surviving classical results
+  along with a dead quantum claim. Replay the verdict → variants → promote chain on three closed
+  experiments whose quantum claim died but whose classical output survived, using their raw
+  results and gate tables as input (the existing VERDICT.md is the reference, not an input).
+
+input:
+  type: replay
+  runs:
+    - {experiment: experiments/spectral_graph/09_candidate_retrieval_pauli,
+       must_survive: "sub-megabyte classical candidate index: PQ at ~0.15 MB reaches 80-87% of the uncompressed retriever's Recall@500 on 2 of 3 datasets"}
+    - {experiment: experiments/spectral_graph/10_pauli_fingerprint_graph_ml,
+       must_survive: "D2 streaming-moment change detection on transaction graphs, as a purely classical idea"}
+    - {experiment: experiments/fraud_aml/12_nonstoquastic_fraud_screen,
+       must_survive: "phase-cancellation features as an instrument; the first flux audit of real financial graphs; static-graph leakage worth 0.51 ROC-AUC (phase features 2.4x more exposed)"}
+
+axes:
+  survives_section:
+    weight: 4.0
+    artifacts: [VERDICT.md, VARIANTS.md]
+    rubric: |
+      5: every must_survive item appears in "What survives regardless" (verdict) and as salvage (a) or (b) (variants)
+      3: two of three
+      1: one of three
+      0: none — the classical results were dropped with the quantum claim
+  ledger_scope:
+    weight: 3.0
+    artifacts: [PROMOTE_PR.md]
+    rubric: |
+      5: each proposed ledger entry lists the surviving classical result under does_not_exclude
+      3: survivors mentioned but not in does_not_exclude
+      0: an entry excludes the surviving classical direction
+
+combined_formula: weighted_average
+regression_thresholds: {combined_drop: 0.5, axis_drop: 1.0, critical: {from_min: 4, to_max: 2}}

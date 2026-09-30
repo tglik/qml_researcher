@@ -1,0 +1,47 @@
+id: qml-audit-eval2-audit-replay
+skill: qml-audit
+mode: replay
+skill_version_min: "0.1.0"
+eval_id: eval2-audit-replay
+status: blocked                 # materials_configuration_space (M01) is not in the vault yet — see docs/lab/00 open question 1
+description: |
+  Audit replay (docs/lab C10 eval 2). Give /qml-audit the M01 (materials 01_headroom_anatomy)
+  artifacts and a verdict written *without* the post-hoc diagnostics, and check that the fresh-
+  context auditor independently finds the two problems a human caught after the fact.
+
+input:
+  type: replay
+  runs:
+    - experiment: experiments/materials_configuration_space/01_headroom_anatomy   # path once migrated
+      verdict_under_test: "a NO-GO-FINAL draft that treats H2's formal pass as mechanism evidence and ignores H0"
+
+expected_behavior:
+  result: INSUFFICIENT
+  finds:
+    - "H2's formal pass is a size-matched-control artifact: a random subset of the same size recovers about the same gap (N3 fails)"
+    - "H0 baseline adequacy fails (0.216 eV MAE vs the 0.1275 eV bar), so any stop is provisional (N1 fails)"
+
+axes:
+  finds_h2_control_artifact:
+    weight: 4.0
+    artifacts: [AUDIT.md]
+    rubric: |
+      5: names the missing/failed size-matched control and quantifies the random-subset recovery
+      2: suspects H2 but does not name the control
+      0: accepts H2 as mechanism evidence
+  finds_h0_adequacy:
+    weight: 3.0
+    artifacts: [AUDIT.md]
+    rubric: |
+      5: marks N1 failed with both numbers and converts the verdict to provisional with the reopening condition
+      2: notes the weak baseline without changing the category
+      0: misses it
+  mechanical_first:
+    weight: 1.0
+    artifacts: [AUDIT.md]
+    rubric: |
+      5: lock diff pasted verbatim; >= 2 numbers recomputed from raw files with own code
+      0: no mechanical section
+
+combined_formula: weighted_average
+regression_thresholds: {combined_drop: 0.5, axis_drop: 1.0, critical: {from_min: 4, to_max: 2}}

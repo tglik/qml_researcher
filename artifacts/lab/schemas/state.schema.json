@@ -1,0 +1,51 @@
+{
+  "$id": "qml-lab/state@1",
+  "title": "Program control state (STATE.json) — read first, written last by every lab skill",
+  "type": "object",
+  "required": ["schema", "thread", "branch", "owner", "entry_path", "stage", "checkpoints", "budget", "updated_by", "updated_at"],
+  "properties": {
+    "schema": {"enum": ["qml-lab/state@1"]},
+    "thread": {"type": "string"},
+    "branch": {"type": "string"},
+    "owner": {"type": "string"},
+    "entry_path": {"enum": ["algorithm", "use-case"]},
+    "frozen_question": {"type": ["string", "null"]},
+    "stage": {"enum": ["intake", "screen", "prereg", "run", "panel2", "verdict", "audit", "variants", "promote", "closed"]},
+    "current_phase": {"enum": ["P1", "P2", "P3", "P4", "P5", null]},
+    "phases_planned": {"type": "array", "items": {"enum": ["P1", "P2", "P3", "P4", "P5"]}},
+    "checkpoints": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["mode", "status"],
+        "properties": {
+          "mode": {"enum": ["HUMAN_APPROVE", "HUMAN_SPOTCHECK", "AGENT"]},
+          "status": {"enum": ["open", "approved", "rejected"]},
+          "author": {"type": "string"},
+          "signer": {"type": ["string", "null"]},
+          "outcome": {"enum": ["unchanged", "minor", "material", null]},
+          "decision": {"type": ["string", "null"]},
+          "minutes": {"type": ["number", "null"]},
+          "brief": {"type": ["string", "null"]},
+          "opened_at": {"type": "string"},
+          "closed_at": {"type": ["string", "null"]},
+          "spotcheck": {"type": "string"}
+        }
+      }
+    },
+    "lock": {"type": ["object", "null"]},
+    "budget": {
+      "type": "object",
+      "required": ["planned", "spent"],
+      "properties": {
+        "planned": {"type": "object", "additionalProperties": {"type": "object"}},
+        "spent": {"type": "object", "additionalProperties": {"type": "object"}}
+      }
+    },
+    "blockers": {"type": "array", "items": {"type": "object", "required": ["what"]}},
+    "escalations": {"type": "array", "items": {"type": "object", "required": ["type", "status"]}},
+    "history": {"type": "array", "items": {"type": "object"}},
+    "updated_by": {"type": "string"},
+    "updated_at": {"type": "string"}
+  }
+}

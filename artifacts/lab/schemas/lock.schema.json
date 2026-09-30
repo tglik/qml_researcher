@@ -1,0 +1,45 @@
+{
+  "$id": "qml-lab/lock@1",
+  "title": "Pre-registration lock (PREREG.lock.json) — written only by lab.tools.lock",
+  "type": "object",
+  "required": ["schema", "locked_at", "locked_by", "items", "root_sha256", "amendments"],
+  "properties": {
+    "schema": {"enum": ["qml-lab/lock@1"]},
+    "locked_at": {"type": "string"},
+    "locked_by": {"type": "string"},
+    "git_commit": {"type": "string"},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "text", "sha256", "source"],
+        "properties": {
+          "id": {"type": "string"},
+          "kind": {"enum": ["threshold", "gate", "split", "stop_rule", "metric", "baseline", "gray_zone"]},
+          "text": {"type": "string"},
+          "op": {"enum": [">=", ">", "<=", "<", "=="]},
+          "value": {"type": "string"},
+          "sha256": {"type": "string"},
+          "source": {"type": "string"}
+        }
+      }
+    },
+    "root_sha256": {"type": "string"},
+    "amendments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["n", "date", "touches", "reason", "precedes_data_access_for", "approved_by", "new_root_sha256"],
+        "properties": {
+          "n": {"type": "integer"},
+          "date": {"type": "string"},
+          "touches": {"type": "array", "items": {"type": "string"}},
+          "reason": {"type": "string"},
+          "precedes_data_access_for": {"enum": ["P1", "P2", "P3", "P4", "P5"]},
+          "approved_by": {"type": "string"},
+          "new_root_sha256": {"type": "string"}
+        }
+      }
+    }
+  }
+}

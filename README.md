@@ -113,8 +113,29 @@ The third repo, `qml_experiments`, was retired on 2026-09-30 and its contents co
 | `/reproducibility-audit` | Checks QML reproducibility fields: code commit, seeds, dataset version, backend, circuit family, qubit count, depth, shots, noise model, optimizer, hyperparameters |
 | `/negative-result` | Structures a failed experiment as a durable artifact: what failed, hypothesis status, what was learned, what should not be retried |
 
+### QML Lab — from candidate direction to audited verdict
+*The experiment half of the researcher. Design: [`docs/lab/`](docs/lab/01_high_level_plan.md) ·
+implementation and review guide: [`lab/README.md`](lab/README.md). Every skill and role is split
+into `ESSENCE.md` (how it thinks — for scientific review) and a protocol (how it runs).*
+
+| Skill | What it does |
+|-------|-------------|
+| `/qml-lab` | **Entry point.** `new` a program from an algorithm or a use case · `status` (what is waiting, for whom; the backlog of actionable hypotheses) · `next` (runs the next allowed step) · `sign` a checkpoint · `escalate` · `amend` · `stats` / `step-down` (the autonomy ladder) |
+| `/qml-intake` | Algorithm path (Adi's Stage 0 analysis) or use-case path → `HYPOTHESIS.md` with numbered falsifiable hypotheses; one question per turn until 5/5 |
+| `/qml-screen` | Paper screen G0–G3 + six rules + five QML criteria → PASS / PASS-NARROWED / KILLED-ON-PAPER / ASK-HUMAN; engages the exclusion ledger by mechanism |
+| `/qml-prereg` | Pre-registration (phases P1–P5, arms incl. the classical twin, locked thresholds, gray zones, both verdict sentences) → freeze into `PREREG.lock.json` |
+| `/qml-review-panel` | Five adversarial personas, pass 1 on the proposal, pass 2 on raw results before any verdict |
+| `/qml-run` | One frozen phase: provenance for every number, gates computed from the lock, guard + lock checks |
+| `/qml-verdict` · `/qml-audit` | Verdict against frozen gates; independent fresh-context audit (lock diff, recomputation, reproduction, N1–N5) |
+| `/qml-variants` · `/qml-promote` | Variant mining + pivot (paper/IP) · promotion PR: ledger entry, verdict entity, hypothesis status, criteria proposals |
+
+Human checkpoints CP1 screen · CP2 freeze · CP3 phase · CP4 verdict · CP5 promotion start as
+`HUMAN_APPROVE` and step down only on measured agreement (`config/lab_autonomy.json`). Deterministic
+tools: `python -m lab.tools.<lock|state|autonomy|gates|guard|provenance|splits|ledger|validate|check_sizes>`
+(stdlib only; tests: `python -m unittest discover -s tests/lab`).
+
 ### Experiments bridge
-*Direct context and bounded actions on the experiments in the vault — see [Two-repo layout](#two-repo-layout) below.*
+*Closed/legacy experiments in the vault — see [Two-repo layout](#two-repo-layout) below. Live lab programs go through `/qml-lab`.*
 
 | Skill | What it does |
 |-------|-------------|

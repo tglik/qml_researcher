@@ -32,6 +32,7 @@ input:
   - Optional --scope-only: stop after Phase 0B and wait for user review
   - Optional --lit-review: stop after Phase 1; produce annotated bibliography instead of synthesis
   - Optional --fact-check: verify a single claim or paper (Phase 1 targeted + Phase 5 only)
+  - Optional --return-to <lab thread>: invoked by the QML Lab screen; scope is the question in <thread>/00_inputs/research_request.md
 
 output:
   - Research workspace: {vault}/research/{slug}_{YYYY-MM-DD}/
@@ -304,7 +305,12 @@ include at least one sub-question designed to find the strongest counterevidence
 **0.2 FINER quality check:**
 - F (Feasible): Can this be answered with available papers?
 - I (Interesting): Does the answer matter for team direction?
-- N (Novel): Has this been systematically covered? Check `[[indexes/paper-registry.md]]`.
+- N (Novel): Has this been systematically covered? Check `[[indexes/paper-registry.md]]`, and our own
+  measurements: `[[indexes/experiment-registry.md]]` and `[[indexes/exclusion-ledger.md]]` (C12 I7) — if the lab
+  already measured this question, the report starts from that verdict.
+- **Called by the lab** (`--return-to <thread>`, C12 I4): the question is in
+  `<thread>/00_inputs/research_request.md`; keep scope to that question, and on completion write the
+  report path into that file and tell the caller to resume `/qml-screen <thread>`.
 - E (Ethical): No concerns.
 - R (Relevant): Directly actionable for QML startup decisions?
 

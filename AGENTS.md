@@ -22,7 +22,10 @@ Skills live in `.agents/skills/` (canonical). Invoke by name:
 | `/qml-deep-research` | Multi-phase literature research for a QML topic |
 | `/qml-paper-review` | Deep critical review of a single QML paper |
 | `/extract-artifacts` | Promote a Layer 1 source into cards in the `qml_artifacts` vault |
-| `/qml-experiments` | Read the experiments in the vault (`{output_root}/experiments/`) directly (status/show/run-status) and take confirmed actions (rerun/edit) |
+| `/qml-lab` | QML Lab entry point: start an experiment program (algorithm or use case), see what is waiting, advance a program, sign checkpoints — see `lab/README.md` |
+| `/qml-intake` | Scope a lab program into numbered falsifiable hypotheses (interactive) |
+| `/qml-screen` · `/qml-prereg` · `/qml-review-panel` · `/qml-run` · `/qml-verdict` · `/qml-audit` · `/qml-variants` · `/qml-promote` | Lab stage skills — normally reached through `/qml-lab next` |
+| `/qml-experiments` | Closed/legacy experiments: read the experiments in the vault (`{output_root}/experiments/`) directly (status/show/run-status) and take confirmed actions (rerun/edit) |
 
 Always invoke skills from the **repository root** — skills use repo-root-relative paths (`criteria/qml_domain.md`, `config/workspace.json`).
 

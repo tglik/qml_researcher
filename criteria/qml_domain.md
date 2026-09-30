@@ -7,6 +7,11 @@ This document is the authoritative source for how the team evaluates QML papers.
 It is loaded by the `/qml-paper-review` and `/qml-deep-research` skills as a cached context block.
 **Edit criteria here; skills pick up changes automatically.**
 
+Companion: [`lab_method.md`](lab_method.md) says how the lab judges its *own experiments*; this
+file says how to judge *papers*. Directions the lab has measured and excluded are in the vault's
+`indexes/exclusion-ledger.md`; each new final exclusion proposes a line for *Deprioritized
+Directions* below (added by a person when the promotion PR is merged).
+
 ---
 
 ## How to Apply These Criteria

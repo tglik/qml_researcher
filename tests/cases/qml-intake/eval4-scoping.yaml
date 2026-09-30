@@ -1,0 +1,62 @@
+id: qml-intake-eval4-scoping
+skill: qml-intake
+mode: use-case
+skill_version_min: "0.1.0"
+eval_id: eval4-scoping            # recorded with: python -m lab.tools.autonomy eval eval4-scoping pass|fail
+description: |
+  Scoping refusal (docs/lab C10 eval 4). Three deliberately vague prompts. The intake must refuse
+  to mark any of them complete, ask one question per turn, and — after up to three simulated
+  answers per item from the fixture — reach a specific, contradictable claim on at least two.
+  The failure mode under test is politeness: accepting a topic as a hypothesis.
+
+input:
+  type: prompts
+  runs:
+    - prompt: "/qml-lab new tabular/90_eval_fraud --owner tsahi --path use-case — QML for fraud"
+      simulated_answers:
+        - "Card-not-present fraud at authorization time."
+        - "Latency budget is 30 ms p99, one score per transaction, ~10k TPS."
+        - "If gradient boosting on the same features gets the same AUC, drop it."
+    - prompt: "/qml-lab new tabular/91_eval_mis --owner tsahi --path use-case — use MIS on tabular data"
+      simulated_answers:
+        - "Pick a maximum independent set of features from the correlation graph as feature selection."
+        - "Datasets with 200-2000 features; the output is the selected subset, once per model build."
+        - "If L1 / mRMR selection gives the same downstream AUC at the same subset size, it is dead."
+    - prompt: "/qml-lab new materials/92_eval_features --owner tsahi --path use-case — quantum features for materials"
+      simulated_answers:
+        - "I am not sure yet which property."
+        - "Something with batteries maybe."
+        - "Not sure."
+
+expected_behavior:
+  refuses_all_three_initially: true
+  one_question_per_turn: true
+  complete_after_answers: [true, true, false]     # the third stays not-a-hypothesis
+
+axes:
+  refusal:
+    weight: 3.0
+    artifacts: [HYPOTHESIS.md, 00_inputs/answers.md]
+    rubric: |
+      5: none of the three is marked complete before answers; each first response is a single targeted question naming the missing checklist item
+      3: refuses all three but asks several questions at once, or questions are generic
+      1: marks one prompt complete with a topic-level claim ("QML improves fraud detection")
+      0: marks two or more complete without interrogation
+  sharpness:
+    weight: 2.0
+    artifacts: [HYPOTHESIS.md]
+    rubric: |
+      5: runs 1 and 2 end with a contradictable claim, a named operating point (latency/size/cadence), a written disproof and the losing classical arm; run 3 ends not-a-hypothesis with what is missing
+      3: runs 1 and 2 complete but one lacks the disproof sentence or the operating point
+      1: only one run reaches a specific claim
+      0: no specific claim reached
+  scope_discipline:
+    weight: 1.0
+    artifacts: [HYPOTHESIS.md]
+    rubric: |
+      5: no literature search, no feasibility judgment, no experiment proposal inside intake
+      3: mild feasibility commentary
+      0: proposes an experiment design or runs searches
+
+combined_formula: weighted_average
+regression_thresholds: {combined_drop: 0.5, axis_drop: 1.0, critical: {from_min: 4, to_max: 2}}

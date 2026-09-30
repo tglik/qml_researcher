@@ -160,6 +160,13 @@ hypothesis_schema: {HYPOTHESIS_SCHEMA}
 
 Read: {OUTPUT_ROOT}/extractions/synthesis_{date}/00_paper_inventory.md
 Also read: {OUTPUT_ROOT}/cards/hypotheses/ (existing hypothesis cards — check for updates vs new)
+Also read: {OUTPUT_ROOT}/indexes/exclusion-ledger.md (the lab's own measured negatives — C12 I3)
+
+Ledger rule, applied to every candidate before the promotion filter: compare by mechanism, not
+by topic words. Inside an active `final` entry → do not promote; record under SKIPPED with
+"excluded: <ledger id>". Inside a `provisional` entry → may promote only with
+strategic_value: incremental and a link to the entry. A candidate that argues against an entry's
+mechanism is promotable and must name the entry it challenges.
 
 Detect claim clusters. For each candidate, apply the promotion filter.
 Write output to: {OUTPUT_ROOT}/extractions/synthesis_{date}/01_hypothesis_candidates.md

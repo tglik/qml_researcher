@@ -16,7 +16,7 @@ quarterly ledger review by Adi + Tsahi (expiry sweep).
 | `criteria/lab_method.md` | qml_researcher | **new** | Tsahi (by hand; amendments via `/qml-promote` proposals) | every lab skill |
 | `criteria/qml_domain.md` | qml_researcher | exists | `/qml-promote` *proposes* deprioritizations | screen, literature skills |
 | `indexes/exclusion-ledger.md` | qml_artifacts | **new** | `/qml-promote` | `/qml-screen` G0, `/qml-variants` |
-| `indexes/experiment-registry.md` | qml_artifacts | exists (rebuilt) | `scripts/lab/registry.py` from `VERDICT.md` frontmatter, run by `/qml-promote` | all |
+| `indexes/experiment-registry.md` | qml_artifacts | exists (rebuilt) | `lab/tools/registry.py` from `VERDICT.md` frontmatter, run by `/qml-promote` | all |
 | `experiments/**/VERDICT.md` frontmatter | qml_artifacts | **replaces** `cards/experiments/` (D12, C11) | `/qml-verdict`, finalized by `/qml-promote` | all; old card links resolve via `aliases` |
 | `indexes/autonomy-log.md` | qml_artifacts | **new** | `/qml-lab` at each CP sign-off | `/qml-lab` step-down calc, C10 |
 | `experiments/spectral_graph/INSIGHTS.md` | qml_artifacts (moved by C11) | exists | human only; promote *proposes* amendments | source for lab_method |
@@ -101,7 +101,7 @@ time-sliced), eval 3 (false-kill), structural check: every ledger entry validate
 - [ ] Write `criteria/lab_method.md` (M, 1.5 days)
 - [ ] Seed ledger from 13 verdicts (M, 1.5 days) + Adi review
 - [ ] Create `autonomy-log.md` with header + stats footer stub (S)
-- [ ] `scripts/lab/ledger.py` — parse/validate/time-slice ledger for evals (S, ½ day)
+- [ ] `lab/tools/ledger.py` — parse/validate/time-slice ledger for evals (S, ½ day)
 
 ## Acceptance criteria
 `lab_method.md` covers all 7 sections; ledger validates; ≥1 entry per closed experiment

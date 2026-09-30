@@ -1,0 +1,55 @@
+id: qml-screen-eval1-screen-replay
+skill: qml-screen
+mode: replay
+skill_version_min: "0.1.0"
+eval_id: eval1-screen-replay
+status: partial-fixtures        # 4 known-answer fixtures written; 10 framings + materials still to write (see fixtures README)
+description: |
+  Screen replay (docs/lab C10 eval 1) — the main eval. Each fixture is a closed experiment's
+  pre-experiment framing; intake is skipped by writing the framing as HYPOTHESIS.md claim +
+  operating point, then /qml-screen runs against a ledger time-sliced to before the experiment.
+  Measures gate-earliness: which gate would have killed it, at what cost.
+
+input:
+  type: fixtures
+  setup: |
+    for each fixture: python -m lab.tools.ledger slice --before <date> --out <tmp ledger>; run the
+    screen with LAB_OUTPUT_ROOT pointing at a copy of the vault whose ledger is the slice and whose
+    experiments/ contains only verdicts evaluated before <date>.
+  runs:
+    - {fixture: tests/fixtures/lab/eval1/fraud_authorization.md, before: "2026-09-15",
+       known_answer: "Candidates 1-3 killed at G1/G2 with the anti-correlation reason stated as a structural finding; candidate 4 passes or passes-narrowed as the only architecture with a program-defined input and a one-number output"}
+    - {fixture: tests/fixtures/lab/eval1/exp07_spectral_gap.md, before: "2026-07-29",
+       known_answer: "Rule 1 red: the restricted abelian Pauli family has a closed-form, near-free classical spectrum, so modeled-quantum vs Lanczos-on-the-real-graph is the wrong comparison; rule 2/3 concern that low-order moments may not determine extremal eigenvalues"}
+    - {fixture: tests/fixtures/lab/eval1/exp09_retrieval_readout.md, before: "2026-07-29",
+       known_answer: "Routes 1-3 killed at G1 on paper (readout ~sqrt(candidate set) vs classical ~log(catalog) after indexing, per query at ms latency); route 4 survives to measurement only with the item->address map charged (G2)"}
+    - {fixture: tests/fixtures/lab/eval1/exp04_twin.md, before: "2026-07-29",
+       known_answer: "G3 red on paper: small classical (polylog) description + non-negative diffusion filter with no sign cancellation => a classical twin (random walk on the same description) almost certainly exists"}
+
+axes:
+  known_answers:
+    weight: 4.0
+    artifacts: [SCREEN.md]
+    rubric: |
+      5: all four known answers reached, each by the named rule with its reason
+      3: three of four
+      1: one or two
+      0: none
+  gate_earliness:
+    weight: 3.0
+    artifacts: [SCREEN.md]
+    rubric: |
+      5: every NO-GO in the replay set is killed at G0-G3 (target >= 60% once all fixtures exist)
+      3: >= 60%
+      1: 30-60%
+      0: < 30%, or "needs an experiment" on every rule
+  no_over_kill:
+    weight: 2.0
+    artifacts: [SCREEN.md]
+    rubric: |
+      5: every kill names the narrowest class; fraud candidate 4 not killed with the others
+      3: one kill scoped too broadly
+      0: a topic-level kill ("quantum fraud detection is dead")
+
+combined_formula: weighted_average
+regression_thresholds: {combined_drop: 0.5, axis_drop: 1.0, critical: {from_min: 4, to_max: 2}}

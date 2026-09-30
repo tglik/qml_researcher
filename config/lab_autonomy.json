@@ -1,0 +1,28 @@
+{
+  "schema": "qml-lab/autonomy@1",
+  "lab_version": "0.1.0",
+  "_comment": [
+    "Checkpoint modes for the QML Lab autonomy ladder (docs/lab, D4/D5).",
+    "HUMAN_APPROVE blocks until a person signs. HUMAN_SPOTCHECK proceeds; a sample is reviewed within 48 h.",
+    "AGENT proceeds; the decision is logged; escalations still fire.",
+    "A checkpoint steps down one mode after `retire_rule.consecutive_runs` sign-offs with no material change",
+    "AND all of its `evals` passing on the current lab_version. Only Tsahi approves a step-down",
+    "(python -m lab.tools.autonomy step-down). Any material finding restores the previous mode automatically.",
+    "CP2 (freeze) and CP5 (promotion) are permanently HUMAN_APPROVE."
+  ],
+  "people": ["meir", "adi", "tsahi"],
+  "step_down_approvers": ["tsahi"],
+  "retire_rule": {"consecutive_runs": 5, "max_material": 0, "requires_evals": true},
+  "spotcheck": {"sample_rate": 0.33, "review_within_hours": 48, "always_review_verdicts": ["GO", "CONDITIONAL-GO"]},
+  "checkpoints": {
+    "CP1": {"name": "screen",     "mode": "HUMAN_APPROVE", "target": "AGENT",           "evals": ["eval1-screen-replay", "eval4-scoping", "eval5-algorithm-path"]},
+    "CP2": {"name": "freeze",     "mode": "HUMAN_APPROVE", "target": "HUMAN_APPROVE",   "evals": []},
+    "CP3": {"name": "phase gate", "mode": "HUMAN_APPROVE", "target": "AGENT",           "evals": ["lock-integrity", "guard-redteam"]},
+    "CP4": {"name": "verdict",    "mode": "HUMAN_APPROVE", "target": "HUMAN_SPOTCHECK", "evals": ["eval2-audit-replay", "eval3-false-kill"]},
+    "CP5": {"name": "promotion",  "mode": "HUMAN_APPROVE", "target": "HUMAN_APPROVE",   "evals": []}
+  },
+  "eval_status": {},
+  "history": [
+    {"date": "2026-09-30", "cp": "*", "from": null, "to": "HUMAN_APPROVE", "by": "tsahi", "evidence": "W0 initialisation — start supervised"}
+  ]
+}

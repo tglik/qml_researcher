@@ -44,7 +44,7 @@ No card and no mirrored source report (D12): the experiment folder is the graph 
 | 0 Branch | Work on the program's existing branch `lab/<thread>` in `qml_artifacts` | Branch up to date with master |
 | 1 Entity frontmatter | Finalize `VERDICT.md` frontmatter (C11 schema): verdict, audit result, topics, `ledger` ids, `related` links | Validates vs `experiment_entity_schema.md` |
 | 2 Ledger | Entry per C02 schema, **narrowest mechanism-scoped class**, `does_not_exclude` mandatory, `review_by` set; FINAL only if audit CONFIRMED | Validates |
-| 3 Registry / topic map | `scripts/lab/registry.py` rebuilds `indexes/experiment-registry.md` and topic-map experiment rows from all VERDICT frontmatter | Diff limited to this program's rows |
+| 3 Registry / topic map | `lab/tools/registry.py` rebuilds `indexes/experiment-registry.md` and topic-map experiment rows from all VERDICT frontmatter | Diff limited to this program's rows |
 | 4 Graph links | Add `## Graph links` to `VERDICT.md` (claims, papers, hypotheses it bears on) | Links resolve in Quartz build |
 | 5 Proposals | Optional `criteria/qml_domain.md` deprioritization; optional INSIGHTS / `lab_method.md` amendment **only** if a genuinely new transferable rule emerged — both as *proposed diffs* in the PR description, not applied (they live in `qml_researcher`) | Marked "proposal" |
 | 6 Hypothesis cards | Write variant cards in `cards/hypotheses/` linked to the ledger entry they descend from | — |
@@ -78,7 +78,7 @@ variants from exp 11-style mechanisms should reproduce exp 12's inversion.
 ## Build tasks
 - [ ] `/qml-promote` SKILL.md + `lab-archivist` def (M, 1.5 days — W1)
 - [ ] `/qml-variants` SKILL.md + `variant-generator` def (M, 1.5 days — W3)
-- [ ] `scripts/lab/registry.py` (shared with C11) (S)
+- [ ] `lab/tools/registry.py` (shared with C11) (S)
 
 ## Acceptance criteria
 Promote on one legacy thread (e.g. exp 13, after C11) produces valid entity frontmatter, a

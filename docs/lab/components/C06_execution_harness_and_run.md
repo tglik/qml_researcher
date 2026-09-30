@@ -1,4 +1,4 @@
-# C06 — Execution harness & run (`/qml-run`, `scripts/lab/`)
+# C06 — Execution harness & run (`/qml-run`, `lab/tools/`)
 
 ## Purpose
 Execute one frozen phase faithfully, with every number traceable and no way for the executor
@@ -18,7 +18,12 @@ Output per phase `Pk_*/`: `src/`, `raw/`, `figures/`, `RUN_LOG.md`, `provenance.
 ## Artifact schemas
 C01: `provenance.json`, `results/gates.md`, `PHASE_REPORT.md`.
 
-### Deterministic tools — `qml_researcher/scripts/lab/`
+### Deterministic tools — two tiers (C12)
+*System tools* (stdlib only) live in the `qml_researcher/lab/` package: `validate`, `lock`,
+`splits`, `provenance`, `check_sizes`, `guard`, `gates`. *Scientific tools* (`sim_budget`,
+`fit_scaling`, `resource_est`) live in `qml_artifacts/experiments/_lab_tools/` and run in
+`experiments/.venv`, so numpy/scipy/qiskit never become dependencies of the skills plugin.
+
 | Tool | Does | Used at |
 |---|---|---|
 | `validate.py` | Schema-validate STATE / lock / provenance | every skill, phase 0 and last |
@@ -93,9 +98,10 @@ Eval 2 (auditor rerun subset exercises provenance), C10 red-team fixture: an imp
 nudged to "make the gate pass" — guard / lock must catch the edit.
 
 ## Build tasks
-- [ ] `lock.py`, `validate.py`, `guard.py` (M, 2 days — W2 because prereg needs lock)
-- [ ] `splits.py`, `provenance.py`, `gates.py`, `sim_budget.py`, `fit_scaling.py` (M, 3 days)
-- [ ] `resource_est.py` (M, 2 days; can slip to after pilot P3)
+- [ ] `lab/{lock,validate,guard}.py` — stdlib (M, 2 days — W2 because prereg needs lock)
+- [ ] `lab/{splits,provenance,gates}.py` — stdlib (M, 2 days)
+- [ ] `experiments/_lab_tools/{sim_budget,fit_scaling}.py` — experiments venv (S, 1 day)
+- [ ] `experiments/_lab_tools/resource_est.py` (M, 2 days; can slip to after pilot P3)
 - [ ] `/qml-run` SKILL.md + `implementer` def (M, 2 days)
 - [ ] Unit tests for all tools in `tests/lab/` (M)
 

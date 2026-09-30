@@ -34,6 +34,17 @@ LABS_ROOT = Path("/Users/tsahi/.hermes/profiles/labs")
 SOUL_SRC = REPO / "SOUL.md"
 SOUL_DEST = LABS_ROOT / "SOUL.md"
 
+# Skills exposed in Hermes (Slack). An explicit allowlist (docs/lab C12): a new skill is only
+# exposed when someone adds it here on purpose. QML Lab stage skills (screen, prereg,
+# review-panel, run, verdict, audit, variants, promote) stay local — they need a git checkout,
+# compute and long sessions; in Slack the lab is driven through /qml-lab (status, sign, briefs)
+# and /qml-intake (asynchronous scoping questions).
+HERMES_SKILLS = {
+    "fetch-arxiv", "qml-paper-review", "qml-deep-research", "qml-daily-scout",
+    "qml-primitive-transfer", "synthesize-hypotheses", "extract-artifacts", "test-skills",
+    "qml-experiments", "qml-lab", "qml-intake",
+}
+
 TOOL_MAP = {
     "Agent": "Hermes delegate_task tool. Inject the converted role prompt from references/agents/<agent>.md into the child context.",
     "Read": "Hermes read_file tool.",
@@ -56,6 +67,8 @@ SKILL_DESCRIPTIONS = {
     "synthesize-hypotheses": "Use when consolidating cross-paper claim patterns into Research Hypothesis cards; applies a Pareto filter (support_count >= 2, >= 1 QML criterion, strategic_value in [directional, actionable]) and updates the hypothesis ledger.",
     "extract-artifacts": "Use after any skill run or when ingesting raw inputs (meeting notes, paper reviews, news) to extract structured Layer 2 cards (paper, person, organization) into the knowledge base and update all Layer 3 indexes.",
     "test-skills": "Use to evaluate completed skill run artifacts against quality axes and regression baselines; reports per-axis scores and flags regressions.",
+    "qml-lab": "Use to see what is waiting in the QML Lab (programs, open checkpoints, decision briefs), to sign a checkpoint, or to start a new experiment program from an algorithm or a use-case idea. Execution steps run locally in Claude Code.",
+    "qml-intake": "Use to scope a new QML Lab program: turns a quantum algorithm or use-case idea into numbered falsifiable hypotheses, asking one question per message until the 5-item checklist is complete.",
 }
 
 RELATED = {
@@ -67,6 +80,8 @@ RELATED = {
     "synthesize-hypotheses": ["qml-paper-review", "qml-deep-research", "extract-artifacts"],
     "extract-artifacts": ["qml-paper-review", "qml-deep-research", "qml-primitive-transfer", "synthesize-hypotheses"],
     "test-skills": ["qml-paper-review", "qml-deep-research", "qml-primitive-transfer", "qml-daily-scout"],
+    "qml-lab": ["qml-intake", "qml-experiments", "qml-deep-research", "synthesize-hypotheses"],
+    "qml-intake": ["qml-lab", "qml-deep-research", "qml-primitive-transfer"],
 }
 
 
@@ -307,7 +322,11 @@ def install() -> None:
     DEST_ROOT.mkdir(parents=True)
 
     installed = 0
+    skipped = []
     for skill_dir in sorted(p for p in SRC.iterdir() if p.is_dir() and (p / "SKILL.md").exists()):
+        if skill_dir.name not in HERMES_SKILLS:
+            skipped.append(skill_dir.name)
+            continue
         out = DEST_ROOT / skill_dir.name
         (out / "references").mkdir(parents=True)
         (out / "SKILL.md").write_text(converted_skill(skill_dir), encoding="utf-8")
@@ -320,7 +339,7 @@ def install() -> None:
         if (skill_dir / "openai.yaml").exists():
             shutil.copy2(skill_dir / "openai.yaml", out / "references" / "openai.yaml")
 
-        for subdir in ["criteria", "artifacts", "config"]:
+        for subdir in ["criteria", "artifacts", "config", "lab"]:
             target = REPO / subdir
             link = out / "references" / subdir
             if target.exists():
@@ -333,6 +352,8 @@ def install() -> None:
         installed += 1
 
     print(f"Installed {installed} Hermes qml_researcher skills from {SRC} into {DEST_ROOT}")
+    if skipped:
+        print(f"Not exposed in Hermes (local only, see HERMES_SKILLS): {', '.join(skipped)}")
 
 
 if __name__ == "__main__":

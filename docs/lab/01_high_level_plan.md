@@ -1,6 +1,6 @@
 # QML Lab — high-level plan
 
-**Date:** 2026-09-30 · **Decisions:** [`00_office_hours.md`](00_office_hours.md) (D1–D12) ·
+**Date:** 2026-09-30 · **Decisions:** [`00_office_hours.md`](00_office_hours.md) (D1–D13) ·
 **Component designs:** [`components/`](components/) · **Supersedes:** §2–§4 and §14 of
 `qml_artifacts/sources/documents/qml-agent-lab-design_2026-09-23.md` (the rest of that doc —
 rules, Negative Verdict Standard, failure modes, junior-researcher comparison — still stands and
@@ -22,6 +22,19 @@ promotion remain human.
 
 ---
 
+## 1b. Where it lives and how it fits (D13)
+
+The lab is built **inside `qml_researcher`** as a bounded layer, not a separate repo: it reuses
+the spawn protocol, claim ladder, criteria, config, eval harness and Hermes installer, and a
+separate repo would recreate the cross-repo friction D12 just removed. It completes the
+researcher's loop — the literature half proposes candidate directions; the lab measures them;
+verdicts flow back as hypothesis status, exclusions the scout respects, and deprioritized
+directions in `qml_domain.md`. Boundary rules (one entry point, two tool tiers, Hermes
+allowlist, separate lab versioning) and the seven feedback edges are in
+[C12](components/C12_researcher_integration.md).
+
+---
+
 ## 2. Architecture — five layers, all files
 
 Meir's `Role → Skill → Tool → Evidence → Memory` split, realized without a platform (D2), in
@@ -30,9 +43,9 @@ holds everything the system produces (evidence and memory). `qml_experiments` is
 
 | Layer | What it is | Where it lives | Component |
 |---|---|---|---|
-| **Roles** | Who may do what: agent definitions + human slots + permission matrix | `docs/lab/roles.md`; agent defs in `.agents/skills/<skill>/agents/*.md` (per `protocol.md`) | C03 |
+| **Roles** | Who may do what: agent definitions + human slots + permission matrix | `lab/roles/<role>/{ESSENCE,PROTOCOL}.md` (+ `docs/lab/components/C03`) | C03 |
 | **Skills** | Numbered-phase procedures with a pass/fail gate per phase | `.agents/skills/qml-{intake,screen,prereg,review-panel,run,verdict,audit,variants,promote,lab}/` | C04–C09 |
-| **Tools** | Deterministic Python — hashing, provenance, fits, budgets, resource estimates. The LLM never judges a number these can compute | `qml_researcher/scripts/lab/*.py` | C06 |
+| **Tools** | Deterministic Python — hashing, provenance, fits, budgets, resource estimates. The LLM never judges a number these can compute | `qml_researcher/lab/tools/*.py` | C06 |
 | **Evidence** | Code, results, small data, phase reports, verdicts — one thread per program, one branch per program. `VERDICT.md` frontmatter *is* the experiment's graph entity (no separate card) | `qml_artifacts/experiments/<thread>/` | C01, C11 |
 | **Memory** | Criteria, exclusion ledger, registry, literature cards, autonomy log | `qml_researcher/criteria/lab_method.md`; `qml_artifacts/{indexes,cards,sources}` | C02 |
 
@@ -55,7 +68,7 @@ in — lives in two files: per-program `STATE.json` (C01) and lab-wide
                                ◆ CP1 screen ◆
                                         │
  /qml-prereg  H→experiment map · metrics · baselines+twin · P1..P5 milestones · gray-zone policy · both verdict sentences
-              → PREREG.lock.json (scripts/lab/lock.py)
+              → PREREG.lock.json (lab.tools.lock)
  /qml-review-panel #1  (5 personas + Adi's S2 checklist floor)
                                ◆ CP2 freeze ◆
                                         │
@@ -108,11 +121,12 @@ out-of-order calls, opens and closes checkpoints.
 | [C03](components/C03_roles_people_permissions.md) | Roles, people & permissions | `docs/lab/roles.md`, agent defs, escalation table | W0 |
 | [C04](components/C04_intake_and_screen.md) | Intake & screen | `/qml-intake`, `/qml-screen` | W1 |
 | [C05](components/C05_prereg_and_review.md) | Pre-registration & review panel | `/qml-prereg`, `/qml-review-panel` | W2 |
-| [C06](components/C06_execution_harness_and_run.md) | Execution harness & run | `/qml-run`, `scripts/lab/*.py` | W3 (lock.py in W2) |
+| [C06](components/C06_execution_harness_and_run.md) | Execution harness & run | `/qml-run`, `lab/tools/*.py` | W3 (lock.py in W2) |
 | [C07](components/C07_verdict_and_audit.md) | Verdict & audit | `/qml-verdict`, `/qml-audit` | W2 |
 | [C08](components/C08_variants_pivot_promotion.md) | Variants, pivot & promotion | `/qml-variants`, `/qml-promote` | W1 (promote), W3 (variants) |
 | [C09](components/C09_orchestrator_autonomy.md) | Orchestrator & autonomy controller | `/qml-lab`, `config/lab_autonomy.json` | W1 (manual), W3 (full) |
 | [C10](components/C10_evaluation_improvement.md) | Evaluation & self-improvement | evals 1–5 in `/test-skills`, retro loop | W1 onward |
+| [C12](components/C12_researcher_integration.md) | Researcher integration | boundary rules (one entry point, two tool tiers, Hermes allowlist) + 7 feedback edges into the literature skills | W1–W3 |
 | [C11](components/C11_repo_consolidation.md) | Repository consolidation | move experiments into `qml_artifacts/experiments/`, data policy, retire `qml_experiments` | W0 (first) |
 
 ---
@@ -146,9 +160,9 @@ screen and audit — before building an executor.
 | Wave | Scope | Exit criterion | Est. |
 |---|---|---|---|
 | **W0 — foundations** | **C11 migration first** (experiments → `qml_artifacts/experiments/`, cards → VERDICT frontmatter, data manifests, Quartz ignores, archive `qml_experiments`) · C01 templates + schemas · C02 `lab_method.md` + ledger seeded with 13 closed verdicts (+ materials M00/M01 once located) + autonomy log · C03 `roles.md` + agent defs · `config/lab_autonomy.json` all `HUMAN_APPROVE` | Quartz builds with 0 broken links and no code pages; 2 migrated experiments rerun and reproduce; ledger has one entry per closed experiment with `excludes` + `does_not_exclude`; Adi reviews 3 entries unchanged | 5–7 days |
-| **W1 — screen & memory** | `/qml-intake` (both paths) · `/qml-screen` · `/qml-promote` · `/qml-lab` minimal (state + checkpoints, no run) · evals 1, 4 | Eval 1 ≥60% of NO-GOs killed at G0–G3 incl. 3 known-answer checks; eval 4 refuses 3/3 | 1 week |
+| **W1 — screen & memory** | `/qml-intake` (both paths + transfer/hypothesis-card input) · `/qml-screen` · `/qml-promote` · `/qml-lab` minimal (state + checkpoints, no run) · evals 1, 4 · **C12 boundary rules + scout reads ledger (I2) + deprioritization proposals (I6)** | Eval 1 ≥60% of NO-GOs killed at G0–G3 incl. 3 known-answer checks; eval 4 refuses 3/3 | 1 week |
 | **W2 — discipline & audit** | `/qml-prereg` + `lock.py` · `/qml-review-panel` · `/qml-verdict` · `/qml-audit` · evals 2, 3 | M01 replay: auditor flags H2 size-matched artifact and H0 → provisional; eval 3 keeps all 4 classical salvage results | 2 weeks |
-| **W3 — executor & pilot** | `/qml-run` + `scripts/lab/*` · `/qml-lab` full loop · `/qml-variants` · eval 5 · **pilot: Adi's algorithm, Meir driving** | Pilot reaches an audited verdict through P1–P3 with every CP logged; supervision ≤ 1.5 h per milestone | 2–3 weeks |
+| **W3 — executor & pilot** | `/qml-run` + `lab/tools/*` · `/qml-lab` full loop · `/qml-variants` · eval 5 · **pilot: Adi's algorithm, Meir driving** | Pilot reaches an audited verdict through P1–P3 with every CP logged; supervision ≤ 1.5 h per milestone | 2–3 weeks |
 | **W4 — step-down** | Apply D5 using autonomy-log data; Tsahi's improvement loop (C10) running per program | First checkpoint (expected CP1 or CP3) moves to its next mode with the retire evidence attached | ongoing |
 
 ---
@@ -182,7 +196,35 @@ screen and audit — before building an executor.
 | D9 replay first, Adi pilot | §6 W1–W3 exits; C10 evals 1–5 |
 | D10 verdict vocabulary | C07; C08 card-enum mapping; C02 ledger `status` |
 | D11 variants + pivot | C08 |
+| D13 lab inside qml_researcher as a bounded layer | C12; C06 tool tiers; C09 entry point |
 | D12 two repos, experiments in the vault | C11; C01 layout; C02 registry; C06 data fetch; C08 promote without cards |
+
+## 8b. Implementation status (2026-09-30)
+
+Branch `lab/implementation` (qml_researcher) and `lab/w0-knowledge` (qml_artifacts). Review guide:
+[`lab/README.md`](../../lab/README.md) — every role and skill is split into **ESSENCE** (how it
+thinks, for Adi/Meir) and **PROTOCOL/SKILL** (how it runs); a test enforces the split.
+
+| Area | Built | Where |
+|---|---|---|
+| Method criteria | ✅ six rules with precedents, gate ladder, Adi's global rules + warning and simulation tables, N1–N5 | `criteria/lab_method.md` |
+| Roles | ✅ 12 roles (ESSENCE + PROTOCOL) + 5 panel personas | `lab/roles/` |
+| Skills | ✅ 10 lab skills (ESSENCE + SKILL), linked into `.claude/skills` | `.agents/skills/qml-*` |
+| Templates & schemas | ✅ 11 templates, 3 JSON schemas, experiment-entity schema | `artifacts/lab/` |
+| Deterministic tools | ✅ state · lock · validate · autonomy · provenance · splits · gates · guard · ledger · check_sizes (stdlib) | `lab/tools/` |
+| Tests | ✅ 17 passing (tools end-to-end via CLI; structure incl. "no mechanics in essence files") | `tests/lab/` |
+| Autonomy config | ✅ all checkpoints HUMAN_APPROVE; step-down math + auto/spot-check | `config/lab_autonomy.json` |
+| Knowledge seed | ✅ exclusion ledger — 12 entries (10 final, 2 provisional) covering all 13 closed experiments; verdicts linked; autonomy log | vault `indexes/` |
+| Researcher integration (C12) | ✅ scout reads ledger (I2) · synthesis engages ledger (I3) · deep research as lab service (I4) · intake pre-fill from cards (I5) · qml_domain cross-ref + seed proposal (I6, proposal only) · paper review/deep research load our verdicts (I7) · Hermes allowlist · SOUL "The lab" · README/AGENTS | various |
+| Evals (C10) | ✅ eval 4 and 5 fully specified · 🟡 eval 1: 4 known-answer fixtures, 10 framings to write · 🟡 eval 3 specified · ⛔ eval 2 blocked (materials program missing) | `tests/cases/qml-*`, `tests/fixtures/lab/` |
+
+**Not built yet:** scientific tools in the experiments venv (`sim_budget`, `fit_scaling`,
+`resource_est` — needed for P1+ runs); `registry.py` (registry is maintained by hand until
+`/qml-promote` runs for real); the 10 remaining eval-1 framings; the pilot. **Not yet exercised:**
+no skill has run end to end on a live program — the first real run (a replay, then Adi's
+algorithm) is the next step.
+
+---
 
 ## 9. Non-goals for V1
 Platform/workflow engine, permission enforcement in code, dashboard UI (D2). QPU or cloud

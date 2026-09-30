@@ -78,7 +78,7 @@ version that must score below baseline.
 - [ ] Eval 1 fixtures: 13 time-sliced framings (M, 2 days — W1; needs Adi/Tsahi to write the "then-current framing" for each)
 - [ ] Eval 2 fixture from materials M01 (S — W2; blocked on locating materials repo)
 - [ ] Eval 3 fixture (S — W2)
-- [ ] Structural checker `scripts/lab/check_artifacts.py` (S)
+- [ ] Structural checker `lab/tools/check_artifacts.py` (S)
 - [ ] Register cases in `tests/cases/qml-lab/` for `/test-skills` (S)
 - [ ] Retro template (S)
 

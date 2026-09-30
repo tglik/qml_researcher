@@ -1,7 +1,10 @@
 # C09 — Orchestrator & autonomy controller (`/qml-lab`)
 
 ## Purpose
-The program loop: keeps each program on its frozen question, enforces order, tracks budget,
+The lab's single user-facing entry point (C12): people drive the lab through `/qml-lab`
+(plus `/qml-intake` for the interactive interrogation); stage skills are reached through
+`/qml-lab next`. Under Hermes, `status`, `sign`, briefs and escalations are available in Slack;
+execution subcommands run locally. The program loop: keeps each program on its frozen question, enforces order, tracks budget,
 opens and closes human checkpoints, routes escalations — and implements the **autonomy ladder**
 (D4/D5), so supervision drops only when the data says it can.
 
@@ -38,7 +41,7 @@ Output: updated `STATE.json`, `briefs/*.md`, autonomy-log rows, `decision_log.md
 | Command | Does | Pass/fail |
 |---|---|---|
 | `new <thread> --owner <p> --path algorithm\|use-case` | Create `qml_artifacts/experiments/<thread>/` from template on branch `lab/<thread>` of `qml_artifacts`, `STATE.json`, `README.md`; hand to `/qml-intake` | Validator green |
-| `status [<thread>]` | Table of programs: owner, stage, phase, open CP, budget %, blockers, escalations | — |
+| `status [<thread>]` | Table of programs: owner, stage, phase, open CP, budget %, blockers, escalations; plus the **backlog** — `strategic_value: actionable` hypothesis cards with no program yet (C12 I5) | — |
 | `next <thread>` | Read STATE; run the next allowed skill; **refuse out of order** (no prereg without CP1, no run without lock, no verdict before panel #2, no promote before CP4) | Refusal message names missing precondition |
 | `sign <thread> <CP> --by <p> --outcome unchanged\|minor\|material --minutes N [--note]` | Enforce signer ≠ author; record in STATE + autonomy-log + decision_log; advance stage | signer ≠ author |
 | `escalate <thread> <type>` | Write brief; set escalation in STATE; pause | — |
@@ -94,7 +97,7 @@ tests on synthetic logs; signer ≠ author test.
 ## Build tasks
 - [ ] W1 minimal: `new`, `status`, `next` (intake→screen→promote), `sign`, autonomy-log writing (M, 2 days)
 - [ ] W3 full: run/verdict/audit routing, budget, `escalate`, `amend`, `stats`, `step-down`, `ledger-review` (M, 3 days)
-- [ ] `lab_autonomy.json` + `scripts/lab/autonomy.py` (streak + eligibility) (S, 1 day)
+- [ ] `lab_autonomy.json` + `lab/tools/autonomy.py` (streak + eligibility) (S, 1 day)
 - [ ] Hermes: use `clarify` for checkpoint pauses (S)
 
 ## Acceptance criteria

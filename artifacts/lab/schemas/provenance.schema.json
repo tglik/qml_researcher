@@ -1,0 +1,27 @@
+{
+  "$id": "qml-lab/provenance@1",
+  "title": "Provenance records (<phase>/provenance.json) — one per material number, appended by lab.tools.provenance",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["number_id", "value", "file", "command", "git_commit", "env_hash", "at"],
+    "properties": {
+      "number_id": {"type": "string"},
+      "value": {"type": ["number", "string"]},
+      "ci": {"type": ["array", "null"]},
+      "unit": {"type": ["string", "null"]},
+      "file": {"type": "string"},
+      "file_sha256": {"type": ["string", "null"]},
+      "row_selector": {"type": ["string", "null"]},
+      "command": {"type": "string"},
+      "git_commit": {"type": "string"},
+      "env_hash": {"type": "string"},
+      "dataset_sha256": {"type": ["string", "null"]},
+      "split_sha256": {"type": ["string", "null"]},
+      "seeds": {"type": ["array", "null"]},
+      "wall_clock_s": {"type": ["number", "null"]},
+      "peak_mem_gb": {"type": ["number", "null"]},
+      "at": {"type": "string"}
+    }
+  }
+}

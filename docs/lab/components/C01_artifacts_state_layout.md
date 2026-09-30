@@ -11,7 +11,7 @@ checkpoint sign-off (C09), which writes `STATE.json.checkpoints[*]` and `decisio
 Tsahi owns template changes (C10 improvement loop).
 
 ## Inputs / outputs
-Input: nothing (foundation). Output: templates in `qml_researcher/artifacts/lab/`, JSON schemas
+Input: nothing (foundation). Output: templates in `qml_researcher/artifacts/lab/templates/`, JSON schemas
 in `qml_researcher/artifacts/lab/schemas/`, and the layout below.
 
 ### Thread layout (one program = one thread = one branch `lab/<thread>` — D8)
@@ -26,13 +26,13 @@ qml_artifacts/experiments/<thread>/
   PROPOSAL.md                  /qml-prereg — narrative design (Adi S1 structure)
   00_operating_point.md        /qml-prereg
   frozen_definitions.md        /qml-prereg — splits, metrics, instance generators, seeds
-  PREREG.lock.json             scripts/lab/lock.py — never hand-edited
+  PREREG.lock.json             lab/tools/lock.py — never hand-edited
   PANEL_1.md  PANEL_2.md       /qml-review-panel
   P1_toy/  P2_medium/  P3_real/  P4_noise/  P5_hardware/
       src/  raw/  figures/
       data/  manifest.json + fetch.py; files ≤ 5 MB committed, larger gitignored (C11)
       RUN_LOG.md               /qml-run
-      provenance.json          scripts/lab/provenance.py
+      provenance.json          lab/tools/provenance.py
       results/gates.md         numbers vs thresholds only
       PHASE_REPORT.md          /qml-run (Adi S3 template)
   VERDICT.md                   /qml-verdict — frontmatter is the experiment's graph entity (C11 schema)
@@ -103,7 +103,7 @@ of the phase it touches — checked by `lock.py verify` (C06).
  "wall_clock_s": 812, "peak_mem_gb": 3.1, "at": "…"}
 ```
 
-### Markdown templates (in `artifacts/lab/`)
+### Markdown templates (in `artifacts/lab/templates/`)
 | Template | Required sections | Derived from |
 |---|---|---|
 | `HYPOTHESIS.md` | Claim (contradictable by a number) · Operating point · Disproof sentence · Arm that wins if false · Decision it changes · **H1..Hn table** (hypothesis, predicted value/scaling, metric, source) · entry path | Tsahi §3.1 scoping + Adi S0 §4.9 |
@@ -119,7 +119,7 @@ of the phase it touches — checked by `lock.py verify` (C06).
 | `DECISION_BRIEF.md` | ≤1 page: what is being decided · the agent's recommendation · evidence links · what it would cost to continue · 2–5 options · reply format | Meir §7 + Adi rule 1 |
 
 ## Procedure
-1. W0: write templates + schemas; add `scripts/lab/validate.py` (C06) that validates
+1. W0: write templates + schemas; add `lab/tools/validate.py` (C06) that validates
    `STATE.json`, `PREREG.lock.json`, `provenance.json` against the schemas. *Pass:* validator
    accepts a hand-built example thread and rejects 5 seeded-broken variants.
 2. Every skill's Phase 0 = `validate.py STATE.json` + read; last phase = write + validate.
@@ -146,10 +146,10 @@ by the `implementer`.
 C10 harness structural checks on every eval run; validator unit tests.
 
 ## Build tasks
-- [ ] `artifacts/lab/*.md` — 11 templates (S, 1 day)
+- [ ] `artifacts/lab/templates/*.md` — 11 templates (S, 1 day)
 - [ ] `artifacts/lab/schemas/{state,lock,provenance}.schema.json` (S, ½ day)
 - [ ] Example thread `tests/fixtures/lab/example_thread/` (S, ½ day)
-- [ ] `scripts/lab/validate.py` (C06) (S, ½ day)
+- [ ] `lab/tools/validate.py` (C06) (S, ½ day)
 
 ## Acceptance criteria
 Validator green on example thread; every artifact named in C04–C09 has a template or schema

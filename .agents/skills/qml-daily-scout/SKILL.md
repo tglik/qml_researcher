@@ -230,6 +230,20 @@ For each selected item, include one concise skepticism/evidence gate. Choose the
 
 Do not write vague skepticism like “needs more work.” Name the specific evidence gate.
 
+### Our own measured negatives (exclusion ledger — QML Lab, C12 I2)
+
+Before ranking, read `{OUTPUT_ROOT}/indexes/exclusion-ledger.md` (validate with
+`python -m lab.tools.ledger validate`). For each selected item, compare its direction with the
+ledger **by mechanism** (the `mechanism` and `excludes` fields — not by topic words):
+
+- Inside an active **`final`** entry → lower its score by one band and tag it
+  `⛔ excluded: <ledger id> — <one-line mechanism>`. Keep it in the digest only if it is otherwise top-tier.
+- Inside a **`provisional`** entry → tag `⚠ provisional exclusion: <id>`; do not down-rank.
+- **Argues against an entry's mechanism** (e.g. a construction with genuine sign cancellation where
+  the entry's twin relied on none; an adequate baseline where the entry's was not) → raise by one
+  band and tag `🔁 challenges <id>` — this is the evidence that reopens an exclusion.
+- An item inside an entry's `does_not_exclude` is not excluded; say so if it looks similar.
+
 ---
 
 ## Output schema

@@ -11,9 +11,9 @@ this file are CP5-class (human PR).
 
 ## Inputs / outputs
 Output: `qml_researcher/docs/lab/roles.md` (the tables below, canonical) and agent definition
-files under each owning skill (`.agents/skills/<skill>/agents/<role>.md`, per `protocol.md`
-— skills own their agents; a role used by two skills gets one canonical file in the owning
-skill and is referenced by path from the other).
+files `lab/roles/<role>/ESSENCE.md` (how the role thinks — scientific review) and
+`lab/roles/<role>/PROTOCOL.md` (what it does — system review). Roles are shared across skills, so
+they live in one place rather than in each skill's `agents/` folder (see `lab/README.md`).
 
 ## Artifact schemas
 
@@ -115,7 +115,7 @@ the auditor on a fresh context.
 ## Build tasks
 - [ ] `docs/lab/roles.md` (S, ½ day)
 - [ ] 12 agent defs + 5 panel persona defs (M, 2 days)
-- [ ] `scripts/lab/guard.py` — git-diff write guard used by `/qml-run` (S, C06)
+- [ ] `lab/tools/guard.py` — git-diff write guard used by `/qml-run` (S, C06)
 
 ## Acceptance criteria
 Every skill in C04–C09 spawns only roles listed as O/E for it; Adi signs the matrix; the

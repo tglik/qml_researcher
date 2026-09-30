@@ -8,7 +8,7 @@ be kept in sync across two repos. After this change (D12):
 
 | Repo | Holds |
 |---|---|
-| `qml_researcher` | **System code** — skills, agents, criteria, schemas, `scripts/lab/` tools, evals, docs |
+| `qml_researcher` | **System code** — skills, agents, criteria, schemas, `lab/tools/` tools, evals, docs |
 | `qml_artifacts` | **All research artifacts** — literature cards and sources (as today) **plus** every experiment: docs, code, results, figures, small data |
 | `qml_experiments` | **Retired** — archived read-only with a pointer README; no skill reads or writes it |
 
@@ -91,7 +91,7 @@ PROPOSAL, PHASE_REPORT, PANEL, VERDICT, AUDIT, VARIANTS) and `figures/` are publ
 | 3 Data split | For each file > 5 MB: move to gitignore, write manifest entry + fetch function, verify fetch reproduces sha | `fetch.py --verify` green for all 13 |
 | 4 Entity frontmatter | Convert each card's frontmatter into `VERDICT.md` frontmatter (script), add `aliases`, append card-only body content as `## Graph links` | 13/13 converted |
 | 5 Remove bridges | Delete `cards/experiments/*.md` and `sources/reports/experiments/*.md` | Quartz build has 0 broken links |
-| 6 Indexes | Rebuild `experiment-registry.md` and topic-map experiment rows from VERDICT frontmatter (`scripts/lab/registry.py`) | Registry lists 13 (+ materials) |
+| 6 Indexes | Rebuild `experiment-registry.md` and topic-map experiment rows from VERDICT frontmatter (`lab/tools/registry.py`) | Registry lists 13 (+ materials) |
 | 7 Quartz | Add ignorePatterns; build | Verdict pages render with figures; no `.py` / data pages |
 | 8 Rerun check | Rerun 2 experiments' reproduce commands from the new location (one with fetched data) | Results match committed `results/` |
 | 9 Archive | Commit a pointer `README.md` in `qml_experiments` ("moved to qml_artifacts/experiments at <sha>"), archive the GitHub repo read-only | Archived |
@@ -121,7 +121,7 @@ change only at promotion.
 | Failure | Control |
 |---|---|
 | Broken wiki-links after deleting cards | `aliases` in VERDICT frontmatter; Quartz build link check |
-| Vault bloat / Quartz publishes code or data | 5 MB rule + ignorePatterns + a pre-commit size check (`scripts/lab/check_sizes.py`) |
+| Vault bloat / Quartz publishes code or data | 5 MB rule + ignorePatterns + a pre-commit size check (`lab/tools/check_sizes.py`) |
 | Lost reproducibility for large data | `manifest.json` + `fetch.py --verify`; rerun check in step 8 |
 | History lost (plain copy) | Source sha in the copy commit; archived repo stays readable |
 | Obsidian/Quartz slowed by many code files | ignorePatterns; `.obsidian` excluded folders list updated |
@@ -135,8 +135,8 @@ frontmatter.
 - [ ] `scripts/lab/migrate/copy_experiments.py` (layout normalization + accounting diff) (S)
 - [ ] `scripts/lab/migrate/split_data.py` (manifest + fetch stubs) + per-experiment fetch functions (M, 1 day)
 - [ ] `scripts/lab/migrate/cards_to_frontmatter.py` (S)
-- [ ] `scripts/lab/registry.py` (S)
-- [ ] `scripts/lab/check_sizes.py` pre-commit (S)
+- [ ] `lab/tools/registry.py` (S)
+- [ ] `lab/tools/check_sizes.py` pre-commit (S)
 - [ ] Quartz ignorePatterns + build check (S)
 - [ ] `qml_researcher` reference updates (table above) (S)
 - [ ] Archive `qml_experiments` (S)

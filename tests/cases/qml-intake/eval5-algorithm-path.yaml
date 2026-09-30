@@ -1,0 +1,47 @@
+id: qml-intake-eval5-algorithm-path
+skill: qml-intake
+mode: algorithm
+skill_version_min: "0.1.0"
+eval_id: eval5-algorithm-path
+description: |
+  Algorithm-path known answers (docs/lab C10 eval 5). Three algorithm fixtures, each with one
+  decisive problem the analysis + screen must find. Run: /qml-lab new eval/<n> --path algorithm
+  with the fixture in 00_inputs/, then /qml-intake and /qml-screen. Scored on
+  ALGORITHM_ANALYSIS.md and SCREEN.md.
+
+input:
+  type: fixtures
+  runs:
+    - fixture: tests/fixtures/lab/eval5/a_dequantizable_recsys.md
+      known_answer: "Dequantizable — Tang (2019) sample-and-query classical algorithm matches it up to polynomial factors given the same (ℓ² sampling) access; G3 red; warning box: classically simulable/dequantizable."
+    - fixture: tests/fixtures/lab/eval5/b_full_vector_readout.md
+      known_answer: "Reading all N=5,000 weights to 1e-4 needs ≥ N/ε² = 5×10¹¹ shots (or ≥ N state preparations with tomography), erasing the exponential claim; plus loading μ costs ≈ N; G1 red; the comparison against conjugate gradient in the same variable is polynomial at best."
+    - fixture: tests/fixtures/lab/eval5/c_clifford_circuit.md
+      known_answer: "The circuit is Clifford (X, H, CNOT, S) on a computational-basis input: efficiently simulable (Gottesman–Knill); ZZ expectations computable classically exactly; warning box: classically simulable ⇒ ASK-HUMAN or KILLED-ON-PAPER; no hardware run warranted."
+
+axes:
+  known_answer_found:
+    weight: 4.0
+    artifacts: [ALGORITHM_ANALYSIS.md, SCREEN.md]
+    rubric: |
+      5: all three decisive problems identified, each with the specific reason (dequantization + access model; N/ε² readout + loading; Clifford simulability) and the matching warning box verbatim
+      3: two of three identified with reasons
+      1: one identified
+      0: none — or PROCEED recommended on any fixture
+  same_variable_end_to_end:
+    weight: 2.0
+    artifacts: [ALGORITHM_ANALYSIS.md]
+    rubric: |
+      5: every resource table states N, q and the mapping; loading and readout are in the quantum cost; simulator time never used as quantum time
+      3: one table misses loading or readout
+      0: headline cost excludes loading/readout, or compares quantum polylog(N) with classical poly(N) without matching access
+  verdict_discipline:
+    weight: 1.0
+    artifacts: [SCREEN.md]
+    rubric: |
+      5: (a) KILLED-ON-PAPER at G3, (b) KILLED-ON-PAPER at G1, (c) KILLED-ON-PAPER or ASK-HUMAN citing simulability; each with the narrowest excluded class
+      3: correct direction but mechanism class too broad ("quantum finance is dead")
+      0: any PASS
+
+combined_formula: weighted_average
+regression_thresholds: {combined_drop: 0.5, axis_drop: 1.0, critical: {from_min: 4, to_max: 2}}

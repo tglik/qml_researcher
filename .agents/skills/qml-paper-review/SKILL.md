@@ -297,6 +297,10 @@ Add `## Links`: [[01_claim_registry.md]] (next), [[02_analysis.md]] (next), [[04
 
 **Task:**
 - Input: `{WORKSPACE}/01_claim_registry.md`, `{WORKSPACE}/02_analysis.md`
+- Also input — **our own measurements** (C12 I7): `{OUTPUT_ROOT}/experiments/**/VERDICT.md` whose frontmatter
+  `topics` overlap the paper's topics, and `{OUTPUT_ROOT}/indexes/exclusion-ledger.md`. Where the team has
+  measured the paper's claim (or its mechanism) itself, cite our verdict next to the literature evidence
+  (`[[experiments/<thread>/<NN>/VERDICT]]`) — our number beside theirs.
 - Focus on 3-5 highest-stakes claims (EMPIRICAL ADVANTAGE or THEORETICAL NOVELTY labels, and any QML criteria concerns from Phase 2)
 - For supporting/contradicting papers with arXiv ID: `[[cards/paper-cards/{arxiv_id}]]`
 - Reference registry claims with: `[§Category](01_claim_registry.md#category)`

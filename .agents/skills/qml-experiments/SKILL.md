@@ -14,12 +14,13 @@ description: |
   VERDICT.md (and its frontmatter, the experiment's graph entity) is human-authored.
 triggers:
   - qml-experiments
-  - what experiments have we run
-  - what have we run for <experiment/topic>
-  - rerun this experiment
-  - check experiment run status
-  - has this experiment been rerun since the code changed
-  - make a code change in an experiment
+  - what closed experiments have we run
+  - what have we already measured for <topic>
+  - rerun a closed experiment
+  - has this closed experiment been rerun since the code changed
+  - make a code change in a closed experiment
+# Narrowed (docs/lab C12): live lab programs are driven through /qml-lab (status, next, sign);
+# this skill is the helper for closed/legacy experiments and supplies /qml-run's rerun mechanics.
 
 input:
   - subcommand: status (default, no slug) | show <slug> | run-status <slug> | rerun <slug> [--yes] | edit <slug> "<change description>"
