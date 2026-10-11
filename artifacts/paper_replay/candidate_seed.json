@@ -1,0 +1,748 @@
+{
+  "version": "seed-2026-10-11",
+  "status": "proposed; outcomes and tiers are curator hypotheses to verify by reading the adjudicating passages, not labels",
+  "evaluator_only": "Contains outcomes. Never place in candidate context.",
+  "candidates": [
+    {
+      "id": "qml-01",
+      "domain": "qml",
+      "profile": "mechanism",
+      "original": {
+        "arxiv": "1804.11326",
+        "label": "Havlicek et al. 2019, quantum-enhanced feature spaces"
+      },
+      "claim": "Kernels from feature maps that are hard to estimate classically can give a classification advantage on suitable data.",
+      "adjudicators": [
+        {
+          "arxiv": "2208.11060",
+          "label": "Thanasilp et al., exponential concentration in quantum kernel methods",
+          "relation": "conditional_limitation"
+        },
+        {
+          "arxiv": "2111.05451",
+          "label": "Shaydulin & Wild, importance of kernel bandwidth",
+          "relation": "conditional_limitation"
+        }
+      ],
+      "proposed_outcome": "conditional_limitation",
+      "tier_guess": "B",
+      "notes": "Hardware demo on a synthetic dataset; the advantage claim is conjectural in the paper itself. Test whether the verdict separates the demonstration from the advantage claim."
+    },
+    {
+      "id": "qml-02",
+      "domain": "qml",
+      "profile": "mechanism",
+      "original": {
+        "arxiv": "1810.03787",
+        "label": "Cong, Choi, Lukin 2019, quantum convolutional neural networks"
+      },
+      "claim": "QCNNs recognize quantum phases with sample complexity beyond existing approaches, using a circuit with O(log N) parameters.",
+      "adjudicators": [
+        {
+          "arxiv": "2408.12739",
+          "label": "Bermejo et al., QCNNs are effectively classically simulable",
+          "relation": "conditional_limitation"
+        }
+      ],
+      "proposed_outcome": "conditional_limitation",
+      "tier_guess": "B",
+      "notes": "Simulability holds for the locally easy, low-bodyness regimes studied; quantum data acquisition may still be needed. Score the exact claim."
+    },
+    {
+      "id": "qml-03",
+      "domain": "qml",
+      "profile": "formal",
+      "original": {
+        "arxiv": "1603.08675",
+        "label": "Kerenidis & Prakash 2016, quantum recommendation systems"
+      },
+      "claim": "An exponential speedup over classical algorithms for recommendation, given QRAM-style data access.",
+      "adjudicators": [
+        {
+          "arxiv": "1807.04271",
+          "label": "Tang, quantum-inspired classical algorithm for recommendation systems",
+          "relation": "dequantization_matched_access"
+        }
+      ],
+      "proposed_outcome": "refuted_exponential_separation",
+      "tier_guess": "A",
+      "notes": "Algorithm correctness survives; the exponential separation does not under comparable sampling access. Overlaps synthetic eval5."
+    },
+    {
+      "id": "qml-04",
+      "domain": "qml",
+      "profile": "formal",
+      "original": {
+        "arxiv": "1307.0401",
+        "label": "Lloyd, Mohseni, Rebentrost 2014, quantum principal component analysis"
+      },
+      "claim": "Exponential speedup for principal component analysis of an unknown low-rank density matrix.",
+      "adjudicators": [
+        {
+          "arxiv": "1811.00414",
+          "label": "Tang, QPCA only achieves an exponential speedup because of its state preparation assumptions",
+          "relation": "dequantization_matched_access"
+        }
+      ],
+      "proposed_outcome": "conditional_limitation",
+      "tier_guess": "B",
+      "notes": "Speedup on classical data is dequantized; the quantum-data-input setting is a different access model. Good scope test."
+    },
+    {
+      "id": "qml-05",
+      "domain": "qml",
+      "profile": "commercial_or_benchmark",
+      "original": {
+        "arxiv": "1907.02085",
+        "label": "Perez-Salinas et al. 2020, data re-uploading for a universal quantum classifier"
+      },
+      "claim": "A single-qubit re-uploading classifier is universal and performs competitively on benchmark classification tasks.",
+      "adjudicators": [
+        {
+          "arxiv": "2403.07059",
+          "label": "Bowles, Ahmed, Schuld, better than classical? benchmarking QML models",
+          "relation": "matched_reevaluation"
+        }
+      ],
+      "proposed_outcome": "mixed",
+      "tier_guess": "A",
+      "notes": "Universality is formal and survives; competitiveness against tuned classical baselines is the adjudicated part. Confirm the benchmark includes this model."
+    },
+    {
+      "id": "qml-06",
+      "domain": "qml",
+      "profile": "mechanism",
+      "original": {
+        "arxiv": "2011.01938",
+        "label": "Huang et al. 2021, power of data in quantum machine learning"
+      },
+      "claim": "Projected quantum kernels outperform classical models on datasets engineered to have a large geometric difference.",
+      "adjudicators": [
+        {
+          "arxiv": "2403.07059",
+          "label": "Bowles, Ahmed, Schuld, better than classical? benchmarking QML models",
+          "relation": "matched_reevaluation"
+        }
+      ],
+      "proposed_outcome": "supported_scoped",
+      "tier_guess": "B",
+      "notes": "Positive case within an engineered-data scope. Confirm what the benchmark says about projected kernels before assigning a tier."
+    },
+    {
+      "id": "qml-07",
+      "domain": "qml",
+      "profile": "formal",
+      "original": {
+        "arxiv": "2010.02174",
+        "label": "Liu, Arunachalam, Temme 2021, rigorous and robust quantum speed-up in supervised learning"
+      },
+      "claim": "A quantum kernel learner achieves an end-to-end speedup on a discrete-log-based classification task, under standard hardness assumptions.",
+      "adjudicators": [],
+      "proposed_outcome": "supported_scoped",
+      "tier_guess": "C",
+      "notes": "Formal positive control. No external adjudication identified yet; tier C until one is found. Mining found discussion (e.g. 2406.07072 on trainability vs dequantization) but no claim-level adjudication. Formal positive control; tier C unless an independent proof check is found."
+    },
+    {
+      "id": "qml-08",
+      "domain": "qml",
+      "profile": "formal",
+      "original": {
+        "arxiv": "1803.11173",
+        "label": "McClean et al. 2018, barren plateaus in quantum neural network training landscapes"
+      },
+      "claim": "Gradients of sufficiently random parameterized circuits vanish exponentially in the number of qubits.",
+      "adjudicators": [
+        {
+          "arxiv": "2001.00550",
+          "label": "Cerezo et al., cost function dependent barren plateaus",
+          "relation": "independent_extension"
+        },
+        {
+          "arxiv": "2405.00781",
+          "label": "Larocca et al., review of barren plateaus",
+          "relation": "review"
+        }
+      ],
+      "proposed_outcome": "supported",
+      "tier_guess": "A",
+      "notes": "Cerezo et al. is independent of the original authors; the 2024 review includes McClean and does not count toward independence."
+    },
+    {
+      "id": "qc-01",
+      "domain": "qc",
+      "profile": "commercial_or_benchmark",
+      "original": {
+        "doi": "10.1038/s41586-019-1666-5",
+        "label": "Arute et al. 2019, quantum supremacy using a programmable superconducting processor"
+      },
+      "claim": "Sampling the 53-qubit random circuits at the reported fidelity would take a state-of-the-art supercomputer about 10,000 years.",
+      "adjudicators": [
+        {
+          "arxiv": "2111.03011",
+          "label": "Pan, Chen, Zhang, solving the sampling problem of the Sycamore quantum circuits",
+          "relation": "classical_rebuttal"
+        }
+      ],
+      "proposed_outcome": "refuted_cost_estimate",
+      "tier_guess": "A",
+      "notes": "The classical-cost estimate is refuted; the hardware fidelity results stand. Claim-level split. arXiv 1910.11333 is the supplementary information, not the paper; use the Nature DOI."
+    },
+    {
+      "id": "qc-02",
+      "domain": "qc",
+      "profile": "commercial_or_benchmark",
+      "original": {
+        "doi": "10.1038/s41586-023-06096-3",
+        "label": "Kim et al. 2023, evidence for the utility of quantum computing before fault tolerance"
+      },
+      "claim": "Error-mitigated expectation values for a 127-qubit kicked Ising circuit are accurate in regimes beyond brute-force classical simulation.",
+      "adjudicators": [
+        {
+          "arxiv": "2306.14887",
+          "label": "Tindall et al., efficient tensor network simulation of IBM's Eagle kicked Ising experiment",
+          "relation": "classical_rebuttal"
+        },
+        {
+          "arxiv": "2306.16372",
+          "label": "Begusic & Chan, fast classical simulation of evidence for the utility of quantum computing",
+          "relation": "classical_rebuttal"
+        }
+      ],
+      "proposed_outcome": "conditional_limitation",
+      "tier_guess": "A",
+      "notes": "Error-mitigation accuracy survives; beyond-classical framing does not in the reported regime. Begusic & Chan citation not found in Semantic Scholar or OpenAlex reference lists; the paper's subject is this experiment, so treat as an index gap and confirm in the PDF."
+    },
+    {
+      "id": "qc-03",
+      "domain": "qc",
+      "profile": "commercial_or_benchmark",
+      "original": {
+        "arxiv": "2012.01625",
+        "label": "Zhong et al. 2020, quantum computational advantage using photons (Jiuzhang)"
+      },
+      "claim": "Gaussian boson sampling with 76 detected photons is infeasible to reproduce classically at the reported rate.",
+      "adjudicators": [
+        {
+          "arxiv": "2109.11525",
+          "label": "Villalonga et al., efficient approximation of experimental Gaussian boson sampling",
+          "relation": "classical_rebuttal"
+        }
+      ],
+      "proposed_outcome": "conditional_limitation",
+      "tier_guess": "B",
+      "notes": "Rebuttal spoofs the benchmark tests used; exact sampling hardness is not refuted. Claim-level. Author-overlap flag 'L. Li' is a name collision (Google vs USTC), not shared authorship."
+    },
+    {
+      "id": "qc-04",
+      "domain": "qc",
+      "profile": "commercial_or_benchmark",
+      "original": {
+        "arxiv": "2403.00910",
+        "label": "King et al. 2025, beyond-classical computation in quantum simulation (D-Wave)"
+      },
+      "claim": "Quantum annealer dynamics of spin glasses are beyond the reach of classical simulation methods at the reported accuracy.",
+      "adjudicators": [
+        {
+          "arxiv": "2503.05693",
+          "label": "Tindall et al., dynamics of disordered quantum systems with 2D tensor networks",
+          "relation": "classical_rebuttal"
+        },
+        {
+          "arxiv": "2503.08247",
+          "label": "Mauron & Carleo, challenging the quantum advantage frontier with large-scale classical simulations of annealing dynamics",
+          "relation": "classical_rebuttal"
+        }
+      ],
+      "proposed_outcome": "contested",
+      "tier_guess": "Unscorable",
+      "notes": "Live dispute with replies; good test that the verdict stays INCONCLUSIVE rather than picking a side. Mauron & Carleo citation not found in either index; confirm in the PDF."
+    },
+    {
+      "id": "qc-05",
+      "domain": "qc",
+      "profile": "commercial_or_benchmark",
+      "original": {
+        "arxiv": "1512.02206",
+        "label": "Denchev et al. 2016, what is the computational value of finite-range tunneling?"
+      },
+      "claim": "The D-Wave 2X is about 10^8 times faster than simulated annealing on crafted instances.",
+      "adjudicators": [
+        {
+          "arxiv": "1604.01746",
+          "label": "Mandra et al., strengths and weaknesses of weak-strong cluster problems",
+          "relation": "matched_reevaluation"
+        }
+      ],
+      "proposed_outcome": "conditional_limitation",
+      "tier_guess": "B",
+      "notes": "Speedup holds against simulated annealing; not against the strongest classical solvers. Weak-baseline lesson, directly relevant to criterion 5."
+    },
+    {
+      "id": "qc-06",
+      "domain": "qc",
+      "profile": "formal",
+      "original": {
+        "arxiv": "0811.3171",
+        "label": "Harrow, Hassidim, Lloyd 2009, quantum algorithm for linear systems of equations"
+      },
+      "claim": "Exponential speedup for solving sparse, well-conditioned linear systems, returning a quantum state.",
+      "adjudicators": [
+        {
+          "doi": "10.1038/nphys3272",
+          "label": "Aaronson, read the fine print",
+          "relation": "conditional_limitation"
+        }
+      ],
+      "proposed_outcome": "conditional_limitation",
+      "tier_guess": "B",
+      "notes": "Algorithm stands; end-to-end advantage depends on input/output caveats. Matches the deprioritized-HHL rule in CLAUDE.md."
+    },
+    {
+      "id": "phys-01",
+      "domain": "physics",
+      "profile": "replication",
+      "original": {
+        "arxiv": "1710.10701",
+        "label": "Zhang et al. 2018, quantized Majorana conductance (retracted 2021)"
+      },
+      "claim": "A zero-bias conductance plateau at 2e^2/h is evidence of Majorana zero modes.",
+      "adjudicators": [
+        {
+          "doi": "10.1038/s41586-021-03373-x",
+          "label": "Retraction note: Quantized Majorana conductance",
+          "relation": "retraction"
+        },
+        {
+          "arxiv": "2004.08583",
+          "label": "Yu et al., non-Majorana states yield nearly quantized conductance",
+          "relation": "contradiction"
+        }
+      ],
+      "proposed_outcome": "refuted",
+      "tier_guess": "A",
+      "notes": "Retracted after data-selection issues. Verify the retraction notice DOI. The retraction note is by the original authors (self-retraction): authoritative for the claim's evidential status but not an independent replication. Yu et al. shares Bakkers (device growth). Confirm whether independent critics (e.g. published data-selection concerns) triggered the retraction before assigning tier A."
+    },
+    {
+      "id": "phys-02",
+      "domain": "physics",
+      "profile": "replication",
+      "original": {
+        "arxiv": "2307.12008",
+        "label": "Lee et al. 2023, LK-99 room-temperature ambient-pressure superconductor"
+      },
+      "claim": "Cu-doped lead apatite is a superconductor at room temperature and ambient pressure.",
+      "adjudicators": [],
+      "proposed_outcome": "refuted",
+      "tier_guess": "A",
+      "notes": "Multiple independent replications attributed effects to Cu2S impurities. Adjudicator IDs to be found by citation mining. Citation mining found no challenger: Semantic Scholar has few citation passages for this preprint. Find replication papers manually (independent synthesis attributing the transition to Cu2S)."
+    },
+    {
+      "id": "phys-03",
+      "domain": "physics",
+      "profile": "mechanism",
+      "original": {
+        "arxiv": "1606.02318",
+        "label": "Carleo & Troyer 2017, solving the quantum many-body problem with artificial neural networks"
+      },
+      "claim": "Neural-network quantum states reach state-of-the-art variational accuracy for ground states of 1D/2D spin models.",
+      "adjudicators": [
+        {
+          "arxiv": "2302.04919",
+          "label": "Wu et al., variational benchmarks for quantum many-body problems",
+          "relation": "matched_reevaluation"
+        }
+      ],
+      "proposed_outcome": "supported_scoped",
+      "tier_guess": "B",
+      "notes": "Positive physics case. Benchmark compares many variational methods; check what it says about NQS accuracy in the original models. Variational benchmarks paper includes Carleo as co-author: not independent, so tier B at most unless an unrelated benchmark is found."
+    },
+    {
+      "id": "ml-01",
+      "domain": "ml",
+      "profile": "commercial_or_benchmark",
+      "original": {
+        "arxiv": "1708.05031",
+        "label": "He et al. 2017, neural collaborative filtering"
+      },
+      "claim": "An MLP-based interaction function outperforms the dot product of matrix factorization for implicit-feedback recommendation.",
+      "adjudicators": [
+        {
+          "arxiv": "2005.09683",
+          "label": "Rendle et al., neural collaborative filtering vs. matrix factorization revisited",
+          "relation": "matched_reevaluation"
+        },
+        {
+          "arxiv": "1907.06902",
+          "label": "Ferrari Dacrema et al., are we really making much progress?",
+          "relation": "matched_reevaluation"
+        }
+      ],
+      "proposed_outcome": "refuted",
+      "tier_guess": "A",
+      "notes": "Weak-baseline case: a properly tuned dot product beats the MLP. Relevant to the lab's recsys experiments."
+    },
+    {
+      "id": "ml-02",
+      "domain": "ml",
+      "profile": "commercial_or_benchmark",
+      "original": {
+        "arxiv": "1908.07442",
+        "label": "Arik & Pfister 2021, TabNet"
+      },
+      "claim": "TabNet outperforms other neural and decision-tree models on a range of tabular benchmarks.",
+      "adjudicators": [
+        {
+          "arxiv": "2106.03253",
+          "label": "Shwartz-Ziv & Armon, tabular data: deep learning is not all you need",
+          "relation": "matched_reevaluation"
+        },
+        {
+          "arxiv": "2207.08815",
+          "label": "Grinsztajn et al., why do tree-based models still outperform deep learning on tabular data?",
+          "relation": "matched_reevaluation"
+        }
+      ],
+      "proposed_outcome": "refuted",
+      "tier_guess": "A",
+      "notes": "Tabular baseline case aligned with criterion 5 (XGBoost/TabPFN)."
+    },
+    {
+      "id": "ml-03",
+      "domain": "ml",
+      "profile": "mechanism",
+      "original": {
+        "arxiv": "1502.03167",
+        "label": "Ioffe & Szegedy 2015, batch normalization"
+      },
+      "claim": "Batch normalization speeds training by reducing internal covariate shift.",
+      "adjudicators": [
+        {
+          "arxiv": "1805.11604",
+          "label": "Santurkar et al., how does batch normalization help optimization?",
+          "relation": "contradiction"
+        }
+      ],
+      "proposed_outcome": "mixed",
+      "tier_guess": "A",
+      "notes": "Performance claim supported; mechanism claim contradicted. Tests claim-level scoring."
+    },
+    {
+      "id": "ml-04",
+      "domain": "ml",
+      "profile": "mechanism",
+      "original": {
+        "arxiv": "1810.00826",
+        "label": "Xu et al. 2019, how powerful are graph neural networks? (GIN)"
+      },
+      "claim": "GIN is as expressive as the WL test and achieves state-of-the-art graph classification accuracy.",
+      "adjudicators": [
+        {
+          "arxiv": "1912.09893",
+          "label": "Errica et al., a fair comparison of graph neural networks for graph classification",
+          "relation": "matched_reevaluation"
+        }
+      ],
+      "proposed_outcome": "mixed",
+      "tier_guess": "A",
+      "notes": "Expressivity theorem survives; empirical margins shrink under fair evaluation with structure-agnostic baselines. Graph domain matches lab directions."
+    },
+    {
+      "id": "ml-05",
+      "domain": "ml",
+      "profile": "commercial_or_benchmark",
+      "original": {
+        "arxiv": "1904.06627",
+        "label": "Wang et al. 2019, multi-similarity loss for deep metric learning"
+      },
+      "claim": "The multi-similarity loss improves retrieval accuracy over prior metric-learning losses.",
+      "adjudicators": [
+        {
+          "arxiv": "2003.08505",
+          "label": "Musgrave et al., a metric learning reality check",
+          "relation": "matched_reevaluation"
+        }
+      ],
+      "proposed_outcome": "conditional_limitation",
+      "tier_guess": "A",
+      "notes": "Gains largely vanish under fair comparison. Confirm the reality check includes this loss."
+    },
+    {
+      "id": "ml-06",
+      "domain": "ml",
+      "profile": "commercial_or_benchmark",
+      "original": {
+        "arxiv": "1704.00028",
+        "label": "Gulrajani et al. 2017, improved training of Wasserstein GANs"
+      },
+      "claim": "WGAN-GP gives more stable training and better sample quality than prior GAN objectives.",
+      "adjudicators": [
+        {
+          "arxiv": "1711.10337",
+          "label": "Lucic et al., are GANs created equal?",
+          "relation": "matched_reevaluation"
+        }
+      ],
+      "proposed_outcome": "conditional_limitation",
+      "tier_guess": "B",
+      "notes": "With enough tuning budget, objectives reach similar scores. Tuning-budget confound."
+    },
+    {
+      "id": "ml-07",
+      "domain": "ml",
+      "profile": "commercial_or_benchmark",
+      "original": {
+        "arxiv": "1611.01578",
+        "label": "Zoph & Le 2017, neural architecture search with reinforcement learning"
+      },
+      "claim": "An RL-discovered recurrent cell outperforms LSTM on Penn Treebank language modeling.",
+      "adjudicators": [
+        {
+          "arxiv": "1707.05589",
+          "label": "Melis, Dyer, Blunsom, on the state of the art of evaluation in neural language models",
+          "relation": "matched_reevaluation"
+        }
+      ],
+      "proposed_outcome": "refuted",
+      "tier_guess": "A",
+      "notes": "A well-tuned LSTM outperforms the searched cell. Hyperparameter-budget asymmetry."
+    },
+    {
+      "id": "ml-08",
+      "domain": "ml",
+      "profile": "replication",
+      "original": {
+        "arxiv": "1512.03385",
+        "label": "He et al. 2016, deep residual learning"
+      },
+      "claim": "Residual connections make very deep networks trainable and improve ImageNet accuracy over plain networks of the same depth.",
+      "adjudicators": [
+        {
+          "arxiv": "1812.01187",
+          "label": "He et al., bag of tricks for image classification",
+          "relation": "replication"
+        }
+      ],
+      "proposed_outcome": "supported",
+      "tier_guess": "A",
+      "notes": "Positive control. Bag of tricks (Amazon) is an independent re-implementation; confirm it re-tests the residual-vs-plain claim rather than only building on ResNet."
+    },
+    {
+      "id": "qml-09",
+      "domain": "qml",
+      "profile": "mechanism",
+      "original": {
+        "arxiv": "2002.08953",
+        "label": "Huang, Kueng, Preskill 2020, predicting many properties of a quantum system from very few measurements (classical shadows)"
+      },
+      "claim": "Randomized measurements predict M linear functions of an unknown state with sample complexity scaling as log M, independent of system size for local observables.",
+      "adjudicators": [
+        {
+          "arxiv": "2008.05234",
+          "label": "Struchalin et al., experimental estimation of quantum state properties from classical shadows",
+          "relation": "independent_experimental_confirmation"
+        }
+      ],
+      "proposed_outcome": "supported",
+      "tier_guess": "A",
+      "notes": "Quantum-learning positive with an independent experiment. Check author overlap and whether the experiment tests the scaling claim or one instance.",
+      "success_case": true
+    },
+    {
+      "id": "qml-10",
+      "domain": "qml",
+      "profile": "mechanism",
+      "original": {
+        "arxiv": "2112.00778",
+        "label": "Huang et al. 2022, quantum advantage in learning from experiments"
+      },
+      "claim": "Learning with quantum memory gives an exponential reduction in experiments needed for some tasks, demonstrated on a superconducting processor.",
+      "adjudicators": [],
+      "proposed_outcome": "supported_scoped",
+      "tier_guess": "C",
+      "notes": "Positive quantum-advantage claim (sample complexity, not runtime). No independent replication identified; tier C. Theory companions share authors.",
+      "success_case": true
+    },
+    {
+      "id": "qc-07",
+      "domain": "qc",
+      "profile": "replication",
+      "original": {
+        "arxiv": "1508.05949",
+        "label": "Hensen et al. 2015, loophole-free Bell inequality violation using electron spins"
+      },
+      "claim": "Bell inequality violation with detection and locality loopholes closed simultaneously.",
+      "adjudicators": [
+        {
+          "arxiv": "1511.03190",
+          "label": "Giustina et al., significant-loophole-free test of Bell's theorem with entangled photons",
+          "relation": "independent_replication"
+        },
+        {
+          "arxiv": "1511.03189",
+          "label": "Shalm et al., strong loophole-free test of local realism",
+          "relation": "independent_replication"
+        }
+      ],
+      "proposed_outcome": "supported",
+      "tier_guess": "A",
+      "notes": "Three independent groups, different platforms. Positive quantum claim, foundations rather than advantage. Verified overlap: Abellan, Mitchell, Pruneri, Amaya (ICFO) co-author all three tests as suppliers of the random-number generators. Core experimental groups are independent, but the setting-choice component is shared; record it as a common-mode dependency when assigning the tier.",
+      "success_case": true
+    },
+    {
+      "id": "qc-08",
+      "domain": "qc",
+      "profile": "replication",
+      "original": {
+        "arxiv": "2408.13687",
+        "label": "Google Quantum AI 2024, quantum error correction below the surface code threshold"
+      },
+      "claim": "Logical error decreases by a factor of about 2 per code-distance step (3 to 5 to 7) on superconducting qubits.",
+      "adjudicators": [],
+      "proposed_outcome": "supported_scoped",
+      "tier_guess": "C",
+      "notes": "Positive QEC claim, no independent replication identified on another platform for the same claim. Tier C until one is found.",
+      "success_case": true
+    },
+    {
+      "id": "qc-09",
+      "domain": "qc",
+      "profile": "replication",
+      "original": {
+        "arxiv": "2312.03982",
+        "label": "Bluvstein et al. 2024, logical quantum processor based on reconfigurable atom arrays"
+      },
+      "claim": "Neutral-atom arrays run algorithms on up to 48 logical qubits with error-detecting codes, with logical performance improving over physical.",
+      "adjudicators": [],
+      "proposed_outcome": "supported_scoped",
+      "tier_guess": "C",
+      "notes": "Neutral-atom positive, relevant to the Q-Factor track. No independent replication identified; tier C.",
+      "success_case": true
+    },
+    {
+      "id": "phys-04",
+      "domain": "physics",
+      "profile": "mechanism",
+      "original": {
+        "arxiv": "1707.04344",
+        "label": "Bernien et al. 2017, probing many-body dynamics on a 51-atom quantum simulator"
+      },
+      "claim": "Rydberg-atom arrays show persistent revivals from a Neel-like state, contrary to expected fast thermalization.",
+      "adjudicators": [
+        {
+          "arxiv": "1711.03528",
+          "label": "Turner et al., weak ergodicity breaking from quantum many-body scars",
+          "relation": "independent_explanation"
+        }
+      ],
+      "proposed_outcome": "supported",
+      "tier_guess": "B",
+      "notes": "Observation reported as an anomaly, explained later by independent theory. Calibration case: the original evidence supports the observation, not a mechanism. Neutral-atom relevant.",
+      "success_case": true
+    },
+    {
+      "id": "phys-05",
+      "domain": "physics",
+      "profile": "replication",
+      "original": {
+        "arxiv": "1602.03837",
+        "label": "LIGO/Virgo 2016, observation of gravitational waves from a binary black hole merger (GW150914)"
+      },
+      "claim": "Detection of a transient gravitational-wave signal from a binary black hole merger at greater than 5 sigma.",
+      "adjudicators": [
+        {
+          "arxiv": "1811.01921",
+          "label": "Nitz et al., 1-OGC: the first open gravitational-wave catalog",
+          "relation": "independent_reanalysis"
+        }
+      ],
+      "proposed_outcome": "supported",
+      "tier_guess": "A",
+      "notes": "Independent reanalysis of open data by a group outside the collaboration. Check author overlap (some may be LVC members).",
+      "success_case": true
+    },
+    {
+      "id": "ml-09",
+      "domain": "ml",
+      "profile": "replication",
+      "original": {
+        "doi": "10.1038/s41586-021-03819-2",
+        "label": "Jumper et al. 2021, highly accurate protein structure prediction with AlphaFold"
+      },
+      "claim": "AlphaFold predicts protein structures with atomic accuracy competitive with experiment in most cases.",
+      "adjudicators": [
+        {
+          "doi": "10.1002/prot.26171",
+          "label": "Pereira et al., high-accuracy protein structure prediction in CASP14",
+          "relation": "independent_blind_assessment"
+        }
+      ],
+      "proposed_outcome": "supported",
+      "tier_guess": "A",
+      "notes": "Blind assessment by independent CASP assessors. Strongly memorized: use mainly as a perturbation parent. CASP14 assessment citation not found in either index (journal reference-list gap); confirm in the PDF.",
+      "success_case": true
+    },
+    {
+      "id": "ml-10",
+      "domain": "ml",
+      "profile": "replication",
+      "original": {
+        "arxiv": "1706.03762",
+        "label": "Vaswani et al. 2017, attention is all you need"
+      },
+      "claim": "A pure-attention encoder-decoder reaches state-of-the-art BLEU on WMT14 En-De and En-Fr at lower training cost.",
+      "adjudicators": [
+        {
+          "arxiv": "1806.00187",
+          "label": "Ott et al., scaling neural machine translation",
+          "relation": "independent_replication"
+        }
+      ],
+      "proposed_outcome": "supported",
+      "tier_guess": "A",
+      "notes": "Independent re-implementation that reproduces and improves the results. Strongly memorized: perturbation parent.",
+      "success_case": true
+    },
+    {
+      "id": "ml-11",
+      "domain": "ml",
+      "profile": "replication",
+      "original": {
+        "arxiv": "1810.04805",
+        "label": "Devlin et al. 2019, BERT"
+      },
+      "claim": "Masked-language-model pretraining followed by fine-tuning sets state of the art on GLUE, SQuAD and other benchmarks.",
+      "adjudicators": [
+        {
+          "arxiv": "1907.11692",
+          "label": "Liu et al., RoBERTa: a robustly optimized BERT pretraining approach",
+          "relation": "independent_replication"
+        }
+      ],
+      "proposed_outcome": "supported_scoped",
+      "tier_guess": "A",
+      "notes": "Replication confirms the gains and finds BERT undertrained; the next-sentence-prediction component is not supported. Claim-level split.",
+      "success_case": true
+    },
+    {
+      "id": "ml-12",
+      "domain": "ml",
+      "profile": "mechanism",
+      "original": {
+        "arxiv": "2001.08361",
+        "label": "Kaplan et al. 2020, scaling laws for neural language models"
+      },
+      "claim": "Loss follows power laws in parameters, data and compute; compute-optimal training favors much larger models trained on relatively less data.",
+      "adjudicators": [
+        {
+          "arxiv": "2203.15556",
+          "label": "Hoffmann et al., training compute-optimal large language models (Chinchilla)",
+          "relation": "matched_reevaluation"
+        }
+      ],
+      "proposed_outcome": "mixed",
+      "tier_guess": "A",
+      "notes": "Power-law form supported; the compute-optimal allocation revised (parameters and tokens scale about equally).",
+      "success_case": true
+    }
+  ]
+}

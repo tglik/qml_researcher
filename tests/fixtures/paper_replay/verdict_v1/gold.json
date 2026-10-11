@@ -1,0 +1,12 @@
+{
+  "fixture_version": "verdict-interpretation-v1",
+  "review_status": "provisional_author_key_not_independently_adjudicated",
+  "cases": {
+    "v01": {"evidence_class": "SUPPORTED_SIGNAL", "next_action": "FOLLOW_UP", "scientific_exclusion_licensed": false, "decisive_refs": ["result.lower_pp", "protocol.minimum_useful_effect_pp", "checks.measurement_validity"]},
+    "v02": {"evidence_class": "EMPIRICAL_NEGATIVE", "next_action": "STOP_SCOPED_CLAIM", "scientific_exclusion_licensed": true, "decisive_refs": ["result.upper_pp", "protocol.minimum_useful_effect_pp", "checks.independent_audit", "checks.measurement_validity"]},
+    "v03": {"evidence_class": "INCONCLUSIVE", "next_action": "MORE_EVIDENCE", "scientific_exclusion_licensed": false, "decisive_refs": ["result.lower_pp", "result.upper_pp", "protocol.minimum_useful_effect_pp"]},
+    "v04": {"evidence_class": "INVALID_OR_BLOCKED", "next_action": "REPAIR_VALIDITY", "scientific_exclusion_licensed": false, "decisive_refs": ["checks.measurement_validity"]},
+    "v05": {"evidence_class": "INCONCLUSIVE", "next_action": "MORE_EVIDENCE", "scientific_exclusion_licensed": false, "decisive_refs": ["result.upper_pp", "protocol.minimum_useful_effect_pp", "protocol.boundary_rule"]},
+    "v06": {"evidence_class": "SUPPORTED_SIGNAL", "next_action": "STOP_BUDGET", "scientific_exclusion_licensed": false, "decisive_refs": ["result.lower_pp", "protocol.minimum_useful_effect_pp", "limits.budget_exceeded"]}
+  }
+}

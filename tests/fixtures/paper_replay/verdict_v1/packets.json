@@ -1,0 +1,42 @@
+{
+  "fixture_version": "verdict-interpretation-v1",
+  "provenance": "Synthetic grader-development fixture; no paper, experiment or independent reproduction is asserted.",
+  "common": {
+    "scope_id": "graph-method-a-regime-r",
+    "hypothesis": "Method A improves the prespecified graph score by at least the minimum useful effect over the adequate classical comparator in regime R at matched resources.",
+    "profile": "scoped_empirical_comparison",
+    "protocol": {
+      "minimum_useful_effect_pp": 0.5,
+      "units": "percentage_points",
+      "interval": "Prespecified simultaneous confidence interval for the mean paired improvement across independent graphs; supplied as adjudicated evidence in this synthetic fixture.",
+      "support_rule": "lower bound strictly greater than minimum useful effect",
+      "negative_rule": "upper bound strictly less than minimum useful effect",
+      "boundary_rule": "equality at the boundary is inconclusive",
+      "sampling_unit": "independent_graph",
+      "sample_count": 40,
+      "retrospective_fixture": true
+    },
+    "checks": {
+      "arm_adequacy": true,
+      "protocol_integrity": true,
+      "scope_and_alternatives": true,
+      "independent_audit": true,
+      "measurement_validity": true
+    },
+    "limits": {
+      "hardware_execution": false,
+      "general_advantage_tested": false,
+      "human_promotion_approved": false,
+      "budget_exceeded": false
+    },
+    "input_status": "All checks are fixture stipulations. Do not claim you ran or independently verified them. No code or raw data is supplied."
+  },
+  "cases": [
+    {"case_id": "v01", "result": {"estimate_pp": 0.8, "lower_pp": 0.6, "upper_pp": 1.0}},
+    {"case_id": "v02", "result": {"estimate_pp": 0.1, "lower_pp": -0.1, "upper_pp": 0.3}},
+    {"case_id": "v03", "result": {"estimate_pp": 0.2, "lower_pp": -2.0, "upper_pp": 3.0}},
+    {"case_id": "v04", "result": {"estimate_pp": 0.1, "lower_pp": -0.1, "upper_pp": 0.3}, "checks": {"measurement_validity": false}},
+    {"case_id": "v05", "result": {"estimate_pp": 0.1, "lower_pp": -0.1, "upper_pp": 0.5}},
+    {"case_id": "v06", "result": {"estimate_pp": 0.8, "lower_pp": 0.6, "upper_pp": 1.0}, "limits": {"budget_exceeded": true}}
+  ]
+}
