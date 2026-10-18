@@ -1,36 +1,38 @@
 # Hardware roadmaps
 
 Reference for the hardware realist, the algorithm analyst (break-even N*) and P5 hardware plans.
-Every number needs a source and a date. An entry older than six months is stale: refresh it
+Every number has a source and a date. An entry older than six months is stale: refresh it
 (`/qml-deep-research`, scoped to that vendor) before using it to rate hardware fit.
 
-**Status: skeleton — not yet filled.** Do not rate hardware fit from memory; until a row is filled
-and sourced, mark hardware numbers [UNVERIFIED].
+**Last full refresh: 2026-10-18** (web search; next refresh due 2027-04). Unless marked otherwise,
+numbers are company-reported and not independently verified. "—" means no source was found;
+treat that quantity as [UNVERIFIED], never fill it from memory. Roadmap dates slip often: QuEra's
+100-logical-qubit target moved from 2026 to 2028, and Rigetti's 336-qubit system has no 2026
+confirmation.
 
 ## Current devices and roadmap (2027 onward)
-| Vendor | Modality | Qubits (physical / logical) | 2-qubit fidelity | Gate time | Coherence | Roadmap milestones 2027+ | Source · date |
+
+| Vendor | Modality | Current device | Physical / logical qubits | Two-qubit fidelity | Gate time · coherence | Roadmap 2027+ | Sources |
 |---|---|---|---|---|---|---|---|
-| IBM | superconducting | | | | | | |
-| Google Quantum AI | superconducting | | | | | | |
-| Rigetti | superconducting | | | | | | |
-| Quantinuum | trapped ion | | | | | | |
-| IonQ | trapped ion | | | | | | |
-| Quantum Art | trapped ion | | | | | | |
-| QuEra | neutral atom | | | | | | |
-| Pasqal | neutral atom | | | | | | |
-| Atom Computing | neutral atom | | | | | | |
-| Infleqtion | neutral atom | | | | | | |
-| Q-Factor | neutral atom | | | | | | |
-| PsiQuantum | photonic | | | | | | |
-| Xanadu | photonic | | | | | | |
+| IBM | superconducting | Heron r3; Nighthawk (Jan 2026) | Nighthawk: 120-qubit modules, up to 3 linked (360) in 2026; 7,500-gate circuits | Heron r3: EPLG 2.15e-3 at 100 qubits (layered-gate error, not median 2Q error) | — | Kookaburra (2026, first logical module), Cockatoo coupler (2027), 15,000-gate circuits (2028), Starling fault-tolerant (2029) | [IBM roadmap](https://ibm.com/roadmaps/quantum/2026) · [IBM Nighthawk note](https://quantum.cloud.ibm.com/announcements/product-updates/2026-01-05-nighthawk) · [Quantum Insider, 2026-01](https://thequantuminsider.com/2026/01/13/ibm-announces-nighthawk-and-latest-heron-are-now-available/) |
+| Google Quantum AI | superconducting | Willow (Dec 2024) | 105 physical; distance-7 surface code at ~1e-3 logical error | Mean CZ error 0.33% ± 0.18% (QEC chip); 0.14% (RCS chip) | T1 68 µs (QEC chip), 98 µs (RCS chip) | Next target: logical error 1e-6; goal of a ~1M-qubit fault-tolerant system (no dates found) | [Willow spec sheet](https://quantumai.google/static/site-assets/downloads/willow-spec-sheet.pdf) · [QCR](https://quantumcomputingreport.com/?p=30178) |
+| Rigetti | superconducting | Cepheus-1-108Q | 108 physical | Median 99.1% (99.6% at 36q, 99.8% at 9q) | ~60 ns two-qubit gates; coherence named as the fidelity bottleneck | ~1,000 qubits, 99.9%, < 50 ns within ~3 years (as of Aug 2026) | [Rigetti Q2 2026 8-K](https://www.sec.gov/Archives/edgar/data/0001838359/000110465926091979/rgti-20260806xex99d1.htm) |
+| Quantinuum | trapped ion | Helios | 98 physical; 48 logical (2:1 encoding) | 99.921% | — | Sol (2027): ~100 logical qubits at ~99.999% logical fidelity; Apollo (2029): hundreds of logical qubits, fault tolerant | [Quantinuum S-1 (2026)](https://www.sec.gov/Archives/edgar/data/0002110105/000162828026032836/quantinuum-sx1.htm) |
+| IonQ | trapped ion | Tempo (shipping 2026); 256-qubit device planned 2026 | 64+ (Tempo) | 99.97% demonstrated by Oxford Ionics technology (now IonQ); 99.99% expected | — | Sources disagree: ~800–1,600 logical qubits by 2027–2028; 40,000–80,000 logical by 2030 | [Nasdaq](https://www.nasdaq.com/articles/ionqs-quantum-roadmap-and-foundry-strategy-through-2030) · [QCR analyst day](https://quantumcomputingreport.com/ionq-announces-regulatory-approval-for-oxford-ionics-acquisition-and-provides-a-roadmap-update-at-its-2025-analyst-day-meeting/amp/) |
+| Quantum Art (Israel) | trapped ion | 50-qubit system (2025); 200-ion controlled chain demonstrated | 50 physical | — | — | Perspective, 1,000 qubits (2027); Landscape, 12,000–40,000 (2029–2031); Mosaic, 1M fault tolerant (2033) | [Post Quantum profile](https://postquantum.com/quantum-computing-companies/quantum-art/) · [Pulse 2.0](https://pulse2.com/quantum-art-100-million-series-a/) |
+| QuEra | neutral atom | Aquila (analog), Gemini (digital, QEC testbed) | — | 99.5% CZ on up to 60 atoms in parallel (Harvard/MIT/QuEra, peer-reviewed, 2023) | Aquila ~3 shots/s; Gemini ~1 shot/s | Libra on Amazon Braket (2028): > 256 logical qubits, 1e-6 logical error; gigaquop class (2028–2029): 1,000+ logical from ~20,000 physical | [QCR 2028 roadmap](https://quantumcomputingreport.com/quera-updates-neutral-atom-quantum-roadmap-with-2028-fault-tolerant-launch-on-amazon-braket/) · [arXiv:2304.05420](https://arxiv.org/pdf/2304.05420) |
+| Pasqal | neutral atom | Orion Gamma | 140+ physical; 2 logical demonstrated (May 2026) | — | — | Vela (2027 delivery); Centaurus (2028); 10,000+ physical and 200+ logical by 2029 | [Sacra](https://sacra.com/c/pasqal) · [QCR F-4 filing](https://quantumcomputingreport.com/pasqal-and-bleichroeder-acquisition-corp-ii-file-form-f-4-sec-registration-for-2-billion-public-nasdaq-merger/amp/) |
+| Atom Computing (+ Microsoft) | neutral atom | 1,180-site Yb array (previewed 2023) | Magne (early 2027): ~1,200 physical, ~50 logical | 99.56% (2024, peer-reviewed; not confirmed on the 1,180-qubit array) | — | Magne for QuNorth, Copenhagen, operational early 2027 | [IEEE Spectrum](https://spectrum.ieee.org/neutral-atom-quantum-computing) · [Atom Computing](https://atom-computing.com/high-fidelity-gates-and-the-worlds-largest-entangled-logical-qubit-state/) |
+| Infleqtion | neutral atom | Sqale | 80 physical encoding 30 logical (distance 2: detects, does not correct, errors) | 99.73% | — | 100 logical qubits by 2028; 1,000 by 2030 | [Quantum Insider, 2026-09](https://thequantuminsider.com/2026/09/24/infleqtion-achieves-30-entangled-logical-qubits-on-its-sqale-quantum-computer/) · [HPCwire](https://www.hpcwire.com/?p=189492) · [Post Quantum](https://postquantum.com/industry-news/infleqtion-30-logical-qubits/) |
+| Q-Factor (Israel) | neutral atom | Pre-product; out of stealth April 2026 ($24M seed) | — | — | — | Architecture aimed at > 1M qubits using atom transport and controlled Rydberg interactions; no dated milestones public | [SiliconANGLE, 2026-04](https://siliconangle.com/2026/04/06/q-factor-emerges-24m-funding-next-big-bet-achieve-quantum-computing-advantage/) · [QCR](https://quantumcomputingreport.com/q-factor-emerges-from-stealth-with-24m-seed-round-to-scale-neutral-atom-systems/) |
+| PsiQuantum | photonic | Omega chipset (Feb 2025) | — | Two-photon interference visibility 99.5%; chip-to-chip interconnect 99.72%; SPAM 99.98% | — | Utility-scale, million-qubit systems at Brisbane and Chicago; no operational date found | [PsiQuantum Omega](https://psiquantum.com/omega) |
+| Xanadu | photonic | Aurora (35 chips, 13 km fiber, room temperature) | 12 logical GKP qubits with real-time decoding | — (optical loss is the stated bottleneck) | — | Fault-tolerant data center in Canada by ~2030 (third-party wording, unconfirmed) | [Post Quantum profile](https://postquantum.com/quantum-computing-companies/xanadu/) · [Xanadu FY2025 results](https://investors.xanadu.ai/news-releases/news-release-details/xanadu-announces-fourth-quarter-and-full-year-2025-results) |
 
 ## Capabilities an algorithm can exploit
+
 | Modality | Native capabilities | Typical constraints |
 |---|---|---|
-| Neutral atom | Reconfigurable connectivity (atom shuttling), high parallelism, native Rydberg blockade for graph problems (MIS), large arrays | Slower gate and shuttle times, atom loss, mid-circuit measurement maturity varies by vendor |
-| Trapped ion | All-to-all connectivity, high gate fidelity, long coherence | Slow gates, limited qubit counts per trap |
-| Superconducting | Fast gates, mid-circuit measurement and feedforward, mature tooling | Nearest-neighbor connectivity, shorter coherence |
-| Photonic | Room-temperature operation, natural fit for measurement-based architectures | Probabilistic gates, photon loss |
-
-Vendor-specific capabilities (and whether they are available now or on the roadmap) go in the
-first table's milestones column.
+| Neutral atom | Reconfigurable connectivity (atom shuttling), high parallelism (parallel gates on tens of atoms), native Rydberg blockade for graph problems (MIS), large arrays | Slow repetition (~1–3 shots/s on QuEra systems), atom loss, mid-circuit measurement maturity varies by vendor |
+| Trapped ion | All-to-all connectivity within a chain, the highest two-qubit fidelities (99.9%+), long coherence; multi-qubit gates (Quantum Art) | Slower gates, limited qubits per chain; scaling through modules and links |
+| Superconducting | Fast gates (~tens of ns), mid-circuit measurement and feedforward, mature tooling, demonstrated below-threshold surface codes | Nearest-neighbor connectivity, coherence ~100 µs, cryogenics |
+| Photonic | Room-temperature operation, natural fit for measurement-based architectures, networking over fiber | Probabilistic gates, photon loss is the main obstacle to fault tolerance |
