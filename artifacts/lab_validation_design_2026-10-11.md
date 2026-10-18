@@ -66,7 +66,7 @@ When a pipeline fails, replace one upstream artifact at a time with its curated 
 
 ### Paper selection
 
-Start with 12 independently reviewed papers: approximately three each from QML, QC, computational physics, and classical ML. Include understandable claims, accessible methods and evidence, identifiable decisive experiments or derivations, and tractable subsets where execution is possible. At least four should have runnable data/code or a small trusted numerical reference.
+Start with 12 independently reviewed papers, balanced by claim profile rather than equally by domain (see "Cross-domain cases" below): approximately six QML/QC advantage-type claims, four classical-ML method-versus-strong-baseline claims, and two formal or physics claims that test scope and evidence class. Include understandable claims, accessible methods and evidence, identifiable decisive experiments or derivations, and tractable subsets where execution is possible. At least four should have runnable data/code or a small trusted numerical reference.
 
 Quality means inspectable and defensible evidence, not citation count or venue. Include strong mechanism results and rigorous negative/null studies. A positive paper can also produce an inconclusive test case when decisive evidence is withheld. A hardware-only paper can test planning and interpretation without pretending its apparatus can be reproduced locally.
 
@@ -79,6 +79,38 @@ Quality means inspectable and defensible evidence, not citation count or venue. 
 5. The paper's own evidence only. Use only where the curators are competent to label; the label is provisional.
 
 **Selection order.** Rank candidates by: (1) an external adjudication of the exact claim exists; (2) the claim is specific enough to judge; (3) results report enough uncertainty to build a packet; (4) code or data is available; (5) the corpus keeps its domain and outcome mix (supported, refuted, conditionally limited, inconclusive); (6) the date relative to the tested model's training cutoff fits the intended split. Field- and age-normalized citation impact is a tiebreaker and a pointer to where challenge papers are likely to exist, never a correctness signal: highly cited claims include claims later weakened, and the rebuttals themselves add citations.
+
+### Cross-domain cases and policy layers
+
+The deployed policy (`criteria/lab_method.md` Rules 1–6, gate ladder, and the five criteria in `criteria/qml_domain.md`) assumes one claim profile: a quantum method outperforms classical alternatives at an industrial operating point on real data. A classical or physics paper has no quantum claim for the classical-twin, hardware-fit, readout-cost, or industrial-scale checks to act on. Run natively, such a case either measures little (mostly N/A), produces false-exclusion noise (a sound paper flagged for missing quantum criteria), or requires a profile adapter that turns the test into a test of the adapter rather than the deployed lab.
+
+The mismatch is about claim profile, not domain. qml-07 (formal speed-up), qml-10 (sample complexity), qc-07 (Bell test) and phys-04 (observation) also lack an advantage-type claim; read literally, Rule 2 would wrongly reject qml-07. Profile dispatch is a lab capability gap, not a benchmark-only concern.
+
+Split the scored policy into two layers:
+
+| Layer | Contents | Applies to |
+|---|---|---|
+| General research layer | N1–N5, evidence classes (§6), scope preservation, claim-level splitting, matched resources, baseline adequacy | All cases |
+| QML layer | Five domain criteria, classical twin under the same access model, hardware fit, readout cost, industrial operating point | QML/QC cases with an advantage-type claim |
+
+Score cases outside the QML layer's profile on the general layer only. QML-layer checks are recorded `N/A`, never failed. This refines `UNSUPPORTED_PROFILE` (§2): the case remains scored on the layer that applies.
+
+Most QML-layer rules are specific instances of general rules, so non-QML cases can test the reasoning they rest on:
+
+| Lab rule | General form | Candidate proxies |
+|---|---|---|
+| Criterion 5 / N1 baseline adequacy | A tuned strong baseline closes the claimed gap | ml-01, ml-02, ml-05, ml-07; qc-05 |
+| Rule 4 matched constraints | Unequal tuning or compute budget produces the gap | ml-06, ml-07 |
+| Rule 1 classical twin / dequantization | A cheaper method with the same access gives the same answer | qc-01, qc-03; qml-03, qml-04 |
+| N3 discriminating power | Data selection, or evidence unable to separate explanations | phys-01, phys-02 |
+| N4 mechanism named | Performance claim survives while the mechanism claim fails | ml-03, ml-11, phys-04 |
+
+Rules for using cross-domain cases:
+
+1. **Stage restriction.** Non-QML cases run as role-only tests of general-layer components: verdict, review panel, audit, baseline champion, and design. Full-pipeline runs and native `qml-intake`/`qml-screen` tests use QML/QC cases only; a screen correctly declining a case with no quantum claim is not a measured failure.
+2. **Mandatory mapping.** Each retained non-QML case names the lab rule it proxies. Cases with no mapping that are also heavily memorized (ml-09, ml-10, ml-12, phys-05) are used only as perturbation parents, or dropped.
+3. **No cross-domain loosening.** A change motivated by a non-QML failure must not weaken a QML-layer rule and must not regress QML cases. Report this as a paired check on every such change.
+4. **Separate reporting.** Report per domain and per profile (§9). Never publish a single cross-domain lab score; strong ML performance does not offset weak QML performance.
 
 **Label confidence tiers.** Assign per claim, not per paper, by rule rather than a weighted score:
 
@@ -393,3 +425,5 @@ Internal sources: the September 23 lab design, canonical `/test-skills`, its eva
 Revision 2026-10-11: added the lab-eval inventory (§2), known-fate cases (§4), external reference sources (§4), the bulk-snapshot corpus rule and closed-book memorization probe (§5), the human cost budget, and the cost-ordered first slice (§12).
 
 Post-Astra revision 2026-10-11: distinguished target/deployed policy, interpretation/full-skill fixtures, and analyst/retrieval/composite tests; moved isolation to the first slice; pinned historical source versions; removed hindsight requirements and blanket refutation labels; specified legitimate early-stop handling. Added the runnable synthetic interpretation fixture without changing production scientific policy.
+
+Revision 2026-10-13: added cross-domain cases and policy layers (§4): general versus QML layer, `N/A` scoring outside the QML profile, rule-proxy mapping, stage restriction for non-QML cases, and a profile-balanced initial corpus replacing three papers per domain.
