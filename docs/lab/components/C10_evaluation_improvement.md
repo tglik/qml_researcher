@@ -41,7 +41,7 @@ Plus red-team fixtures (C06/C09): implementer nudged to pass a gate (guard must 
 ### System health metrics (read from artifacts, reported by `/qml-lab stats`)
 Human minutes per milestone · agreement rate per CP · panel block rate (10–60% band) · audit
 CONFIRMED rate (100% over ≥ 10 audits is a smell) · baseline strength (classical arm vs
-published SOTA ratio — the twin-champion's score) · gate-earliness · false-kill count · time to
+published SOTA ratio — the competitor-champion's score) · gate-earliness · false-kill count · time to
 screen verdict.
 
 ### Improvement loop (Tsahi)

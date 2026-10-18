@@ -2,8 +2,9 @@
 name: qml-review-panel
 version: 0.1.0
 description: |
-  QML Lab adversarial review panel: five personas (methodologist, dequantization theorist,
-  hardware realist, baseline champion, value translator) spawned in parallel on fresh contexts.
+  QML Lab adversarial review panel: six personas (methodologist, dequantization theorist,
+  hardware realist, baseline champion, value translator, mathematical critic) spawned in parallel
+  on fresh contexts.
   Pass 1 reviews the pre-registration before freeze; pass 2 reviews raw results before any
   verdict exists. Writes PANEL_1.md / PANEL_2.md. Invoked by /qml-prereg and /qml-lab.
 
@@ -31,17 +32,18 @@ PROTOCOL + one of `personas/*.md`) · **Template:** `artifacts/lab/templates/PAN
 Pass 1: python -m lab.tools.state check {THREAD} --need file:PROPOSAL.md
 Pass 2: python -m lab.tools.state check {THREAD} --need lock
         and VERDICT.md must NOT exist (if it does: stop — pass 2 must precede verdict language)
-PERSONAS = methodologist, dequantization-theorist, hardware-realist, baseline-champion, value-translator
+PERSONAS = methodologist, dequantization-theorist, hardware-realist, baseline-champion, value-translator, mathematical-critic
 ```
 
-## Phase 1 — Five parallel reviews
+## Phase 1 — Six parallel reviews
 For each persona, in one message (parallel), spawn a fresh agent whose prompt is:
-`lab/roles/review-panel/ESSENCE.md` + `personas/<persona>.md` + `PROTOCOL.md` + LAB_METHOD + task:
+`lab/roles/review-panel/ESSENCE.md` + `personas/<persona>.md` + `PROTOCOL.md` + LAB_METHOD + task
+(the hardware realist also gets `criteria/hardware_roadmaps.md`):
 ```
 Task: review {THREAD}, pass {n}. Inputs per the PROTOCOL for this pass. Write your issues to
 {THREAD}/panel/{n}/<persona>.md. Do not read other personas' files.
 ```
-**Gate:** five files exist; each is either a table of issues or "No issues in <lane>."
+**Gate:** six files exist; each is either a table of issues or "No issues in <lane>."
 
 ## Phase 2 — Merge
 Write `{THREAD}/PANEL_<n>.md` from the template: all issues renumbered, grouped BLOCKING first;

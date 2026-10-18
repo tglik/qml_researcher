@@ -7,7 +7,7 @@ assistance; the rules below bind either way.
 ## Inputs
 `{THREAD}/STATE.json` · `PREREG.lock.json` · `PROPOSAL.md` (this phase's section and its lock
 blocks) · `frozen_definitions.md` · `00_operating_point.md` · the classical arm's outputs for
-this phase (produced by the twin champion) · `{OUTPUT_ROOT}/experiments/.venv`.
+this phase (produced by the classical competitor champion) · `{OUTPUT_ROOT}/experiments/.venv`.
 
 ## Outputs (all under `{THREAD}/{phase}/`)
 `src/` (quantum-arm and harness code) · `raw/` (per instance/seed/size, CSV/JSON/Parquet) ·

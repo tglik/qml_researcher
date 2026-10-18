@@ -24,7 +24,7 @@ input:
     - {fixture: tests/fixtures/lab/eval1/exp09_retrieval_readout.md, before: "2026-07-29",
        known_answer: "Routes 1-3 killed at G1 on paper (readout ~sqrt(candidate set) vs classical ~log(catalog) after indexing, per query at ms latency); route 4 survives to measurement only with the item->address map charged (G2)"}
     - {fixture: tests/fixtures/lab/eval1/exp04_twin.md, before: "2026-07-29",
-       known_answer: "G3 red on paper: small classical (polylog) description + non-negative diffusion filter with no sign cancellation => a classical twin (random walk on the same description) almost certainly exists"}
+       known_answer: "G3 red on paper: the non-negative diffusion filter on a small (polylog) classical description triggers the Rule 1 sign-free warning, and the warning is then tested, not assumed: a random walk on the same compressed description uses the same input at comparable cost because it mixes fast, so the twin item is red"}
 
 axes:
   known_answers:

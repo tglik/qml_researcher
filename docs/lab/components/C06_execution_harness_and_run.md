@@ -7,7 +7,7 @@ reward hacking, constraint-evasive fabrication), so it is built last (W3) and le
 deterministic tools — Meir's "tools" layer.
 
 ## Owner role(s) and human touchpoints
-`implementer` (often **Meir** in the slot, with agent assistance), `classical-twin-champion`
+`implementer` (often **Meir** in the slot, with agent assistance), `classical-competitor-champion`
 (baseline arm). Human: **CP3 phase gate** — V1 `HUMAN_APPROVE`.
 
 ## Inputs / outputs
@@ -81,7 +81,7 @@ escalation brief with options + cost.
 
 ## Separation / permission rules
 Implementer cannot write lock / PROPOSAL / frozen_definitions / VERDICT (guard). Interpretation
-is not in `gates.md`. Classical-twin-champion builds the baseline arm; implementer builds the
+is not in `gates.md`. Classical-competitor-champion builds the baseline arm; implementer builds the
 quantum arm.
 
 ## Failure modes and controls

@@ -25,9 +25,9 @@ freeze those blocks are immutable; changes are dated amendments that precede dat
 | Arm | What it is | Tuning budget | Why it is here |
 |---|---|---|---|
 | Quantum | | | |
-| Classical twin | | | rule 1 |
-| Strongest classical (exact) | | ≥ quantum | |
-| Strongest classical (industry tool) | | ≥ quantum | |
+| Best classical for the task (what industry deploys) | | ≥ quantum | rule 1 |
+| Strongest exact classical method | | ≥ quantum | rule 1 |
+| Twin (same input, same access) — or "settled on paper: <reason>" | | ≥ quantum | rule 1 |
 | Size-matched control(s) | | — | N3, one per oracle/ablation gate |
 
 ```lock
@@ -49,6 +49,12 @@ text: {exact split definition — created and hashed before any modeling}
 ```
 
 ## 5. Phases (cheapest-fatal first)
+### P0 — analytic resource count at the operating point (paper only; no run)
+Gates, depth, shots, loading and readout cost at N_ind, counted analytically; best classical cost
+at N_ind measured or cited; break-even N*. Feeds G8. Lives in 00_operating_point.md.
+
+Each run phase below states its **simulation method and why** (lab_method §6).
+
 ### P1 — {toy, 6–16 q}
 Objective · experiment table (ID, hypothesis, sizes, instances, seeds, method, metric, expected) ·
 tuning plan · budget (cpu-h, peak memory, wall-days) · fallback.
@@ -79,8 +85,10 @@ text: {condition under which the program stops after P1}
 |---|---|---|
 
 ## 7. Budget and fallbacks
-| Phase | cpu-h | peak memory | tokens | wall-days | Fallback |
-|---|---|---|---|---|---|
+| Phase | Side | cpu-h | peak memory | tokens | wall-days | Fallback |
+|---|---|---|---|---|---|---|
+| P1 | quantum | | | | | |
+| P1 | classical | | | | | |
 
 ## 8. Analysis plan
 {Figures and tables each phase report must contain.}

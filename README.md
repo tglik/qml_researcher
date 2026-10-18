@@ -122,7 +122,7 @@ into `ESSENCE.md` (how it thinks — for scientific review) and a protocol (how 
 |-------|-------------|
 | `/qml-lab` | **Entry point.** `new` a program from an algorithm or a use case · `status` (what is waiting, for whom; the backlog of actionable hypotheses) · `next` (runs the next allowed step) · `sign` a checkpoint · `escalate` · `amend` · `stats` / `step-down` (the autonomy ladder) |
 | `/qml-intake` | Algorithm path (Adi's Stage 0 analysis) or use-case path → `HYPOTHESIS.md` with numbered falsifiable hypotheses; one question per turn until 5/5 |
-| `/qml-screen` | Paper screen G0–G3 + six rules + five QML criteria → PASS / PASS-NARROWED / KILLED-ON-PAPER / ASK-HUMAN; engages the exclusion ledger by mechanism |
+| `/qml-screen` | Prior-work lookup, then paper screen G0–G3 + seven rules + five QML criteria → PASS / PASS-NARROWED / KILLED-ON-PAPER / ASK-HUMAN; engages the exclusion ledger by mechanism |
 | `/qml-prereg` | Pre-registration (phases P1–P5, arms incl. the classical twin, locked thresholds, gray zones, both verdict sentences) → freeze into `PREREG.lock.json` |
 | `/qml-review-panel` | Five adversarial personas, pass 1 on the proposal, pass 2 on raw results before any verdict |
 | `/qml-run` | One frozen phase: provenance for every number, gates computed from the lock, guard + lock checks |

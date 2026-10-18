@@ -15,15 +15,16 @@ small verification code in `{THREAD}/00_inputs/check/`.
 ## Steps
 1. Read all inputs fully. List interpretations of vague points as [ASSUMPTION].
 2. **Task (A):** formal I/O and objective; correctness notion; N, q and mapping.
-3. **Algorithm (B):** loading and its cost; circuits; depth/gates/T-count as functions of q and N;
+3. **Algorithm (B):** input loading and encoding cost (rule 7); circuits; depth/gates/T-count as functions of q and N;
    measurement and post-processing; shots formula; output form; hyperparameters; trainability.
 4. **Small check:** where feasible, run or hand-work a 2–4 qubit instance; note result.
 5. **Competition (C):** classical table (include industry tools) and quantum table, each row cited.
-6. **Twin (C-14):** check each family; verdict per family.
+6. **Classical competitors:** the lab_method Rule 1 checklist, one verdict per item, including the
+   sign-free / diffusion warning.
 7. **Resources (D):** quantum end-to-end table; best-classical table in the same variables;
    brute-force simulation table.
 8. **Advantage (E):** source step and why classical cannot copy it; trade-offs; break-even N\*.
-9. **Warnings:** apply lab_method §4; put every applicable box at the top.
+9. **Warnings:** apply lab_method §5; put every applicable box at the top.
 10. **Hypotheses:** numbered H1..Hn with predicted values/scalings (these seed `HYPOTHESIS.md`).
 11. **Recommendation:** PROCEED / ASK-HUMAN / STOP per the template rules. *Fail if* PROCEED with
     any warning box present.

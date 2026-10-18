@@ -2,8 +2,8 @@
 name: qml-screen
 version: 0.1.0
 description: |
-  QML Lab paper screen (gates G0–G3 + the six rules + the five QML criteria), run on a completed
-  HYPOTHESIS.md before any experiment is designed. Produces SCREEN.md with PASS, PASS-NARROWED,
+  QML Lab paper screen (gates G0–G3, the seven lab-method rules, the five QML criteria), run on a
+  completed HYPOTHESIS.md before any experiment is designed. Starts with a prior-work lookup. Produces SCREEN.md with PASS, PASS-NARROWED,
   KILLED-ON-PAPER or ASK-HUMAN, then opens human checkpoint CP1. Normally invoked by
   `/qml-lab next`, not directly.
 
@@ -15,6 +15,7 @@ input:
   - "<thread>"
 
 output:
+  - "{THREAD}/PRIOR_WORK.md"
   - "{THREAD}/SCREEN.md"
   - "{THREAD}/00_inputs/research_request.md (only when literature is needed)"
 
@@ -23,8 +24,9 @@ allowed-tools: [Agent, Read, Write, Glob, Grep, Bash]
 
 # /qml-screen
 
-**Essence:** [ESSENCE.md](ESSENCE.md) · **Role:** `lab/roles/screen-analyst/` ·
-**Template:** `artifacts/lab/templates/SCREEN.md`
+**Essence:** [ESSENCE.md](ESSENCE.md) · **Roles:** `lab/roles/lab-archivist/` (lookup mode),
+`lab/roles/screen-analyst/` · **Templates:** `artifacts/lab/templates/PRIOR_WORK.md`,
+`artifacts/lab/templates/SCREEN.md`
 
 ## Setup
 ```
@@ -34,8 +36,16 @@ python -m lab.tools.state check {THREAD} --need file:HYPOTHESIS.md
 python -m lab.tools.ledger validate           # the ledger must parse before G0 can engage it
 ```
 
+## Phase 0 — Prior-work lookup
+Spawn `lab-archivist` in **lookup mode**:
+```
+Task: write {THREAD}/PRIOR_WORK.md per the lookup mode of your PROTOCOL.
+```
+**Gate:** `PRIOR_WORK.md` exists with every template section. `near_duplicate` set ⇒ tell the user
+which program it duplicates and continue (the screen decides at G0).
+
 ## Phase 1 — Screen
-Spawn a **fresh** `screen-analyst` (never the instance that ran intake):
+Spawn a **fresh** `screen-analyst` (never the instance that ran intake or the lookup):
 ```
 Task: screen the program at {THREAD}. Inputs per your PROTOCOL. Write {THREAD}/SCREEN.md from
 artifacts/lab/templates/SCREEN.md. Ledger: {OUTPUT_ROOT}/indexes/exclusion-ledger.md.

@@ -19,12 +19,14 @@ Every skill and every agent role is split into two files, on purpose:
 
 An ESSENCE file never contains file paths or step numbers; a PROTOCOL file never argues about
 science. If you find science in a protocol or mechanics in an essence, that is a bug — flag it.
+How to write these files: [`STYLE.md`](STYLE.md). Who does what, in what order: section 1 of the
+[lab method](../criteria/lab_method.md).
 
 **Suggested review order for Adi and Meir** (≈2 hours total):
 1. [`criteria/lab_method.md`](../criteria/lab_method.md) — the shared rules every role loads.
 2. The four roles that carry the most judgment:
    [`screen-analyst`](roles/screen-analyst/ESSENCE.md),
-   [`classical-twin-champion`](roles/classical-twin-champion/ESSENCE.md),
+   [`classical-competitor-champion`](roles/classical-competitor-champion/ESSENCE.md),
    [`experiment-designer`](roles/experiment-designer/ESSENCE.md),
    [`verdict-auditor`](roles/verdict-auditor/ESSENCE.md).
 3. [`algorithm-analyst`](roles/algorithm-analyst/ESSENCE.md) (Adi's S0) and the
@@ -43,12 +45,14 @@ lab/
   README.md                        this file
   roles/<role>/ESSENCE.md          how the role thinks          (science review)
   roles/<role>/PROTOCOL.md         what the role does, exactly  (system review)
-  roles/review-panel/personas/*.md five panel personas (essence only; they share one PROTOCOL)
+  roles/review-panel/personas/*.md six panel personas (essence only; they share one PROTOCOL)
   tools/                           deterministic tools, stdlib-only Python
 .agents/skills/qml-<skill>/
   ESSENCE.md                       what the skill is for and its judgment calls
   SKILL.md                         the protocol: phases, gates, files, spawns
-criteria/lab_method.md             six rules, gate ladder, Adi's global rules, warning tables
+criteria/lab_method.md             role map, seven rules, gates and phases, global rules, warnings, verdicts
+criteria/hardware_roadmaps.md      vendor and modality numbers for the hardware realist (sourced, dated)
+lab/STYLE.md                       how to write essence, protocol and persona files
 artifacts/lab/templates/           the artifact templates (HYPOTHESIS, SCREEN, VERDICT, …)
 artifacts/lab/schemas/             JSON schemas (STATE, lock, provenance)
 config/lab_autonomy.json           checkpoint modes (the autonomy ladder)

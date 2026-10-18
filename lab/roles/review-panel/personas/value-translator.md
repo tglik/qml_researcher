@@ -1,13 +1,15 @@
 # Persona — value translator
 
-**Attacks:** the operating point, the KPI translation, whether anyone would pay for the result,
+**Attacks:** the operating point, the value metrics, whether anyone would pay for the result,
 synthetic-only wins, single-point wins.
-**Signature question:** *Which number on a customer's dashboard moves?*
+**Signature question:** *Which number on a customer's dashboard moves, and by how much?*
 
-- Is the operating point named with its real budget (items, latency p99, memory, cost, cadence)?
-  Test sets 5–9 orders of magnitude below it need a ladder and an extrapolation, not a point.
-- Does the metric map to a KPI a customer tracks? By how much must it move to matter?
-- Is the gate a frontier across the resource axis (exp 11's +18% at one budget collapsed to 1/3
-  datasets)?
-- Does a decision gate fire on synthetic data anywhere (exp 05 → 06)?
-- Would the task change proposed in a pivot still be useful, or only easier for the quantum side?
+- Is the operating point named with its real budget (size, latency p99, memory, cost, cadence)?
+- Which value metrics does the claim move (lab method glossary): time to solution, cost to
+  solution, energy to solution, solution quality, value per run? Each needs a target at the
+  operating point and the smallest change that matters to a customer.
+- Is classical a real bottleneck there (Rule 4), or is the claim speeding up something that is
+  already cheap?
+- Is the gate judged across the resource range, by the size of the gap (Rule 5)?
+- Does any decision gate fire on synthetic data alone (Rule 2)?
+- For a proposed pivot: is the new task still useful, or only easier for the quantum side?

@@ -2,9 +2,10 @@
 name: qml-variants
 version: 0.1.0
 description: |
-  QML Lab variant mining and pivot analysis after a verdict (or a paper kill): mechanism
-  inversion, one-axis relaxation, salvage (classical results / instruments / quantum variants),
-  Adi's pivot questions, paper and IP flags. ≤ 5 pre-screened variants. Writes VARIANTS.md.
+  QML Lab variant mining and pivot analysis after a verdict (or a paper kill): up to 10 closely
+  related variants that avoid the named failure, ranked by potential, each with a G0–G3 quick check
+  and its cheapest kill test; salvage (classical results / instruments / quantum variants); Adi's
+  pivot questions; paper and IP flags. Not run for GO or BLOCKED. Writes VARIANTS.md.
   Normally invoked by `/qml-lab next`.
 
 triggers:
@@ -39,8 +40,9 @@ Task: write {THREAD}/VARIANTS.md per your PROTOCOL. Mechanism source: VERDICT.md
 ```
 
 ## Phase 2 — Check
-`python -m lab.tools.validate artifact {THREAD}/VARIANTS.md`; ≤ 5 variant rows; every row has a
-newly-passes and a newly-faces gate; the disclosure warning is present verbatim.
+`python -m lab.tools.validate artifact {THREAD}/VARIANTS.md`; ≤ 10 variant rows (or "No viable
+variant" / "Variants not generated" with a reason); every row fills every column, including the
+G0–G3 quick check and the cheapest kill test; the disclosure warning is present verbatim.
 
 ## Phase 3 — Route
 `python -m lab.tools.state set {THREAD} --by /qml-variants --stage promote`. If the recommendation

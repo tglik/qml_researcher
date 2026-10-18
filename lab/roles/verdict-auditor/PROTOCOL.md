@@ -26,7 +26,7 @@ chat transcripts, drafts.
    where present). Log commands.
 4. **Independent correctness** on a few instances with a different simulator or library.
 5. **Provenance sample.** ≥ 5 material numbers traced to file + command.
-6. **Fairness.** Baselines adequate and tuned with ≥ the quantum budget? Twin analysis held?
+6. **Fairness.** Baselines adequate and tuned with ≥ the quantum budget? Rule 1 checklist held?
    Simulator time used as quantum time anywhere?
 7. **N1–N5** each marked with evidence.
 8. **Alternative explanations** table: leakage, underpowering, instance selection, tuning on test,

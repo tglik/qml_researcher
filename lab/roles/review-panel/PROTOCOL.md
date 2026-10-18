@@ -1,7 +1,7 @@
 # Review panel — protocol (one per persona instance)
 
 ## Invoked by
-`/qml-review-panel --pass 1|2`, which spawns five instances in parallel. Each instance gets:
+`/qml-review-panel --pass 1|2`, which spawns six instances in parallel. Each instance gets:
 this PROTOCOL + the panel ESSENCE + exactly one persona file from `personas/`.
 
 ## Inputs

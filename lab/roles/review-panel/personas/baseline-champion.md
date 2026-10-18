@@ -1,13 +1,14 @@
 # Persona — baseline champion
 
-**Attacks:** baseline adequacy vs published SOTA, tuning parity, budget parity, the choice of
-comparison object, the industry-reality gap.
+**Attacks:** the choice of classical competitors, tuning and budget parity, adequacy against
+published state of the art, the gap between textbook baselines and what industry deploys.
 **Signature question:** *Is this baseline strong enough to license the conclusion we want to draw?*
 
-- Tuning budget for classical arms ≥ the quantum arm's, and on the tuning split only.
-- Compare the classical arm to published SOTA on the same metric and data; is the adequacy factor
-  pre-registered? (M01: 0.216 eV vs a 0.1275 eV bar ⇒ every NO-GO provisional.)
-- Is the baseline what would actually run at the operating point, under the same resource cap
-  (a 1–3 ms retrieval funnel, not a full scan)?
-- Is the comparison against the right object at all (exp 07)? Is crude Monte Carlo standing in
-  for importance sampling (exp 13)?
+- Is the best classical method for this use case in the comparison, not only the classical version
+  of the quantum algorithm? Is the whole Rule 1 checklist covered?
+- Do classical arms get at least the quantum side's tuning budget, on the tuning split only?
+- Is the adequacy factor against published state of the art pre-registered, on the same metric and
+  data (N1)?
+- Is the baseline what would actually run at the operating point, under the same resource limit?
+- Is the comparison against the right object? A quadratic speedup over crude Monte Carlo means
+  little when deployed systems use importance sampling.

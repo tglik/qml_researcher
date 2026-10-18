@@ -3,7 +3,7 @@ name: qml-prereg
 version: 0.1.0
 description: |
   QML Lab pre-registration. After CP1 approves a PASS / PASS-NARROWED screen, writes PROPOSAL.md
-  (hypotheses → experiments, arms incl. the classical twin, metrics, phases P1–P5 cheapest-fatal
+  (hypotheses → experiments, classical competitor arms, metrics, P0 resource count, phases P1–P5 cheapest-fatal
   first, thresholds with gray-zone policies, both verdict sentences), 00_operating_point.md and
   frozen_definitions.md; runs review-panel pass 1; opens CP2 (freeze). On CP2 approval /qml-lab
   freezes PREREG.lock.json. Normally invoked by `/qml-lab next`.
@@ -26,7 +26,7 @@ allowed-tools: [Agent, Read, Write, Edit, Glob, Grep, Bash]
 # /qml-prereg
 
 **Essence:** [ESSENCE.md](ESSENCE.md) · **Roles:** `lab/roles/experiment-designer/`,
-`lab/roles/classical-twin-champion/` (spec mode) · **Template:** `artifacts/lab/templates/PROPOSAL.md`
+`lab/roles/classical-competitor-champion/` (spec mode) · **Template:** `artifacts/lab/templates/PROPOSAL.md`
 
 ## Setup
 ```
@@ -41,19 +41,20 @@ Spawn `experiment-designer`:
 Task: write the pre-registration for {THREAD} — PROPOSAL.md (from the template),
 00_operating_point.md, frozen_definitions.md. Every threshold, split, stop rule, gray zone and the
 baseline adequacy bar goes in a ```lock block (id, kind, text; op/value where the gate is numeric).
-Leave section 3 (arms) with the rows to be filled by the twin champion.
+Leave section 3 (arms) with the rows to be filled by the classical competitor champion.
 ```
 **Gate:** `python -m lab.tools.lock show {THREAD}` lists ≥ 1 block of each kind threshold, split,
 stop_rule; every planned phase has a stop_rule and a gray_zone.
 
 ## Phase 2 — Arms and baselines
-Spawn `classical-twin-champion` in **spec mode** on the draft. **Gate:** arms table filled; twin
-row present (built or "settled on paper" with reason); `baseline.adequacy` lock block present.
+Spawn `classical-competitor-champion` in **spec mode** on the draft. **Gate:** arms table filled;
+`competitor_rationale` covers every Rule 1 checklist item; twin row present (built or "settled on
+paper" with reason); `baseline.adequacy` lock block present; classical budget rows filled.
 
 ## Phase 3 — Budget and phases into STATE
 For each planned phase: `python -m lab.tools.state budget {THREAD} --phase Pk --planned cpu_h=…,wall_days=…,tokens_m=…`;
 `python -m lab.tools.state set {THREAD} --by /qml-prereg --phases P1,P2,…`.
-**Gate:** every phase's peak memory fits the V1 envelope (local; lab_method §5); else revise.
+**Gate:** every phase's peak memory, quantum and classical side, fits the local machine (lab_method §6); else revise.
 
 ## Phase 4 — Panel pass 1
 Run `/qml-review-panel {thread} --pass 1`. If `PANEL_1.md` has BLOCKING issues: spawn a **fresh**

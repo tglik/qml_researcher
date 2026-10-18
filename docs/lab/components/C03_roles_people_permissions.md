@@ -25,7 +25,7 @@ they live in one place rather than in each skill's `agents/` folder (see `lab/RE
 | `algorithm-analyst` | Adi S0 analysis (algorithm path) | `qml-intake` | recommend a design | Senior + Systems | S0 Analyst |
 | `screen-analyst` | G0–G3 + 5 criteria, kill cheap | `qml-screen` | recommend "run it and see" | Junior + Peer reviewer | Gate 0 |
 | `experiment-designer` | Prereg, gates, P1–P5, both verdict sentences | `qml-prereg` | run what it designed; audit | Senior | S1 Designer |
-| `classical-twin-champion` | Strongest honest classical arm + twin | `qml-prereg` (spec) / `qml-run` (build) | touch quantum arm | Classical adversary | S0 C-14 |
+| `classical-competitor-champion` | Strongest honest classical arm + twin | `qml-prereg` (spec) / `qml-run` (build) | touch quantum arm | Classical adversary | S0 C-14 |
 | `implementer` | One phase at a time, provenance | `qml-run` | edit lock/gates/verdict | Junior + Experimenter | S3 Experimenter |
 | `review-panel` ×5 | methodologist · dequantization-theorist · hardware-realist · baseline-champion · value-translator | `qml-review-panel` | rewrite what it reviews | Peer reviewer / critic | S2 Reviewer |
 | `verdict-writer` | Verdict vs frozen gates | `qml-verdict` | strengthen wording past status | Senior (synthesis) | S4 Summarizer |
@@ -57,7 +57,7 @@ Vocabulary from Meir: **O** own · **E** execute · **R** review · **A** approv
 | scoping-interviewer / algorithm-analyst | O/E | — | — | — | — | — | — | — | — | — |
 | screen-analyst | R | O/E | — | — | — | — | — | R | — | — |
 | experiment-designer | R | R | O/E | — | — | — | — | — | — | — |
-| classical-twin-champion | — | R | E | — | E (baseline arm only) | — | — | — | — | — |
+| classical-competitor-champion | — | R | E | — | E (baseline arm only) | — | — | — | — | — |
 | implementer | — | — | — | — | O/E | — | — | — | — | — |
 | review-panel | — | — | R | O/E | — | — | — | — | — | — |
 | verdict-writer | — | — | — | — | — | O/E | — | — | — | — |
@@ -76,7 +76,7 @@ or `VERDICT.md`.
 | Unplanned phase failure (not a pre-registered stop) | implementer → lab-director | Adi | likely cause: bug / hyperparams / real limit / noise; options + cost |
 | Phase cost > 2× budget | lab-director | Adi (priority), Tsahi (compute) | spent vs planned, remaining gates, option to stop |
 | Cloud / GPU spend or QPU request | lab-director | Adi + Tsahi | G4/G5 status (must be passed) |
-| Apparent advantage (any GO or CONDITIONAL-GO draft) | verdict-auditor + classical-twin-champion | Adi + Tsahi | twin attempts, baseline adequacy, lock diff |
+| Apparent advantage (any GO or CONDITIONAL-GO draft) | verdict-auditor + classical-competitor-champion | Adi + Tsahi | twin attempts, baseline adequacy, lock diff |
 | BLOCKED twice on same phase | implementer | Meir (owner) → Adi | exact failing command, attempts |
 | Panel BLOCKED twice | review-panel | Adi | the blocking issues, designer's responses |
 | Mathematical inconsistency / trainability failure | review-panel | Adi | derivation or gradient evidence |
@@ -98,7 +98,7 @@ people-rule, not a mode.
 ## Separation / permission rules
 - `implementer` ∉ {verdict-writer, verdict-auditor}. `experiment-designer` ∉ verdict-auditor.
 - `verdict-auditor` receives artifacts only, fresh context, different model where available.
-- `classical-twin-champion` is scored on baseline strength (C10), never on the verdict.
+- `classical-competitor-champion` is scored on baseline strength (C10), never on the verdict.
 - Signer ≠ author, for people.
 
 ## Failure modes and controls

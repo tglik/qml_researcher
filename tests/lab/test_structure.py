@@ -17,7 +17,8 @@ ROLES = REPO / "lab" / "roles"
 SKILLS = REPO / ".agents" / "skills"
 LAB_SKILLS = ["qml-lab", "qml-intake", "qml-screen", "qml-prereg", "qml-review-panel", "qml-run",
               "qml-verdict", "qml-audit", "qml-variants", "qml-promote"]
-PERSONAS = ["methodologist", "dequantization-theorist", "hardware-realist", "baseline-champion", "value-translator"]
+PERSONAS = ["methodologist", "dequantization-theorist", "hardware-realist", "baseline-champion", "value-translator",
+            "mathematical-critic"]
 
 # Mechanics that must not appear in an ESSENCE file.
 MECHANICS = [

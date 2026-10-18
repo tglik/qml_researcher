@@ -81,7 +81,7 @@ HEADING_RE = re.compile(r"^(#{2,3}) (.+?)\s*$", re.M)
 def required_headings(template: Path) -> list[str]:
     """Level-2 headings of a template, placeholders stripped to a stable prefix."""
     out = []
-    for level, title in HEADING_RE.findall(template.read_text()):
+    for level, title in HEADING_RE.findall(template.read_text(encoding="utf-8")):
         if level != "##":
             continue
         stable = re.split(r"[{(—]", title)[0].strip()
@@ -90,16 +90,20 @@ def required_headings(template: Path) -> list[str]:
     return out
 
 
+# Headings renamed in a template; artifacts written before the rename stay valid.
+LEGACY_HEADINGS = {"Rules": ("The six rules",), "5. Classical competitors": ("5. Classical twin",)}
+
+
 def validate_artifact(path: Path) -> list[str]:
     template = TEMPLATES / path.name
     if path.parent.name == "results" and path.name == "gates.md":
         template = TEMPLATES / "gates.md"
     if not template.exists():
         return []
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     have = [re.split(r"[{(—]", t)[0].strip() for lvl, t in HEADING_RE.findall(text) if lvl == "##"]
     return [f"{path.name}: missing section '## {h}'" for h in required_headings(template)
-            if not any(x.startswith(h) for x in have)]
+            if not any(x.startswith(name) for x in have for name in (h, *LEGACY_HEADINGS.get(h, ())))]
 
 
 def validate_thread(thread: Path) -> list[str]:

@@ -207,7 +207,7 @@ thinks, for Adi/Meir) and **PROTOCOL/SKILL** (how it runs); a test enforces the 
 
 | Area | Built | Where |
 |---|---|---|
-| Method criteria | ✅ six rules with precedents, gate ladder, Adi's global rules + warning and simulation tables, N1–N5 | `criteria/lab_method.md` |
+| Method criteria | ✅ seven rules with precedents, role map, gate ladder, Adi's global rules + warning and simulation tables, N1–N5 | `criteria/lab_method.md` |
 | Roles | ✅ 12 roles (ESSENCE + PROTOCOL) + 5 panel personas | `lab/roles/` |
 | Skills | ✅ 10 lab skills (ESSENCE + SKILL), linked into `.claude/skills` | `.agents/skills/qml-*` |
 | Templates & schemas | ✅ 11 templates, 3 JSON schemas, experiment-entity schema | `artifacts/lab/` |

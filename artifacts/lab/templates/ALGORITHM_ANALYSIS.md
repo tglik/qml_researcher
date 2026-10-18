@@ -8,7 +8,7 @@ recommendation: {PROCEED | ASK-HUMAN | STOP}
 
 # Algorithm analysis — {algorithm name}
 
-> **Warnings** (copy every applicable box from lab_method §4 verbatim; write "none" if none apply)
+> **Warnings** (copy every applicable box from lab_method §5 verbatim; write "none" if none apply)
 > ⚠️ …
 
 ## 1. Summary
@@ -38,10 +38,11 @@ recommendation: {PROCEED | ASK-HUMAN | STOP}
 | Algorithm | FT / NISQ | Qubits | Depth | Shots | Time | Scaling class | Limitations | Reference |
 |---|---|---|---|---|---|---|---|---|
 
-## 5. Classical twin
-{Same input, same access model. Check at least: dequantization / quantum-inspired sampling;
-tensor network / MPS (low entanglement); Clifford / matchgate / restricted-geometry simulability;
-classical methods exploiting the same structure (sparsity, low rank, symmetry). Verdict per check.}
+## 5. Classical competitors
+{Work through the lab_method Rule 1 checklist; one row per item with a verdict and the reason.
+Include the sign-free / diffusion warning check.}
+| Competitor | Verdict | Reason / reference |
+|---|---|---|
 
 ## 6. Resources
 ### Quantum (end-to-end)

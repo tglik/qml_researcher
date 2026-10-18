@@ -72,7 +72,7 @@ spine, (4) where humans sit. Everything else composes.
 | Junior QML Researcher | `implementer` + drafting for `screen-analyst` (often **Meir himself**) | ✓ |
 | Literature & Provenance | Out of lab — routed to existing `/qml-deep-research`, `/qml-paper-review` | reuse |
 | QML Experimenter | `implementer` | ✓ |
-| Classical ML Adversary | `classical-twin-champion` + panel `baseline-champion` | ✓ |
+| Classical ML Adversary | `classical-competitor-champion` + panel `baseline-champion` | ✓ |
 | Quantum Systems Specialist | panel `hardware-realist` + P4/P5 owner | ✓ (modeling) |
 | Peer Reviewer / Math Critic | `review-panel` (5 personas) + `verdict-auditor` | ✓ |
 | Memory & Proximity Curator | `lab-archivist` + G0 ledger engagement | ✓ |

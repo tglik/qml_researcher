@@ -3,7 +3,7 @@ name: qml-run
 version: 0.1.0
 description: |
   QML Lab execution of one frozen phase (P1 toy · P2 medium · P3 real data + industrial scale ·
-  P4 noise · P5 hardware plan, modeling only in V1). Classical arm by the twin champion, quantum
+  P4 noise · P5 hardware plan, modeling only in V1). Classical arm by the classical competitor champion, quantum
   arm and harness by the implementer; every material number recorded with provenance; gates
   computed by lab.tools.gates from the lock; phase report; guard + lock checks; opens CP3.
   Local only. Normally invoked by `/qml-lab next`. Not available in Slack.
@@ -24,7 +24,7 @@ allowed-tools: [Agent, Read, Write, Edit, Glob, Grep, Bash]
 # /qml-run
 
 **Essence:** [ESSENCE.md](ESSENCE.md) · **Roles:** `lab/roles/implementer/`,
-`lab/roles/classical-twin-champion/` (build mode) · **Templates:** `PHASE_REPORT.md`, `gates.md`
+`lab/roles/classical-competitor-champion/` (build mode) · **Templates:** `PHASE_REPORT.md`, `gates.md`
 Phase folders: P1 → `P1_toy/`, P2 → `P2_medium/`, P3 → `P3_real/`, P4 → `P4_noise/`, P5 → `P5_hardware/`.
 
 ## Setup
@@ -43,7 +43,7 @@ stop: "no locked gate depends on <Pk>". Write the frozen question + gate ids at 
 `<Pk_dir>/RUN_LOG.md`.
 
 ## Phase 2 — Classical arm first
-Spawn `classical-twin-champion` in **build mode** for this phase. **Gate:** classical results and
+Spawn `classical-competitor-champion` in **build mode** for this phase. **Gate:** classical results and
 the adequacy number recorded with provenance before the quantum arm runs.
 
 ## Phase 3 — Quantum arm and harness

@@ -6,7 +6,7 @@ Freeze what counts as success before any data is opened, in a form a machine can
 it. Merges Tsahi's registered-report discipline with Adi's S1 phase design and S2 checklist.
 
 ## Owner role(s) and human touchpoints
-`experiment-designer` (prereg), `classical-twin-champion` (baseline + twin spec), `review-panel`
+`experiment-designer` (prereg), `classical-competitor-champion` (baseline + twin spec), `review-panel`
 (5 personas). Human: **CP2 freeze** — permanent `HUMAN_APPROVE`. Default signer Adi
 (physics-bearing thresholds), any of the 3 otherwise; never the designer-of-record.
 
@@ -71,7 +71,7 @@ Human's job at CP2 (~30 min): right question? operating point real? thresholds d
 Brief lists the panel's BLOCKING issues and how each was resolved.
 
 ## Separation / permission rules
-Designer never audits. Panel never edits. Classical-twin-champion never touches the quantum
+Designer never audits. Panel never edits. Classical-competitor-champion never touches the quantum
 arm spec. Panel is a different agent instance per pass.
 
 ## Failure modes and controls
@@ -87,7 +87,7 @@ Eval 2 (M01 replay — panel pass 2 should flag the H2 size-matched artifact bef
 does); C10 panel block-rate metric.
 
 ## Build tasks
-- [ ] `/qml-prereg` SKILL.md + `experiment-designer`, `classical-twin-champion` defs (M, 2 days)
+- [ ] `/qml-prereg` SKILL.md + `experiment-designer`, `classical-competitor-champion` defs (M, 2 days)
 - [ ] `/qml-review-panel` SKILL.md + 5 persona defs + S2 checklist (M, 1.5 days)
 - [ ] `lock.py freeze|verify|amend` (C06, needed here in W2)
 

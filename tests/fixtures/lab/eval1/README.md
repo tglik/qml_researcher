@@ -12,7 +12,7 @@ exclusion ledger **time-sliced** to entries created before that experiment
 | `fraud_authorization.md` | fraud/AML screen | 2026-09-15 | Empty *with the anti-correlation reason*: capped layers are per-event (G1), infrequent layers are uncapped (G2) |
 | `exp07_spectral_gap.md` | exp 07 | 2026-07-29 | Rule 1 flags the wrong comparison object: the restricted Pauli family has a near-free exact classical spectrum |
 | `exp09_retrieval_readout.md` | exp 09 | 2026-07-29 | Readout routes die at G1 on paper (~√(candidates) vs ~log(catalog)) |
-| `exp04_twin.md` | exp 04 | 2026-07-29 | G3 red on paper: small classical description + diffusion, no sign cancellation ⇒ twin |
+| `exp04_twin.md` | exp 04 | 2026-07-29 | G3 red on paper: sign-free diffusion warning, then a random walk on the same compressed description shown to match at comparable cost |
 
 **Still to write (needs Adi or Tsahi — hindsight-free framing is a human job):** exps 01, 02,
 03, 05, 06, 08, 10, 11, 12, 13, and the materials program (Q-FEAT-screen must die at G2 —
