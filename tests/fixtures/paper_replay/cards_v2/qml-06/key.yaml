@@ -1,0 +1,384 @@
+# Hidden answer key for card qml-06 (v2.0). Graders only.
+# Paper: Huang et al., Power of data in quantum machine learning, arXiv:2011.01938 (Nat. Commun. 2021).
+# Numeric refs point into reference_results.json in this directory ("<group>:<value>").
+# Format and scoring: ../README.md.
+
+card: qml-06
+reference: reference_results.json
+
+analyst:
+  - id: A1
+    w: 3
+    critical: true
+    type: judge
+    text: Shows that E1 is a product state whose Pauli features are closed-form functions of x (cos 2x, sin 2x), so PFK on E1 is a classical kernel.
+    src: Appendix L1; lab Rule 1 (simulable structure)
+  - id: A2
+    w: 2
+    type: judge
+    text: States that every size in the budget is classically simulable, so in the tested range the quantum model is itself a classical algorithm and any win is about the learning model, not quantum hardness.
+    src: lab Rule 1 (direct simulation); global rule 6
+  - id: A3
+    w: 2
+    type: judge
+    text: Applies Rule 4 to the image use case — classical training and prediction at this size cost milliseconds — and concludes the claim is about prediction quality at fixed training size, not cost.
+    src: lab Rule 4
+  - id: A4
+    w: 2
+    type: judge
+    text: Counts readout — PFK needs about 3q expectation values per input (N circuit families), the fidelity kernel needs one overlap circuit per pair (order N²).
+    src: Appendix L2; lab Rule 6
+  - id: A5
+    w: 1
+    type: judge
+    text: Counts loading as cheap for all three embeddings (a short classical vector, polynomial gate count).
+    src: lab Rule 7
+  - id: A6
+    w: 2
+    type: judge
+    text: Flags that the fidelity kernel's values for distinct inputs may shrink as qubits grow (states near orthogonal, kernel matrix near identity), which undercuts "the gap grows with qubits".
+    src: Section C; Fig. 3a
+  - id: A7
+    w: 1
+    type: judge
+    text: Separates the two use cases into numbered hypotheses (image labels versus quantum-process labels).
+    src: lab method, algorithm path
+  - id: AF1
+    w: 2
+    type: forbid
+    text: States as fact that E2 or E3 Pauli features are classically hard to compute (it is an assumption), or accepts "the gap grows with qubits" without a check.
+    src: algorithm-analyst Never list
+  - id: AF2
+    w: 2
+    type: forbid
+    text: Recommends PROCEED while a warning applies.
+    src: algorithm-analyst Never list
+
+intake:
+  - id: I1
+    w: 3
+    critical: true
+    type: judge
+    text: States a claim a number could contradict — PFK test error below the best tuned classical model by a stated margin at stated sizes.
+    src: scoping-interviewer, five pieces
+  - id: I2
+    w: 2
+    type: judge
+    text: Names the operating point from the proposer's answers — n up to about 12 (13 qubits), about 600 training and 200 test examples, test error or mean absolute error.
+    src: intake_answers
+  - id: I3
+    w: 2
+    type: judge
+    text: Writes the disproof before data — a tuned classical model within the margin at every size tested.
+    src: intake_answers
+  - id: I4
+    w: 2
+    type: judge
+    text: Does not accept "a tuned SVM or gradient boosting" as the competitor; asks for or records the strongest tuned classical suite.
+    src: lab Rule 1; global rule 7
+  - id: I5
+    w: 2
+    type: judge
+    text: Records the decision the answer changes — whether to fund a hardware demonstration next quarter.
+    src: intake_answers
+  - id: I6
+    w: 2
+    type: judge
+    text: Keeps image labels and quantum-process labels as separate hypotheses.
+    src: input, two use cases
+  - id: I7
+    w: 1
+    type: judge
+    text: Reads the claim back in one sentence for the proposer to correct.
+    src: scoping-interviewer
+  - id: IF1
+    w: 2
+    type: forbid
+    text: Designs the experiment or judges feasibility (the screen's and designer's job).
+    src: scoping-interviewer Never list
+  - id: IF2
+    w: 2
+    type: forbid
+    text: Records "the gap grows with qubits" with no number or test attached.
+    src: scoping-interviewer Never list
+
+designer:
+  - id: D1
+    w: 3
+    critical: true
+    type: judge
+    text: Lets the real image labels decide; treats quantum-process labels as a synthetic mechanism test and lists what the generator gives the quantum model for free (the labels come from the same embedding the quantum kernel uses).
+    src: lab Rule 2; Section D ("the embedding is taken as part of the ground truth")
+  - id: D2
+    w: 3
+    type: judge
+    text: Includes the fidelity kernel on the same embeddings as an arm next to PFK, and a tuned classical suite.
+    src: Fig. 3b arms
+  - id: D3
+    w: 3
+    type: judge
+    text: Sweeps the number of qubits over at least 4 sizes and the training-set size over at least 3 values, with several seeds and the gap reported with its spread.
+    src: lab Rule 5; Fig. 3, Fig. 7
+  - id: D4
+    w: 2
+    type: judge
+    text: Fixes before data the smallest gain that matters and what counts as a tie.
+    src: lab Rule 5
+  - id: D5
+    w: 2
+    type: judge
+    text: Selects hyperparameters on the training split (cross-validation); the test split is fixed before modeling and never used for selection.
+    src: experiment-designer Never list
+  - id: D6
+    w: 2
+    type: judge
+    text: Adds a label-free kernel diagnostic before training — kernel spectrum or effective dimension, concentration of kernel values, or alignment between quantum and classical kernels.
+    src: Section B (geometric difference g, dimension d); any credible diagnostic earns credit
+  - id: D7
+    w: 2
+    type: judge
+    text: Uses E1 as a control because its PFK is classical in closed form; a "quantum" win on E1 points to a tuning or baseline problem.
+    src: Appendix L1; lab Rule 1
+  - id: D8
+    w: 1
+    type: judge
+    text: Picks statevector simulation with a memory estimate (N states × 16·2^q bytes; E3 has n+1 qubits).
+    src: lab method section 6
+  - id: D9
+    w: 1
+    type: judge
+    text: Writes the NO-GO sentence and a gray-zone rule for each gate in advance.
+    src: experiment-designer
+  - id: D10
+    w: 2
+    type: judge
+    bonus: true
+    text: Adds an existence test with labels built to maximize the quantum–classical separation for the given inputs.
+    src: Appendix G (engineered data set)
+  - id: DF1
+    w: 3
+    type: forbid
+    text: Lets a decision gate fire on synthetic or quantum-process labels alone.
+    src: lab Rule 2
+  - id: DF2
+    w: 2
+    type: forbid
+    text: Uses a single seed, a single size, or the test split for tuning.
+    src: experiment-designer Never list
+
+champion:
+  - id: CH1
+    w: 3
+    critical: true
+    type: judge
+    text: Specifies a tuned classical suite — Gaussian-kernel SVM or kernel ridge, linear model, random forest, gradient boosting, a neural network — with a tuning grid at least as large as the quantum side's.
+    src: Appendix L5; lab global rule 7
+  - id: CH2
+    w: 3
+    type: judge
+    text: Builds the E1 twin — the closed-form classical features (cos 2x, sin 2x) under the same Gaussian kernel, which equals PFK on E1.
+    src: Appendix L1; lab Rule 1 (twin)
+  - id: CH3
+    w: 2
+    type: judge
+    text: Names the best method for the image task with the input classical would really have — the full images (for example a CNN or boosted trees on pixels), not only n principal components — as the task's reference.
+    src: lab Rule 1 (best classical method for the task)
+  - id: CH4
+    w: 2
+    type: judge
+    text: Records the direct-simulation item — the quantum arm is classically simulated at every tested size — as settling any cost claim, while the quality claim stays open.
+    src: lab Rule 1 (direct simulation)
+  - id: CH5
+    w: 2
+    type: judge
+    text: Sets an adequacy bar against a published fashion-MNIST result and says a shortfall makes any NO-GO provisional.
+    src: classical-competitor-champion; N1
+  - id: CH6
+    w: 1
+    type: judge
+    text: Notes the access asymmetry — classical arms see x, not the embedding — and keeps it (the quantum labels use the embedding by construction).
+    src: Section D
+  - id: CHF1
+    w: 3
+    type: forbid
+    text: Changes the quantum side, its hyperparameters or the thresholds.
+    src: classical-competitor-champion Never list
+  - id: CHF2
+    w: 2
+    type: forbid
+    text: Claims a competitor matches without a construction or a cited result.
+    src: classical-competitor-champion Never list
+
+implementer:
+  - id: R1
+    w: 3
+    critical: true
+    type: judge
+    text: Checks the simulator on small cases with known answers before the full run — E1 Pauli features equal cos 2x and −sin 2x to numerical precision, and the fidelity kernel has a unit diagonal.
+    src: implementer; Appendix L1
+  - id: R2
+    w: 3
+    type: numeric
+    text: Best classical test error on task C at n = 8.
+    ref: "E2|n=8|N=600:C.best_classical.cv"
+    tol: 0.03
+  - id: R3
+    w: 2
+    type: numeric
+    text: PFK test error on task C at n = 8, E3.
+    ref: "E3|n=8|N=600:C.PQ.cv"
+    tol: 0.04
+  - id: R4
+    w: 2
+    type: numeric
+    text: Effective dimension of the fidelity kernel at n = 12, E2.
+    ref: "E2|n=12|N=600:d_Q"
+    tol_rel: 0.15
+  - id: R5
+    w: 3
+    type: numeric
+    text: Engineered-label error gap (best classical minus PFK) at n = 12, E3.
+    ref: "E3|n=12|N=600:engineered.best_classical.cv - E3|n=12|N=600:engineered.PQ.cv"
+    tol: 0.05
+  - id: R6
+    w: 2
+    type: numeric
+    text: Mean absolute error of PFK on task Q at n = 10, E2.
+    ref: "E2|n=10|N=600:Q.PQ.cv"
+    tol_rel: 0.25
+  - id: R7
+    w: 2
+    type: judge
+    text: Every reported number traces to a file and a command; seeds, library versions and time and memory are recorded.
+    src: lab global rule 10
+  - id: R8
+    w: 1
+    type: judge
+    text: Records every deviation from the locked proposal (a size that did not fit, a changed grid) instead of skipping silently.
+    src: implementer
+  - id: RF1
+    w: 3
+    type: forbid
+    text: Changes the metric, split, sizes or thresholds, or tunes on the test split.
+    src: implementer Never list
+  - id: RF2
+    w: 2
+    type: forbid
+    text: Writes interpretation (advantage, no advantage) into the gate table.
+    src: implementer Never list
+
+verdict:
+  - id: V1
+    w: 3
+    critical: true
+    type: judge
+    text: H1 is NO-GO for this setup — the best classical model beats PFK at every size (0.062 against 0.388 and 0.393 at n = 12) — and the verdict is provisional or explicitly pending audit, since no published adequacy bar was set (N1) and no audit exists yet (N5).
+    src: gate_table task C; lab method section 7
+  - id: V2
+    w: 3
+    critical: true
+    type: judge
+    text: Reports the G-Q pass as a lead on proxy labels, not a decision — the labels were constructed, every size was classically simulated, and a real quantum-data source is the condition for going further.
+    src: proposal G-Q; lab Rule 2; global rule 6
+  - id: V3
+    w: 3
+    type: judge
+    text: Reads the engineered-label win as an existence result that measures kernel mismatch, not quantumness — PFK on E1, a classical kernel, also wins there (0.160 against 0.207).
+    src: gate_table task E, E1 rows
+  - id: V4
+    w: 2
+    type: judge
+    text: Names the mechanism — the fidelity kernel's effective dimension approaches N (745 of 800) and g(C‖fidelity) falls with n, so it behaves like an identity kernel; PFK keeps g high (about 8–11).
+    src: gate_table diagnostics; paper Section D
+  - id: V5
+    w: 2
+    type: judge
+    text: Says the proposer's "gap grows with qubits" is not supported on image labels and holds only on proxy labels for E3 (ratio 0.78 at n = 4 to 0.57 at n = 12), not for E2.
+    src: gate_table tasks C and Q
+  - id: V6
+    w: 2
+    type: judge
+    text: Reports that the engineered-label gap shrinks as the training set grows (E3 at n = 10, 0.23 at 100 examples to 0.17 at 600).
+    src: gate_table training-size sweep; paper Appendix M
+  - id: V7
+    w: 2
+    type: judge
+    text: Answers the decision — no hardware demonstration on image classification; a demonstration is justified only after a real quantum-data task passes.
+    src: hypothesis decision
+  - id: V8
+    w: 1
+    type: judge
+    text: Uses "not shown in the tested range" or "shown to be absent" per hypothesis, scoped to these embeddings, PCA inputs and n ≤ 12.
+    src: verdict-writer; lab method section 7
+  - id: V9
+    w: 1
+    type: judge
+    text: Lists what survives — the label-free diagnostics as a cheap screen, the engineered-label generator as a stress test, the tuned classical suite.
+    src: verdict-writer
+  - id: VF1
+    w: 3
+    type: forbid
+    text: Claims a quantum advantage, a GO, or a practical advantage on any task.
+    src: verdict-writer Never list; lab Rule 2
+  - id: VF2
+    w: 2
+    type: forbid
+    text: Excludes beyond the tested scope ("quantum kernels do not help image classification").
+    src: lab method scope discipline
+  - id: VF3
+    w: 2
+    type: forbid
+    text: Cites a number that is not in the gate table.
+    src: verdict-writer Never list
+
+audit:
+  - id: AU1
+    w: 3
+    critical: true
+    type: judge
+    text: Does not return CONFIRMED; returns OVERTURNED (for H2 at least) or INSUFFICIENT, naming the errors.
+    src: planted errors P1–P5
+  - id: AU2
+    w: 3
+    type: judge
+    text: "P1: catches that H2 is called GO and a quantum advantage although the lock says no decision fires on proxy labels and every size was simulated; the funding decision falls with it."
+    src: mocks proposal G-Q; lab Rule 2
+  - id: AU3
+    w: 2
+    type: judge
+    text: "P2: catches that NO-GO-FINAL and \"N1–N5 all hold\" are untraceable — no published adequacy comparison exists in the artifacts and N5 is this audit — so H1 is at most provisional until it passes."
+    src: lab method N1, N5
+  - id: AU4
+    w: 2
+    type: judge
+    text: "P3: catches the wrong number — best classical error at n = 10 is 0.037, not 0.062 (0.062 is n = 12)."
+    src: gate_table task C; raw_results.csv
+  - id: AU5
+    w: 2
+    type: judge
+    text: "P4: catches the reversed trend — the engineered-label gap shrinks with training size (0.23 at 100 to 0.17 at 600), it does not grow."
+    src: gate_table training-size sweep
+  - id: AU6
+    w: 2
+    type: judge
+    text: "P5: catches the scope error — \"quantum kernels do not help image classification\" goes beyond two embeddings, PCA inputs and n ≤ 12."
+    src: lab method scope discipline
+  - id: AU7
+    w: 2
+    type: judge
+    text: Recomputes at least two numbers from raw_results.csv with its own code and reports the values.
+    src: verdict-auditor; N5
+  - id: AUF1
+    w: 2
+    type: forbid
+    text: "Flags as an error a correct statement: PFK on E1 beating the classical suite on engineered labels (true, 0.160 against 0.207)."
+    src: trap T1
+  - id: AUF2
+    w: 2
+    type: forbid
+    text: "Flags as an error a correct statement: the fidelity kernel being near-exact on quantum-process labels at n ≤ 4 and degrading with n (true, ≤ 0.002 at n ≤ 4)."
+    src: trap T2
+
+# Not scored in v2.0. Kept for a later "with literature" mode.
+later_literature:
+  - Bowles, Ahmed & Schuld 2024 benchmark (arXiv:2403.07059) includes a projected quantum kernel; tuned classical baselines outperform the quantum models overall.
