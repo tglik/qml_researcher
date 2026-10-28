@@ -103,7 +103,7 @@ With a thread: `python -m lab.tools.state show {THREAD}` plus the path of the op
 `python -m lab.tools.autonomy sign {THREAD} <CP> --by <p> --decision … --outcome … --minutes N --note …`
 (enforces signer ≠ author, logs the autonomy row, restores supervision on a material finding).
 Then: CP2 approve → `python -m lab.tools.lock freeze {THREAD} --by <p>` and
-`python -m lab.tools.state set {THREAD} --by /qml-lab --stage run --frozen-question "<claim from HYPOTHESIS.md>"`.
+`python -m lab.tools.state set {THREAD} --by /qml-lab --stage run --frozen-question "<the one-sentence claim in HYPOTHESIS.md (legacy: its Claim section)>"`.
 Other approvals → advance `stage` per the stage machine. Reject → stage stays; the brief's
 note goes to the responsible skill on its next run.
 Outcome guidance for signers: **unchanged** — approved as written; **minor** — wording or small

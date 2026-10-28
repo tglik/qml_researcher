@@ -21,6 +21,9 @@ method"), not lab shorthand (no gate ids, rule numbers or "arm"). See lab/STYLE.
 against, and the result that makes us drop it (in bold). If the claim is classical at every size we
 can run, say so here.}
 
+**Claim, in one sentence:** {the claim a number could contradict, with its margin, data and size —
+the sentence read back to the proposer and frozen when the program runs.}
+
 ## Background the reader needs
 - **{Term}.** {One or two sentences.} ({Reference.})
 {Only the concepts the sections below use. Domain terms (chemistry, finance, …) belong here too.}
