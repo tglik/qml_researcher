@@ -1,0 +1,341 @@
+<title>Exp 18 Rewrite Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<style>
+/* Layout: sticky item list on the left; document, before/after panel and review form on the right; one column on phones. */
+:root{
+  --ground:#F4F6F8; --surface:#FFFFFF; --sunk:#EAEEF2; --ink:#16202B; --muted:#56636F; --line:#D6DDE3;
+  --accent:#0E6E73; --accent-soft:#DDEFEF; --on-accent:#FFFFFF;
+  --old:#7A5A2E; --old-soft:#F5EDE1;
+  --ok:#2F7A3A; --ok-bg:#E1F1E3; --chg:#9A5B00; --chg-bg:#FCEFD9; --bad:#A33A2B; --bad-bg:#F7E3DF;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --cond:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#0F1419; --surface:#161D24; --sunk:#1C252E; --ink:#E3E9EE; --muted:#9AA7B2; --line:#2A3540;
+    --accent:#5BBCC0; --accent-soft:#16373A; --on-accent:#0F1419;
+    --old:#E2B77A; --old-soft:#2E2414;
+    --ok:#7CCB88; --ok-bg:#17301C; --chg:#F0B35A; --chg-bg:#3A2A12; --bad:#EE8A7B; --bad-bg:#3A1C17;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0F1419; --surface:#161D24; --sunk:#1C252E; --ink:#E3E9EE; --muted:#9AA7B2; --line:#2A3540;
+  --accent:#5BBCC0; --accent-soft:#16373A; --on-accent:#0F1419;
+  --old:#E2B77A; --old-soft:#2E2414;
+  --ok:#7CCB88; --ok-bg:#17301C; --chg:#F0B35A; --chg-bg:#3A2A12; --bad:#EE8A7B; --bad-bg:#3A1C17;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--sans);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:1180px;margin:0 auto}
+header.top{padding-block:28px 16px;border-bottom:1px solid var(--line)}
+.eyebrow{font:500 12px/1 var(--cond);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:600 clamp(26px,4vw,34px)/1.15 var(--cond);margin:8px 0 8px;text-wrap:balance}
+.lede{max-width:78ch;margin:0;color:var(--ink)}
+.howto{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:12px;color:var(--muted);font-size:13.5px}
+.howto b{color:var(--ink);font-weight:600}
+.status-line{margin-top:12px;font-size:13px;color:var(--muted)}
+.status-line[data-kind="warn"]{color:var(--chg)}
+.layout{display:grid;grid-template-columns:290px 1fr;gap:24px;margin-top:20px;align-items:start}
+nav.list{position:sticky;top:env(safe-area-inset-top,0px);max-height:calc(100vh - 24px);overflow:auto;padding-block:4px 20px}
+.grp{font:600 11.5px/1.3 var(--cond);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
+.item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:5px;padding:7px 8px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer}
+.item:hover{background:var(--sunk)}
+.item:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.item[aria-current="true"]{background:var(--accent-soft);font-weight:600}
+.item .nm{flex:1;min-width:0}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;border:1.5px solid var(--line);background:var(--surface)}
+.dot.right{background:var(--ok);border-color:var(--ok)} .dot.change{background:var(--chg);border-color:var(--chg)} .dot.wrong{background:var(--bad);border-color:var(--bad)}
+.tally{font:12px/1 var(--mono);color:var(--muted);min-width:22px;text-align:right}
+.progress{height:6px;background:var(--sunk);border-radius:3px;overflow:hidden;margin:6px 0 2px}
+.progress i{display:block;height:100%;background:var(--accent);width:0}
+.plabel{font-size:12.5px;color:var(--muted)}
+main{min-width:0}
+.doc{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:22px 26px}
+.docmeta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;font:12.5px/1.4 var(--mono);color:var(--muted);margin-bottom:10px}
+.docmeta span{min-width:0;overflow-wrap:anywhere}
+.why{background:var(--accent-soft);border-radius:6px;padding:10px 14px;font-size:14px;margin-bottom:14px}
+.md{max-width:76ch;min-width:0}
+.md h1{font:600 24px/1.2 var(--cond);margin:0 0 10px}
+.md h2{font:600 18px/1.3 var(--cond);margin:22px 0 6px}
+.md h3{font:600 16px/1.3 var(--cond);margin:18px 0 6px}
+.md p,.md li{margin:0 0 8px}
+.md ul,.md ol{padding-left:20px;margin:0 0 10px}
+.md code{font:13px/1.4 var(--mono);background:var(--sunk);padding:1px 4px;border-radius:3px}
+.md pre{background:var(--sunk);border-radius:6px;padding:10px 12px;overflow-x:auto;max-width:100%}
+.md pre code{background:none;padding:0;white-space:pre}
+.md table{border-collapse:collapse;font-size:13.5px;margin:8px 0 14px;display:block;overflow-x:auto;max-width:100%}
+.md th,.md td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+.md th{background:var(--sunk);font-weight:600}
+.md blockquote{margin:0 0 12px;border-left:3px solid var(--accent);padding:4px 12px;color:var(--muted)}
+.md a{color:var(--accent)}
+.before{margin-top:16px;border:1px solid var(--line);border-left:4px solid var(--old);border-radius:6px;background:var(--surface);padding:12px 18px}
+.before summary{cursor:pointer;font:600 14px/1.4 var(--cond);letter-spacing:.04em;text-transform:uppercase;color:var(--old)}
+.before summary span{font:400 13px/1.4 var(--sans);letter-spacing:0;text-transform:none;color:var(--muted);margin-left:8px}
+.before summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.before .md{font-size:14px;margin-top:12px;max-height:70vh;overflow:auto;padding-right:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px 22px;margin-top:16px}
+.card h2{font:600 17px/1.3 var(--cond);margin:0 0 4px}
+.card .q{color:var(--muted);font-size:14px;margin:0 0 12px}
+.choices{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.choice{font:500 14px/1 var(--sans);border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:9px 14px;cursor:pointer}
+.choice:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.choice[aria-pressed="true"][data-v="right"]{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.choice[aria-pressed="true"][data-v="change"]{background:var(--chg-bg);border-color:var(--chg);color:var(--chg)}
+.choice[aria-pressed="true"][data-v="wrong"]{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+label.fl{display:block;font-weight:600;font-size:13.5px;margin:10px 0 4px}
+label.fl span{font-weight:400;color:var(--muted)}
+textarea{width:100%;min-height:120px;font:14px/1.5 var(--sans);color:var(--ink);background:var(--ground);border:1px solid var(--line);border-radius:6px;padding:10px 12px;resize:vertical}
+textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:12px}
+.btn{font:600 14px/1 var(--sans);background:var(--accent);color:var(--on-accent);border:0;border-radius:6px;padding:10px 16px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:none;color:var(--accent);border:1.5px solid var(--accent)}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.saved{font-size:13px;color:var(--muted)}
+.others{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+.others h3{font:600 14px/1.3 var(--cond);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.rev{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.rev:last-child{border-bottom:0}
+.rev img{width:28px;height:28px;border-radius:50%;background:var(--sunk)}
+.rev .who{font-weight:600;font-size:14px}
+.rev .when{color:var(--muted);font-size:12.5px;font-weight:400;margin-left:6px}
+.rev .txt{grid-column:2;white-space:pre-wrap;font-size:14px;min-width:0;overflow-wrap:anywhere}
+.pill{display:inline-block;font:600 11px/1 var(--cond);letter-spacing:.05em;text-transform:uppercase;padding:4px 7px;border-radius:3px;margin-left:8px;vertical-align:1px}
+.pill.right{color:var(--ok);background:var(--ok-bg)} .pill.change{color:var(--chg);background:var(--chg-bg)} .pill.wrong{color:var(--bad);background:var(--bad-bg)}
+.empty{color:var(--muted);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+select#jump{display:none;width:100%;font:15px var(--sans);padding:9px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+label[for="jump"]{display:none}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr}
+  nav.list{display:none}
+  select#jump,label[for="jump"]{display:block}
+  .doc{padding:18px 16px}
+  .card,.before{padding-inline:14px}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">QML Lab · materials thread, exp 18 · for Meir &amp; Adi</div>
+  <h1>Exp 18, rewritten so a reader can follow it</h1>
+  <p class="lede">We rewrote the exp 18 hypothesis and proposal in plain language: a hypothesis that explains the algorithm and why it is built this way, a short plan, and one document per experiment. The science is unchanged, and the frozen thread is untouched. <b>Is each document clear to you, and is anything wrong or missing?</b></p>
+  <div class="howto">
+    <span><b>Start with:</b> “What changed”, then the hypothesis and the plan</span>
+    <span><b>For each item:</b> pick a verdict, then comment</span>
+    <span><b>Compare</b> any item with the original it replaces</span>
+  </div>
+  <div class="status-line" id="status" role="status">Loading the shared review store…</div>
+</header>
+
+<div class="layout">
+  <nav class="list" id="nav" aria-label="Items to review"></nav>
+  <main>
+    <label class="fl" for="jump">Jump to item</label>
+    <select id="jump"></select>
+    <article class="doc" id="doc" aria-live="polite"></article>
+    <details class="before" id="before" hidden>
+      <summary id="beforeSum">Compare with the original</summary>
+      <div class="md" id="beforeText"></div>
+    </details>
+    <section class="card" id="form" aria-labelledby="formh">
+      <h2 id="formh">Your review</h2>
+      <p class="q">Is it clear to you? Is anything wrong, naive or missing? If you compared it with the original: is it better?</p>
+      <div class="choices" role="group" aria-label="Verdict">
+        <button class="choice" type="button" data-v="right" id="v-right" aria-pressed="false">Clear and right</button>
+        <button class="choice" type="button" data-v="change" id="v-change" aria-pressed="false">Needs a change</button>
+        <button class="choice" type="button" data-v="wrong" id="v-wrong" aria-pressed="false">Unclear or wrong</button>
+      </div>
+      <label class="fl" for="comment">Comment <span>(quote the line you mean; propose wording if you can)</span></label>
+      <textarea id="comment" placeholder="e.g. “Why we expect it” under H1: the argument about generic geometry errors does not hold, because…"></textarea>
+      <div class="row">
+        <button class="btn" type="button" id="save">Save review</button>
+        <span class="saved" id="saved"></span>
+      </div>
+      <div class="others" id="others"></div>
+      <div class="pager">
+        <button class="btn ghost" type="button" id="prev">← Previous</button>
+        <button class="btn ghost" type="button" id="next">Next →</button>
+      </div>
+    </section>
+  </main>
+</div>
+</div>
+
+<script>
+const DATA = __DATA__;
+const COL = "exp18_review";
+const SEL_KEY = "exp18-review-sel";
+const S = { sel: DATA.items[0].id, verdict: null, db: null, user: null, uid: null, canWrite: null,
+            all: {}, mineExists: false, writable: true, dirty: false };
+const $ = (id) => document.getElementById(id);
+const byId = Object.fromEntries(DATA.items.map(i => [i.id, i]));
+const byFile = Object.fromEntries(DATA.items.map(i => [i.path.split("/").pop(), i.id]));
+const LABEL = { right: "Clear and right", change: "Needs a change", wrong: "Unclear or wrong" };
+const md = (s) => window.marked ? window.marked.parse(s) : null;
+
+function setStatus(text, kind) { const el = $("status"); el.textContent = text; el.dataset.kind = kind || ""; }
+function mine() { return (S.uid && S.all[S.uid]) || {}; }
+function collect(itemId) {
+  return Object.entries(S.all).filter(([, items]) => items && items[itemId]).map(([uid, items]) => ({ uid, ...items[itemId] }));
+}
+
+function setMarkdown(el, text) {
+  const html = md(text);
+  if (html !== null) el.innerHTML = html;
+  else { el.textContent = ""; const pre = document.createElement("pre"); pre.style.whiteSpace = "pre-wrap"; pre.textContent = text; el.appendChild(pre); }
+  for (const a of el.querySelectorAll("a")) {
+    const href = a.getAttribute("href") || "";
+    const target = byFile[href.split("#")[0].split("/").pop()];
+    if (/^https?:/i.test(href)) { a.target = "_blank"; a.rel = "noopener"; }
+    else if (target) { a.href = "#" + target; a.addEventListener("click", (e) => { e.preventDefault(); select(target); }); }
+    else { const span = document.createElement("span"); span.textContent = a.textContent; a.replaceWith(span); }
+  }
+}
+
+function renderNav() {
+  const nav = $("nav"); nav.textContent = "";
+  const done = DATA.items.filter(i => mine()[i.id]).length;
+  const head = document.createElement("div");
+  head.innerHTML = `<div class="plabel"></div><div class="progress"><i></i></div>`;
+  head.querySelector(".plabel").textContent = S.uid ? `You have reviewed ${done} of ${DATA.items.length}` : `${DATA.items.length} items`;
+  head.querySelector("i").style.width = (100 * done / DATA.items.length) + "%";
+  nav.appendChild(head);
+  let grp = null;
+  for (const it of DATA.items) {
+    if (it.group !== grp) {
+      grp = it.group;
+      const g = document.createElement("div"); g.className = "grp"; g.textContent = grp; nav.appendChild(g);
+    }
+    const b = document.createElement("button");
+    b.className = "item"; b.type = "button"; b.setAttribute("aria-current", String(it.id === S.sel));
+    const d = document.createElement("span"); d.className = "dot " + ((mine()[it.id] || {}).verdict || "");
+    const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = it.title;
+    const t = document.createElement("span"); t.className = "tally";
+    const n = collect(it.id).length; t.textContent = n ? String(n) : ""; t.title = n + " review(s)";
+    b.append(d, nm, t);
+    b.addEventListener("click", () => select(it.id));
+    nav.appendChild(b);
+  }
+  const j = $("jump");
+  if (!j.options.length) {
+    for (const it of DATA.items) { const o = document.createElement("option"); o.value = it.id; o.textContent = `${it.group}: ${it.title}`; j.appendChild(o); }
+    j.addEventListener("change", () => select(j.value));
+  }
+  j.value = S.sel;
+}
+
+function renderDoc() {
+  const it = byId[S.sel];
+  const doc = $("doc"); doc.textContent = "";
+  const meta = document.createElement("div"); meta.className = "docmeta";
+  const a = document.createElement("span"); a.textContent = it.kind;
+  const b = document.createElement("span"); b.textContent = it.path;
+  meta.append(a, b); doc.appendChild(meta);
+  if (it.focus) { const w = document.createElement("div"); w.className = "why"; w.textContent = it.focus; doc.appendChild(w); }
+  const body = document.createElement("div"); body.className = "md"; setMarkdown(body, it.markdown); doc.appendChild(body);
+  const bf = $("before");
+  bf.hidden = !it.before; bf.open = false;
+  if (it.before) {
+    $("beforeSum").textContent = "Compare with the original";
+    const s = document.createElement("span"); s.textContent = it.before_label; $("beforeSum").appendChild(s);
+    setMarkdown($("beforeText"), it.before);
+  }
+}
+
+async function renderPeople(box, list, emptyText) {
+  box.textContent = "";
+  if (!list.length) { const e = document.createElement("div"); e.className = "empty"; e.textContent = emptyText; box.appendChild(e); return; }
+  const ps = S.user ? await S.user.profiles(list.map(r => r.uid)) : {};
+  for (const r of list.sort((x, y) => (y.updatedAt || "").localeCompare(x.updatedAt || ""))) {
+    const p = ps[r.uid] || {};
+    const row = document.createElement("div"); row.className = "rev";
+    const img = document.createElement("img"); img.alt = ""; if (p.avatarUrl) img.src = p.avatarUrl;
+    const top = document.createElement("div");
+    const who = document.createElement("span"); who.className = "who"; who.textContent = p.name || "A teammate";
+    const pill = document.createElement("span"); pill.className = "pill " + (r.verdict || ""); pill.textContent = LABEL[r.verdict] || "";
+    const when = document.createElement("span"); when.className = "when"; when.textContent = r.updatedAt ? new Date(r.updatedAt).toLocaleDateString() : "";
+    top.append(who, pill, when);
+    const txt = document.createElement("div"); txt.className = "txt"; txt.textContent = r.comment || "—";
+    row.append(img, top, txt); box.appendChild(row);
+  }
+}
+
+function renderForm() {
+  const r = mine()[S.sel];
+  if (!S.dirty) { S.verdict = r ? r.verdict : null; $("comment").value = r ? (r.comment || "") : ""; }
+  for (const v of ["right", "change", "wrong"]) $("v-" + v).setAttribute("aria-pressed", String(S.verdict === v));
+  const can = S.db && S.uid && S.writable && S.canWrite !== false;
+  $("save").disabled = !can;
+  for (const b of document.querySelectorAll(".choice")) b.disabled = !can;
+  $("comment").disabled = !can;
+  $("saved").textContent = r ? `Saved ${new Date(r.updatedAt).toLocaleString()}` : (can ? "" : "Read-only for you: ask Tsahi for Contributor access to leave a review.");
+  const i = DATA.items.findIndex(x => x.id === S.sel);
+  $("prev").disabled = i === 0; $("next").disabled = i === DATA.items.length - 1;
+  const box = $("others"); box.textContent = "";
+  const h = document.createElement("h3"); h.textContent = "The team on this item"; box.appendChild(h);
+  const inner = document.createElement("div"); box.appendChild(inner);
+  renderPeople(inner, collect(S.sel).filter(x => x.uid !== S.uid), "No reviews from others yet.");
+}
+
+function render() { renderNav(); renderDoc(); renderForm(); }
+function select(id) {
+  if (S.dirty) { $("saved").textContent = "You have unsaved changes. Save them, or click the item again to discard."; S.dirty = false; return; }
+  S.sel = id;
+  try { localStorage.setItem(SEL_KEY, id); } catch (e) {}
+  render(); window.scrollTo({ top: 0 });
+}
+
+for (const b of document.querySelectorAll(".choice")) b.addEventListener("click", () => { S.verdict = b.dataset.v; S.dirty = true; renderForm(); });
+$("comment").addEventListener("input", () => { S.dirty = true; });
+$("prev").addEventListener("click", () => { const i = DATA.items.findIndex(x => x.id === S.sel); if (i > 0) select(DATA.items[i - 1].id); });
+$("next").addEventListener("click", () => { const i = DATA.items.findIndex(x => x.id === S.sel); if (i < DATA.items.length - 1) select(DATA.items[i + 1].id); });
+
+$("save").addEventListener("click", async () => {
+  if (!S.verdict) { $("saved").textContent = "Pick a verdict first: Clear and right, Needs a change, or Unclear or wrong."; return; }
+  const entry = { verdict: S.verdict, comment: $("comment").value.trim(), updatedAt: new Date().toISOString() };
+  $("save").disabled = true; $("saved").textContent = "Saving…";
+  try {
+    const ref = S.db.doc(COL + "/" + S.uid);
+    if (!S.mineExists) { const snap = await ref.get(); S.mineExists = snap.exists; }
+    if (S.mineExists) await ref.update({ items: { [S.sel]: entry } });
+    else { await ref.set({ reviewer: S.uid, items: { [S.sel]: entry } }); S.mineExists = true; }
+    S.dirty = false;
+    S.all[S.uid] = { ...(S.all[S.uid] || {}), [S.sel]: entry };
+    render();
+  } catch (e) {
+    if (e && (e.code === "invalid_argument" || e.code === "permission_denied")) { S.writable = false; $("saved").textContent = "Your access is read-only, so the review was not saved. Ask Tsahi for Contributor access."; }
+    else $("saved").textContent = "Could not save (" + ((e && e.code) || "error") + "). Try again in a moment.";
+    $("save").disabled = false;
+  }
+});
+
+try { const s = localStorage.getItem(SEL_KEY); if (s && byId[s]) S.sel = s; } catch (e) {}
+render();
+
+(async () => {
+  const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+  S.db = db; S.user = user;
+  if (user) { S.uid = await user.id(); S.canWrite = await user.can("data.write"); }
+  if (!db) { setStatus("The shared review store isn't available in this view, so you can read but not review. Open the page on claude.ai while signed in.", "warn"); render(); return; }
+  if (!S.uid) setStatus("You can read the reviews but not add one: sign in to claude.ai to review.", "warn");
+  db.collection(COL).onSnapshot(snap => {
+    S.all = {};
+    for (const d of snap.docs) S.all[d.id] = (d.data() || {}).items || {};
+    S.mineExists = !!(S.uid && S.all[S.uid]);
+    const reviewers = Object.keys(S.all).length;
+    const total = Object.values(S.all).reduce((n, items) => n + Object.keys(items).length, 0);
+    if (S.uid) setStatus(total ? `${total} review${total === 1 ? "" : "s"} saved so far by ${reviewers} teammate${reviewers === 1 ? "" : "s"}.` : "Review is open. No reviews saved yet.");
+    if (!S.dirty) render(); else { renderNav(); }
+  }, err => setStatus("Live updates stopped (" + err.code + "). Reload the page to reconnect.", "warn"));
+})();
+</script>
