@@ -63,7 +63,7 @@ def new(thread: Path, owner: str, entry_path: str) -> dict:
             title = {"decision_log.md": "Decision log\n\n| Date | Stage | Decision | Reason | Who |\n|---|---|---|---|---|\n",
                      "change_log.md": "Change log\n\n| Date | What changed | Why | Effect on conclusions |\n|---|---|---|---|\n",
                      "env.md": "Environment\n\n"}[name]
-            p.write_text(f"# {title}")
+            p.write_text(f"# {title}", encoding="utf-8")
     return state
 
 

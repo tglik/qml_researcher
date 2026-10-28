@@ -1,99 +1,95 @@
 ---
 thread: {thread}
+format: 2
 date: {YYYY-MM-DD}
 status: {draft | panel-reviewed | frozen}
 lock_sha256: {filled by lock.py at freeze}
 ---
 
-# Pre-registration — {short name}
+# Plan — {short name}
 
-Every item in a fenced `lock` block below is hashed into PREREG.lock.json at freeze. After
-freeze those blocks are immutable; changes are dated amendments that precede data access.
+<!-- The plan is the overview: a reader should get the program in five minutes. Each experiment's
+design lives in experiments/E<k>_<slug>.md (template: EXPERIMENT.md); experiment k runs as tool
+phase P<k> and its lock ids start with "P<k>.". Revision history and panel responses go to
+change_log.md, never here. Plain words, one term per concept, models named by the short names in
+the table below (lab/STYLE.md). -->
 
-## 1. Hypotheses → experiments
-| Hypothesis | Experiment IDs | Metric | Predicted | Pass if | Fail if |
-|---|---|---|---|---|---|
+## Summary
+{5–7 sentences: what we test (link HYPOTHESIS.md), how many experiments and in what spirit
+(cheapest fatal first), which parts are classical and which ask whether a quantum computer is
+needed, what is already known, and the most likely outcome stated in advance. One status line once
+the program runs.}
 
-## 2. Metrics
-- **Correctness:** {metric; ground truth per size — exact / brute force / trusted solver}
-- **Projected quantum cost:** {formula; assumed hardware clock}
-- **Simulation cost:** {wall-clock + peak memory — reported, never used as quantum time}
-- **Classical cost:** {same hardware, same budget}
-- **Scaling fits:** {polynomial vs exponential, AIC/BIC, CIs}
+## What the result decides
+| Verdict | Meaning | What we do |
+|---|---|---|
+| GO / CONDITIONAL-GO | | {what gets funded, pitched or built} |
+| NO-GO-FINAL | | {what gets dropped; what is kept} |
+| NO-GO-PROVISIONAL | | {no spend until the reopening condition} |
 
-## 3. Arms and baselines
-| Arm | What it is | Tuning budget | Why it is here |
+{The best verdict this program can reach (the screen's ceiling) and why, in one sentence.}
+
+## Experiment sequence
+```
+{E0 ──► E1 ──► … diagram, with one word per box on what each can end}
+```
+
+**E{k} — {the experiment's question}**
+- *Tests:* {hypothesis ids, in plain words}
+- *Why here:* {what it can end, and why it comes at this point}
+- *Expect:* {prediction and the evidence for it}
+- *If it fails:* {what stops, what continues}
+- *Cost:* {core-h, wall-days}. *Details:* [E{k}_{slug}.md](experiments/E{k}_{slug}.md)
+
+## Why this order
+1. {The cheapest experiment that can end the program goes first; say which can end the whole
+   program and which only the quantum claim.}
+
+## Shared setup
+- **Data and splits:** {data, holdouts that gate vs report, seeds}
+- **Main metric:** {metric, its resolution, the smallest gain that matters and why}
+- **Statistics:** {CI method; tuning only inside the training split; each test pool touched once}
+- **Costs reported:** {correctness against ground truth per size; projected quantum cost (always
+  labelled projected); simulation cost (never reported as quantum time); classical cost on the same
+  hardware}
+- **Machine:** {local machine and limits}
+- **Exact definitions:** `frozen_definitions.md` (`def.*`).
+
+Models compared (the classical competitor champion fills the classical rows):
+
+| Short name | What it is | Tuning budget | Used in |
 |---|---|---|---|
-| Quantum | | | |
-| Best classical for the task (what industry deploys) | | ≥ quantum | rule 1 |
-| Strongest exact classical method | | ≥ quantum | rule 1 |
-| Twin (same input, same access) — or "settled on paper: <reason>" | | ≥ quantum | rule 1 |
-| Size-matched control(s) | | — | N3, one per oracle/ablation gate |
+| {Q1} proposed method | | none on the quantum part | |
+| {C0} best classical for the task | | ≥ the proposed method's | |
+| {C1} same-input baseline | | ≥ the proposed method's | |
+| {R1} size-matched control | | same grid | |
 
 ```lock
 id: baseline.adequacy
 kind: baseline
-text: Classical arm must reach within {factor} of published SOTA ({value, source}) on {metric, data}; otherwise every NO-GO is provisional (G5/N1).
+text: The best classical baseline must reach within {factor} of published SOTA ({value, source}) on {metric, data}; otherwise every NO-GO is provisional (G5/N1).
 ```
-
-## 4. Instances, splits, statistics
-- Families and generators (with seeds); easy / typical / hard / edge; ≥ 20–50 per size at small sizes.
-- Tuning vs test instances kept separate.
-- Exact (statevector) and finite-shot runs.
-- CI method, seeds, outlier handling.
-
 ```lock
 id: splits.definition
 kind: split
 text: {exact split definition — created and hashed before any modeling}
 ```
 
-## 5. Phases (cheapest-fatal first)
-### P0 — analytic resource count at the operating point (paper only; no run)
-Gates, depth, shots, loading and readout cost at N_ind, counted analytically; best classical cost
-at N_ind measured or cited; break-even N*. Feeds G8. Lives in 00_operating_point.md.
-
-Each run phase below states its **simulation method and why** (lab_method §6).
-
-### P1 — {toy, 6–16 q}
-Objective · experiment table (ID, hypothesis, sizes, instances, seeds, method, metric, expected) ·
-tuning plan · budget (cpu-h, peak memory, wall-days) · fallback.
-
-```lock
-id: P1.G4.threshold
-kind: threshold
-text: {gate, measured quantity, numeric threshold, justification}
-```
-```lock
-id: P1.gray_zone
-kind: gray_zone
-text: {what happens on a partial or borderline result — written before data}
-```
-```lock
-id: P1.stop_rule
-kind: stop_rule
-text: {condition under which the program stops after P1}
-```
-
-### P2 — {medium, 18–26 q} …
-### P3 — {real data + classical at N_ind + resource estimate at N_ind} …
-### P4 — {noise sweep} …
-### P5 — {hardware plan — modeling only in V1} …
-
-## 6. Verdict sentences, written in advance
-| Gate | If it passes we will write | If it fails we will write |
-|---|---|---|
-
-## 7. Budget and fallbacks
-| Phase | Side | cpu-h | peak memory | tokens | wall-days | Fallback |
+## Budget
+| Experiment | Side | Core-hours | Peak memory | Tokens (M) | Wall-days | Fallback |
 |---|---|---|---|---|---|---|
-| P1 | quantum | | | | | |
-| P1 | classical | | | | | |
+| E1 | quantum | | | | | |
+| E1 | classical | | | | | |
 
-## 8. Analysis plan
-{Figures and tables each phase report must contain.}
+```lock
+id: global.budget_halt
+kind: stop_rule
+text: An experiment whose spend passes 2× its plan, or whose peak memory would exceed the machine, halts and asks a human with options (lab_method global rule 8).
+```
 
-## 9. Risks
+## Before spending: open questions
+- {Anything the owner must decide before compute is spent: access, feasibility, sequencing,
+  estimates that look wrong. "None" if none.}
 
 ## Amendments (append-only after freeze)
 | # | Date | Touches | Reason | Precedes data access for | Approved by |

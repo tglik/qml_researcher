@@ -9,7 +9,7 @@ Meir's review (October 2026).
 - The science lives in `criteria/lab_method.md`. A role file points to it ("apply Rule 6") and never
   restates or paraphrases it. Restated rules drift apart, and contradictions cost the model more
   than missing detail does.
-- One term per concept, defined once in the lab method glossary ("arm", "ledger", "operating
+- One term per concept, defined once in the lab method glossary ("baseline", "ledger", "operating
   point", "cadence"). If you need a new term, add it to the glossary first. Say *classical
   competitor* for any classical method that could beat the quantum one; say *twin* only for the
   strict same-input, same-access case.
@@ -33,3 +33,19 @@ Protocol: Invoked by · Inputs · Output · Steps · May not · Return.
 
 ## Show, don't describe
 One concrete good example and one concrete bad example beat a paragraph of adjectives.
+
+## Write artifacts for a reader outside the field
+These rules apply to `HYPOTHESIS.md`, the plan (`PROPOSAL.md`) and the experiment docs. The
+reader is an ML engineer who is not a quantum or domain expert: a teammate, a partner, or the
+next agent. Good papers explain what the reader needs and cite the rest.
+- **Message first.** Open with the point in a paragraph; details follow.
+- **Define or cite every term** the first time, or put it in *Background*. Domain terms count too.
+- **Say what the method does and why.** Describe the algorithm step by step, give a reason for
+  every design choice, and for every hypothesis say why we expect it and why it is worth testing.
+- **Use standard academic terms:** "baseline", "proposed method", "held-out set". Do not use lab
+  shorthand in prose: no "arm", gate ids (G5), rule numbers or panel issue numbers. Lock ids appear
+  only in an experiment's *Locked rules* section and in references to it.
+- **Keep history out.** Revisions and panel responses go to `change_log.md`; the documents always
+  read as the current design.
+- **Short beats complete.** If a section needs more than a screen, move the detail to the
+  experiment doc or `frozen_definitions.md` and link it.

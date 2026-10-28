@@ -118,8 +118,8 @@ apparent advantage → adi + tsahi; unplanned failure / blocked / panel → adi;
 `/qml-deep-research` (C12 I4) instead of escalating.
 
 ## `amend <thread>`
-For a post-freeze change: the designer edits the lock block(s) in `PROPOSAL.md` and adds an
-Amendments row; a person ≠ designer approves; then
+For a post-freeze change: the designer edits the lock block(s) in `PROPOSAL.md` or
+`experiments/E*.md` and adds an Amendments row to the plan; a person ≠ designer approves; then
 `python -m lab.tools.lock amend {THREAD} --touches <ids> --reason "…" --phase <P> --by <person>`
 (refused automatically if that phase already has data).
 

@@ -1,6 +1,7 @@
 """Pre-registration lock: freeze, verify, diff, amend.
 
-Every fenced ```lock block in PROPOSAL.md and frozen_definitions.md is one lock item:
+Every fenced ```lock block in PROPOSAL.md, frozen_definitions.md and experiments/*.md is one lock
+item:
 
     ```lock
     id: P1.G4.threshold
@@ -29,18 +30,22 @@ from .common import (LabError, PHASES, PHASE_DIRS, git, main_wrapper, now, read_
                      resolve_thread, sha256_text, today, write_json)
 
 SOURCES = ("PROPOSAL.md", "frozen_definitions.md")
+EXPERIMENT_DOCS = "experiments/*.md"
 BLOCK_RE = re.compile(r"^```lock[ \t]*\n(.*?)^```[ \t]*$", re.S | re.M)
 KINDS = {"threshold", "gate", "split", "stop_rule", "metric", "baseline", "gray_zone"}
+
+
+def source_files(thread: Path) -> list[Path]:
+    """The files whose lock blocks form the pre-registration, in a fixed order."""
+    return [thread / n for n in SOURCES if (thread / n).exists()] + sorted(thread.glob(EXPERIMENT_DOCS))
 
 
 def parse_blocks(thread: Path) -> dict[str, dict]:
     """Return {id: item} for all lock blocks in the thread's source files."""
     items: dict[str, dict] = {}
-    for name in SOURCES:
-        path = thread / name
-        if not path.exists():
-            continue
-        text = path.read_text()
+    for path in source_files(thread):
+        name = path.relative_to(thread).as_posix()
+        text = path.read_text(encoding="utf-8")
         for m in BLOCK_RE.finditer(text):
             line_no = text[: m.start()].count("\n") + 1
             item = _parse_block(m.group(1), f"{name}#L{line_no}")
@@ -87,7 +92,7 @@ def freeze(thread: Path, by: str) -> dict:
         raise LabError("PREREG.lock.json already exists — the lock is frozen once; use `amend`")
     items = list(parse_blocks(thread).values())
     if not items:
-        raise LabError("no ```lock blocks found in PROPOSAL.md / frozen_definitions.md")
+        raise LabError("no ```lock blocks found in PROPOSAL.md / frozen_definitions.md / experiments/*.md")
     kinds = {i["kind"] for i in items}
     missing = {"threshold", "split", "stop_rule", "baseline"} - kinds
     if missing:

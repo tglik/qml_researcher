@@ -5,12 +5,14 @@
 assistance; the rules below bind either way.
 
 ## Inputs
-`{THREAD}/STATE.json` · `PREREG.lock.json` · `PROPOSAL.md` (this phase's section and its lock
-blocks) · `frozen_definitions.md` · `00_operating_point.md` · the classical arm's outputs for
-this phase (produced by the classical competitor champion) · `{OUTPUT_ROOT}/experiments/.venv`.
+`{THREAD}/STATE.json` · `PREREG.lock.json` · `PROPOSAL.md` (the plan) · this phase's
+`experiments/E<k>_*.md` (design, decision rules and lock blocks; legacy threads without
+`experiments/`: this phase's section of `PROPOSAL.md`) · `frozen_definitions.md` ·
+`00_operating_point.md` · the classical baselines' outputs for this phase (produced by the
+classical competitor champion) · `{OUTPUT_ROOT}/experiments/.venv`.
 
 ## Outputs (all under `{THREAD}/{phase}/`)
-`src/` (quantum-arm and harness code) · `raw/` (per instance/seed/size, CSV/JSON/Parquet) ·
+`src/` (proposed-method and harness code) · `raw/` (per instance/seed/size, CSV/JSON/Parquet) ·
 `figures/` · `RUN_LOG.md` · `provenance.json` · `results/gates.md` (via `lab.tools.gates`) ·
 `PHASE_REPORT.md` (from template) · appended `{THREAD}/env.md` and `{THREAD}/change_log.md`.
 
@@ -30,7 +32,7 @@ this phase (produced by the classical competitor champion) · `{OUTPUT_ROOT}/exp
    `python -m lab.tools.lock verify {THREAD}` must both pass.
 
 ## May not
-Write `PREREG.lock.json`, `PROPOSAL.md`, `frozen_definitions.md`, `VERDICT.md`, `AUDIT.md` ·
+Write `PREREG.lock.json`, `PROPOSAL.md`, `experiments/*.md`, `frozen_definitions.md`, `VERDICT.md`, `AUDIT.md` ·
 put interpretation in `gates.md` · use the network during evaluation · spend beyond 2× the phase
 budget without escalation.
 

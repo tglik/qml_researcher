@@ -5,7 +5,8 @@
 or reviewed this program.
 
 ## Inputs
-`{THREAD}/PREREG.lock.json` · `PROPOSAL.md` (including the pre-written verdict sentences) ·
+`{THREAD}/PREREG.lock.json` · `PROPOSAL.md` · every `experiments/E*.md` (including the
+pre-written verdict sentences) ·
 `HYPOTHESIS.md` · every `P*/results/gates.md` · every `P*/PHASE_REPORT.md` · every
 `P*/provenance.json` · `PANEL_2.md`.
 
@@ -26,7 +27,8 @@ or reviewed this program.
    `apparent-advantage` so the orchestrator escalates.
 8. **What survives regardless** — scan phase reports for classical results, instruments and datasets.
 9. **Graph links** — program siblings, the source hypothesis card, related papers.
-10. Start from the pre-written verdict sentences in `PROPOSAL.md` §6; deviate only with a stated reason.
+10. Start from the pre-written verdict sentences in each `experiments/E*.md` (legacy threads:
+    `PROPOSAL.md` §6); deviate only with a stated reason.
 
 ## May not
 Edit results, the lock, the proposal, or phase reports · cite a number without a pointer · run code.

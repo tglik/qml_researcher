@@ -98,6 +98,12 @@ def validate_artifact(path: Path) -> list[str]:
     template = TEMPLATES / path.name
     if path.parent.name == "results" and path.name == "gates.md":
         template = TEMPLATES / "gates.md"
+    if path.parent.name == "experiments":
+        template = TEMPLATES / "EXPERIMENT.md"
+    # Artifacts written before a template's format 2 are checked against the frozen legacy copy.
+    legacy = TEMPLATES / "legacy" / template.name
+    if legacy.exists() and str(read_frontmatter(path)[0].get("format", "1")) != "2":
+        template = legacy
     if not template.exists():
         return []
     text = path.read_text(encoding="utf-8")
@@ -120,6 +126,8 @@ def validate_thread(thread: Path) -> list[str]:
             errs += validate_artifact(thread / name)
     for rep in thread.glob("P*/PHASE_REPORT.md"):
         errs += validate_artifact(rep)
+    for doc in sorted(thread.glob("experiments/*.md")):
+        errs += validate_artifact(doc)
     if (thread / "VERDICT.md").exists():
         errs += validate_entity(thread / "VERDICT.md")
     return errs

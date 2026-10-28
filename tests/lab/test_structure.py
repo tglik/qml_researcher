@@ -31,7 +31,7 @@ MECHANICS = [
 
 
 def essence_violations(path: Path) -> list[str]:
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     return [f"{path.relative_to(REPO)}: {why}: {m.group(0)!r}"
             for rx, why in MECHANICS for m in rx.finditer(text)]
 
@@ -49,7 +49,7 @@ class StructureTest(unittest.TestCase):
     def test_skills_have_both_files_and_link_essence(self):
         for s in LAB_SKILLS:
             self.assertTrue((SKILLS / s / "ESSENCE.md").exists(), f"{s} missing ESSENCE.md")
-            skill = (SKILLS / s / "SKILL.md").read_text()
+            skill = (SKILLS / s / "SKILL.md").read_text(encoding="utf-8")
             self.assertIn("[ESSENCE.md](ESSENCE.md)", skill, f"{s}/SKILL.md does not link its essence")
             self.assertTrue((REPO / ".claude" / "skills" / s).exists(), f"{s} not linked in .claude/skills")
 
@@ -61,13 +61,13 @@ class StructureTest(unittest.TestCase):
 
     def test_spawned_roles_exist(self):
         for s in LAB_SKILLS:
-            for role in re.findall(r"lab/roles/([a-z-]+)/", (SKILLS / s / "SKILL.md").read_text()):
+            for role in re.findall(r"lab/roles/([a-z-]+)/", (SKILLS / s / "SKILL.md").read_text(encoding="utf-8")):
                 self.assertTrue((ROLES / role).is_dir(), f"{s} references missing role {role}")
 
     def test_templates_exist_for_named_artifacts(self):
         names = set()
         for f in list(ROLES.glob("*/PROTOCOL.md")) + [SKILLS / s / "SKILL.md" for s in LAB_SKILLS]:
-            names |= set(re.findall(r"artifacts/lab/templates/([A-Za-z_]+\.md)", f.read_text()))
+            names |= set(re.findall(r"artifacts/lab/templates/([A-Za-z_]+\.md)", f.read_text(encoding="utf-8")))
         for n in names:
             self.assertTrue((REPO / "artifacts" / "lab" / "templates" / n).exists(), f"template {n} missing")
 

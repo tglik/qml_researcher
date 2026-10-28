@@ -4,8 +4,9 @@
 
 Compares the thread against the commit recorded when the current phase started
 (STATE history "phase Pk started"), plus uncommitted changes. Protected: the lock, the
-proposal, frozen definitions, the operating point, the verdict and the audit. A PROPOSAL.md
-change is allowed only if a lock amendment was recorded after the phase started.
+proposal, the experiment docs, frozen definitions, the operating point, the verdict and the audit.
+A PROPOSAL.md or experiments/*.md change is allowed only if a lock amendment was recorded after the
+phase started.
 """
 from __future__ import annotations
 
@@ -42,8 +43,9 @@ def check(thread: Path) -> list[str]:
     lock = read_json(thread / "PREREG.lock.json") if (thread / "PREREG.lock.json").exists() else {"amendments": []}
     amended_after = any(a.get("at", "") > (started_at or "") for a in lock.get("amendments", []))
     for f in sorted(touched):
-        if f in PROTECTED:
-            if f in ("PROPOSAL.md", "PREREG.lock.json") and amended_after:
+        experiment_doc = f.startswith("experiments/") and f.endswith(".md")
+        if f in PROTECTED or experiment_doc:
+            if (f in ("PROPOSAL.md", "PREREG.lock.json") or experiment_doc) and amended_after:
                 continue
             problems.append(f"protected file changed during {phase}: {f}")
     try:

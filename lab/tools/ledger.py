@@ -51,7 +51,7 @@ def parse(path: Path | None = None) -> list[dict]:
     if not path.exists():
         return []
     entries = []
-    for m in ENTRY_RE.finditer(path.read_text()):
+    for m in ENTRY_RE.finditer(path.read_text(encoding="utf-8")):
         e = parse_yaml(m.group(2))
         e["_heading"] = m.group(1)
         entries.append(e)
@@ -86,10 +86,10 @@ def validate(entries: list[dict]) -> list[str]:
 
 def slice_before(src: Path, date: str, out: Path) -> int:
     """Write a copy of the ledger containing only entries created before `date` (for replay evals)."""
-    text = src.read_text()
+    text = src.read_text(encoding="utf-8")
     head = text.split("\n## ", 1)[0]
     keep = [m.group(0) for m in ENTRY_RE.finditer(text) if parse_yaml(m.group(2)).get("created", "9999") < date]
-    out.write_text(head.rstrip("\n") + "\n\n" + "\n\n".join(keep) + "\n")
+    out.write_text(head.rstrip("\n") + "\n\n" + "\n\n".join(keep) + "\n", encoding="utf-8")
     return len(keep)
 
 

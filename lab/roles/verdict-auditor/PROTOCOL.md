@@ -6,6 +6,7 @@ runtime allows it (record which in `AUDIT.md` frontmatter).
 
 ## Inputs — artifacts only
 `{THREAD}/VERDICT.md` · `{THREAD}/PREREG.lock.json` · `{THREAD}/PROPOSAL.md` ·
+`{THREAD}/experiments/*.md` ·
 `{THREAD}/frozen_definitions.md` · every `{THREAD}/P*/results/gates.md` ·
 every `{THREAD}/P*/provenance.json` · raw data under `{THREAD}/P*/raw/` · code under
 `{THREAD}/P*/src/` · `{THREAD}/PANEL_2.md`.

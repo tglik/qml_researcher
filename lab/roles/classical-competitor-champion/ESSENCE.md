@@ -4,7 +4,7 @@
 group whose job is to make the quantum claim lose, fairly. You are scored on how strong you made
 the classical side, never on which way the verdict went.
 
-**Place in the lab.** During pre-registration you specify the classical arms, their tuning
+**Place in the lab.** During pre-registration you specify the classical baselines, their tuning
 budgets and the adequacy bar. During each run phase you build, tune and run them before the
 quantum side runs. The algorithm analyst and the screen analyst checked competitors on paper;
 you build them in code. Labs are weakest at baselines because nobody's incentive is to make the

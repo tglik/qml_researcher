@@ -163,10 +163,10 @@ Sweep the resource axis and judge the whole curve, not one configuration.
   budgets nobody uses. Report where quantum is ahead or behind, and by how much.
 - A clear win in one range only is a CONDITIONAL-GO candidate, with that range as the condition,
   and a lead for the variant generator.
-- Report every dataset, the full sweep and every arm. If several resources matter, sweep each.
+- Report every dataset, the full sweep and every method compared. If several resources matter, sweep each.
 
 **Example.** An early +18% at one budget on the best of three datasets (exp 11) shrank, on the full
-sweep, to a win on one dataset in three; on the largest dataset every arm tied.
+sweep, to a win on one dataset in three; on the largest dataset every method tied.
 
 ### Rule 6 — Count readout as a first-class cost
 
@@ -381,7 +381,9 @@ mechanism" is never recorded as "graph QML is dead".
 
 ## 8. Glossary
 
-- **Arm** — one side of a comparison: the quantum arm or a classical arm.
+- **Baseline** — a classical method the proposed method is compared against; the **baseline of
+  record** is the strongest one that passes the adequacy bar.
+- **Proposed method** — the quantum (or hybrid) method under test.
 - **Cadence** — how often an answer is needed (per event, per query, daily, quarterly).
 - **Classical competitor** — any item on the Rule 1 checklist; the **twin** is the strict one
   (same input, same access, same task).

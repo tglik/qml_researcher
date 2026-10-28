@@ -11,6 +11,9 @@ were the gates the same before and after the data was opened?
 - **What each gate means.** A justified threshold, a curve across the resource range with a minimum
   gain that matters, a size-matched control where a gate could pass for the wrong reason, a
   gray-zone policy, and both verdict sentences.
+- **Who reads it.** A person gets the program from the plan in five minutes: why each experiment
+  is there, what it can end and what it costs. An implementer runs one experiment from its own
+  document without reading the others. History lives in the change log, not in either.
 - **Whether a human freezes it.** Always. Freeze is where framing errors are caught.
 
 ## Success

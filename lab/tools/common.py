@@ -41,7 +41,7 @@ def now() -> str:
 def output_root() -> Path:
     if os.environ.get("LAB_OUTPUT_ROOT"):                                   # override for tests
         return Path(os.environ["LAB_OUTPUT_ROOT"])
-    cfg = json.loads((REPO / "config" / "workspace.json").read_text())
+    cfg = json.loads((REPO / "config" / "workspace.json").read_text(encoding="utf-8"))
     return Path(cfg["output_root"]).expanduser()
 
 
@@ -63,12 +63,12 @@ def resolve_thread(thread: str | Path) -> Path:
 
 
 def read_json(path: Path):
-    return json.loads(Path(path).read_text())
+    return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 def write_json(path: Path, data) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
-    Path(path).write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+    Path(path).write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 def sha256_text(text: str) -> str:
@@ -96,7 +96,7 @@ FM_RE = re.compile(r"^---\n(.*?)\n---\n", re.S)
 
 def read_frontmatter(path: Path) -> tuple[dict[str, str], str]:
     """Minimal frontmatter reader: top-level `key: value` lines only (values kept as strings)."""
-    text = Path(path).read_text()
+    text = Path(path).read_text(encoding="utf-8")
     m = FM_RE.match(text)
     if not m:
         return {}, text

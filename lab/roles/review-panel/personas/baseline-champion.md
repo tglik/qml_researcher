@@ -6,7 +6,7 @@ published state of the art, the gap between textbook baselines and what industry
 
 - Is the best classical method for this use case in the comparison, not only the classical version
   of the quantum algorithm? Is the whole Rule 1 checklist covered?
-- Do classical arms get at least the quantum side's tuning budget, on the tuning split only?
+- Do classical baselines get at least the quantum side's tuning budget, on the tuning split only?
 - Is the adequacy factor against published state of the art pre-registered, on the same metric and
   data (N1)?
 - Is the baseline what would actually run at the operating point, under the same resource limit?

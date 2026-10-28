@@ -3,8 +3,8 @@ name: qml-run
 version: 0.1.0
 description: |
   QML Lab execution of one frozen phase (P1 toy · P2 medium · P3 real data + industrial scale ·
-  P4 noise · P5 hardware plan, modeling only in V1). Classical arm by the classical competitor champion, quantum
-  arm and harness by the implementer; every material number recorded with provenance; gates
+  P4 noise · P5 hardware plan, modeling only in V1). Classical baselines by the classical competitor champion,
+  proposed method and harness by the implementer; every material number recorded with provenance; gates
   computed by lab.tools.gates from the lock; phase report; guard + lock checks; opens CP3.
   Local only. Normally invoked by `/qml-lab next`. Not available in Slack.
 
@@ -42,14 +42,15 @@ List this phase's lock ids (`python -m lab.tools.lock show {THREAD}` filtered by
 stop: "no locked gate depends on <Pk>". Write the frozen question + gate ids at the top of
 `<Pk_dir>/RUN_LOG.md`.
 
-## Phase 2 — Classical arm first
+## Phase 2 — Classical baselines first
 Spawn `classical-competitor-champion` in **build mode** for this phase. **Gate:** classical results and
-the adequacy number recorded with provenance before the quantum arm runs.
+the adequacy number recorded with provenance before the proposed method runs.
 
-## Phase 3 — Quantum arm and harness
+## Phase 3 — Proposed method and harness
 Spawn `implementer` (or, when Meir fills the slot, work with him under the same PROTOCOL):
 ```
-Task: execute phase <Pk> of {THREAD} per PROPOSAL.md §5 and your PROTOCOL. Record every material
+Task: execute phase <Pk> of {THREAD} per experiments/E<k>_*.md (legacy threads: PROPOSAL.md §5)
+and your PROTOCOL. Record every material
 number with python -m lab.tools.provenance record. Write <Pk_dir>/results/measured.json keyed by
 lock id. Then python -m lab.tools.gates {THREAD} <Pk>, then PHASE_REPORT.md from the template.
 ```

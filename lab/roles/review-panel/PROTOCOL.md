@@ -6,8 +6,8 @@ this PROTOCOL + the panel ESSENCE + exactly one persona file from `personas/`.
 
 ## Inputs
 - **Pass 1:** `{THREAD}/HYPOTHESIS.md` · `ALGORITHM_ANALYSIS.md` (if present) · `SCREEN.md` ·
-  `PROPOSAL.md` · `00_operating_point.md` · `frozen_definitions.md`
-- **Pass 2:** `PREREG.lock.json` · `PROPOSAL.md` · every `P*/results/gates.md` · every
+  `PROPOSAL.md` · every `experiments/E*.md` · `00_operating_point.md` · `frozen_definitions.md`
+- **Pass 2:** `PREREG.lock.json` · `PROPOSAL.md` · every `experiments/E*.md` · every `P*/results/gates.md` · every
   `P*/PHASE_REPORT.md` *sections 1–5 only* · `P*/raw/` and `P*/figures/` as needed.
   **Never** `VERDICT.md` (it must not exist yet; if it does, stop and report).
 
@@ -19,7 +19,11 @@ The methodologist additionally fills the Adi S2 checklist (pass 1) or the drift-
 ## Steps
 1. Read inputs. Restate, in one line, what your persona attacks in this artifact.
 2. List issues; for each: verbatim anchor, why it matters to the conclusion, concrete fix.
-3. Assign severity (BLOCKING only if the conclusion cannot be licensed without the fix).
+3. Assign severity (BLOCKING only if the conclusion cannot be licensed without the fix). An
+   experiment whose plain-language decision rules say something different from its lock blocks
+   is BLOCKING.
+   Proposed fixes change the design, never add revision history to the plan or the experiment
+   docs (history goes to `change_log.md`).
 4. If you find nothing in your lane, write "No issues in <lane>." — that is a valid result.
 
 ## May not

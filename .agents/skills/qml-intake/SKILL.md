@@ -6,7 +6,8 @@ description: |
   transfer card / deep-research report) into HYPOTHESIS.md — numbered testable hypotheses with
   predicted values, a named operating point, and a disproof written before any data. Algorithm
   path first runs Adi's Stage 0 analysis (ALGORITHM_ANALYSIS.md). Interactive: asks one question
-  per turn until the 5-item falsifiability checklist is complete. Usually started by `/qml-lab new`.
+  per turn until the 6-item checklist (claim, why, operating point, disproof, baseline, decision)
+  is complete. Written for a reader outside the field. Usually started by `/qml-lab new`.
 
 triggers:
   - qml-intake
@@ -53,10 +54,10 @@ Adopt `lab/roles/scoping-interviewer/ESSENCE.md` + `PROTOCOL.md`.
 - Pre-fill from the input (C12 I5): hypothesis card (`cards/hypotheses/…`) or transfer card
   (`sources/reports/{transfer-analysis,primitives-analysis}/*/04_transfer_card.md`) — mark drafts.
 - Algorithm path: H1..Hn and warnings come from `ALGORITHM_ANALYSIS.md`; the interview pins the
-  operating point, the disproof, the losing-arm and the decision.
+  why, the operating point, the disproof, the classical baseline and the decision.
 - Ask **one question per turn** (AskUserQuestion, or Hermes message to the proposer). Record each
   Q/A in `{THREAD}/00_inputs/answers.md`.
-**Gate:** checklist 5/5 ⇒ `status: complete`; otherwise keep asking; three failed rounds on one
+**Gate:** checklist 6/6 ⇒ `status: complete`; otherwise keep asking; three failed rounds on one
 item ⇒ `status: not-a-hypothesis`.
 
 ## Phase 3 — Write and hand off
@@ -69,7 +70,7 @@ item ⇒ `status: not-a-hypothesis`.
 ## Completion message
 ```text
 QML-INTAKE — <DONE | NOT-A-HYPOTHESIS | BLOCKED> — <thread>
-Path: <algorithm | use-case> · Checklist: <n>/5
+Path: <algorithm | use-case> · Checklist: <n>/6
 Claim: <one sentence>
 Warnings: <none | list from the analysis>
 Next: /qml-lab next <thread>

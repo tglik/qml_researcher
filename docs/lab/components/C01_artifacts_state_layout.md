@@ -23,7 +23,8 @@ qml_artifacts/experiments/<thread>/
   HYPOTHESIS.md                /qml-intake — both paths
   ALGORITHM_ANALYSIS.md        /qml-intake — algorithm path only (Adi S0 report)
   SCREEN.md                    /qml-screen
-  PROPOSAL.md                  /qml-prereg — narrative design (Adi S1 structure)
+  PROPOSAL.md                  /qml-prereg — the plan: decision, experiment sequence, budget (format 2)
+  experiments/E<k>_<slug>.md   /qml-prereg — one design doc per phase P<k>, with its lock blocks
   00_operating_point.md        /qml-prereg
   frozen_definitions.md        /qml-prereg — splits, metrics, instance generators, seeds
   PREREG.lock.json             lab/tools/lock.py — never hand-edited

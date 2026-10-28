@@ -42,11 +42,11 @@ def config() -> dict:
 
 def _append_row(row: list[str]) -> None:
     p = log_path()
-    text = p.read_text() if p.exists() else LOG_HEADER
+    text = p.read_text(encoding="utf-8") if p.exists() else LOG_HEADER
     body, _, _ = text.partition(STATS_MARK)
     body = body.rstrip("\n") + "\n| " + " | ".join(c.replace("|", "\\|") for c in row) + " |\n"
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(body)
+    p.write_text(body, encoding="utf-8")
 
 
 def read_rows() -> list[dict]:
@@ -54,7 +54,7 @@ def read_rows() -> list[dict]:
     if not p.exists():
         return []
     rows = []
-    body = p.read_text().partition(STATS_MARK)[0]
+    body = p.read_text(encoding="utf-8").partition(STATS_MARK)[0]
     for line in body.splitlines():
         if not line.startswith("| 20"):
             continue
@@ -84,7 +84,7 @@ def sign(thread: Path, cp: str, by: str, decision: str, outcome: str, minutes: f
     st_mod.save(thread, st, f"sign:{by}")
     _append_row([today(), st["thread"], key, c["mode"], author, by, decision, outcome,
                  f"{minutes:g}", note or ""])
-    with (thread / "decision_log.md").open("a") as f:
+    with (thread / "decision_log.md").open("a", encoding="utf-8") as f:
         f.write(f"| {today()} | {key} | {decision} ({outcome}) | {note or ''} | {by} |\n")
     if outcome == "material" and cfg["checkpoints"][cp]["mode"] != "HUMAN_APPROVE":
         restore(cp, f"material finding at {st['thread']} {key}")
@@ -109,7 +109,7 @@ def auto(thread: Path, cp: str, decision: str, note: str) -> dict:
     import random
     sampled = c["mode"] == "HUMAN_SPOTCHECK" and random.random() < cfg["spotcheck"]["sample_rate"]
     if c["mode"] == "HUMAN_SPOTCHECK" and cp == "CP4":
-        v = (thread / "VERDICT.md").read_text() if (thread / "VERDICT.md").exists() else ""
+        v = (thread / "VERDICT.md").read_text(encoding="utf-8") if (thread / "VERDICT.md").exists() else ""
         sampled = sampled or any(f"verdict: {x}" in v for x in cfg["spotcheck"]["always_review_verdicts"])
     c.update({"status": "approved" if decision == "approve" else "rejected", "signer": "agent",
               "outcome": None, "decision": decision, "minutes": 0, "closed_at": now(),
@@ -171,7 +171,7 @@ def stats() -> list[dict]:
 
 def _write_stats(rows: list[dict]) -> None:
     p = log_path()
-    body = (p.read_text() if p.exists() else LOG_HEADER).partition(STATS_MARK)[0].rstrip("\n") + "\n"
+    body = (p.read_text(encoding="utf-8") if p.exists() else LOG_HEADER).partition(STATS_MARK)[0].rstrip("\n") + "\n"
     lines = [STATS_MARK, f"*Regenerated {now()} by `python -m lab.tools.autonomy stats`.*\n",
              "| Checkpoint | Mode → target | Runs | Streak (need) | Evals | Median min | Step-down eligible |",
              "|---|---|---|---|---|---|---|"]
@@ -179,7 +179,7 @@ def _write_stats(rows: list[dict]) -> None:
         flag = " ⚠ rubber-stamp?" if r["median_minutes"] is not None and r["median_minutes"] < 3 else ""
         lines.append(f"| {r['cp']} {r['name']} | {r['mode']} → {r['target']} | {r['runs']} | {r['streak']} ({r['needed']}) | "
                      f"{'pass' if r['evals_ok'] else 'not yet'} | {r['median_minutes']}{flag} | {'YES' if r['eligible'] else 'no'} |")
-    p.write_text(body + "\n".join(lines) + "\n")
+    p.write_text(body + "\n".join(lines) + "\n", encoding="utf-8")
 
 
 def _next_mode(mode: str) -> str:

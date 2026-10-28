@@ -67,7 +67,7 @@ def write(thread: Path, phase: str) -> Path:
     for r in rows:
         tag = " (manual)" if r["how"] == "manual" else ""
         lines.append(f"| {r['id']} | {r['measured']} | {r['threshold']} | {r['result']}{tag} | {r['provenance']} |")
-    out.write_text("\n".join(lines) + "\n")
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return out
 
 
@@ -76,7 +76,7 @@ def main() -> int:
     ap.add_argument("thread"); ap.add_argument("phase", choices=list(PHASE_DIRS))
     a = ap.parse_args()
     out = write(resolve_thread(a.thread), a.phase)
-    print(out.read_text())
+    print(out.read_text(encoding="utf-8"))
     return 0
 
 

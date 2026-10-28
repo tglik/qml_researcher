@@ -37,7 +37,7 @@ Spawn a **fresh** `verdict-writer` (never an instance that designed, implemented
 this program):
 ```
 Task: write {THREAD}/VERDICT.md per your PROTOCOL. Start from the pre-written verdict sentences
-in PROPOSAL.md §6. Frontmatter per artifacts/lab/experiment_entity_schema.md with audit: pending.
+in each experiments/E*.md (legacy threads: PROPOSAL.md §6). Frontmatter per artifacts/lab/experiment_entity_schema.md with audit: pending.
 ```
 
 ## Phase 2 — Check
