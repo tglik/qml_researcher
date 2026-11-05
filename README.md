@@ -128,6 +128,8 @@ into `ESSENCE.md` (how it thinks — for scientific review) and a protocol (how 
 | `/qml-run` | One frozen phase: provenance for every number, gates computed from the lock, guard + lock checks |
 | `/qml-verdict` · `/qml-audit` | Verdict against frozen gates; independent fresh-context audit (lock diff, recomputation, reproduction, N1–N5) |
 | `/qml-variants` · `/qml-promote` | Variant mining + pivot (paper/IP) · promotion PR: ledger entry, verdict entity, hypothesis status, criteria proposals |
+| `/qml-build-on` | Source A of the candidate backlog: up to 5 publishable next steps on a paper, hypothesis card or verdict |
+| `/qml-open-problems` | Source B: testable claims from open questions and card limitations |
 | `/qml-ingest` | Common ingest gate of the candidate backlog: novelty vs arXiv, triage screen G0–G3, value (rung × p); every idea source writes candidates with `lab.tools.backlog add` ([C13](docs/lab/components/C13_candidate_backlog.md)) |
 
 Human checkpoints CP1 screen · CP2 freeze · CP3 phase · CP4 verdict · CP5 promotion start as

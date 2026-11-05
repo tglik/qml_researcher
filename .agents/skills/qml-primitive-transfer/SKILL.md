@@ -383,6 +383,13 @@ If any `skill_error` event was written, set `outcome` to `"error"` instead.
    top 3 HIGH opportunities and their business rationale. Include what-was-done checklist.
    Attach the Word report.
 
+   **Feed the candidate backlog (source C).** Each HIGH or MEDIUM workload in the card is one
+   cell of the combination grid (primitive × workload). Add it as a candidate:
+   `python -m lab.tools.backlog add --source C --base "<this card path>" --region <R> --title "<primitive> for <workload>" --claim "<one testable sentence: primitive beats <named baseline> on <workload> at <operating point>>"`
+   Grid mode (no input card): take the primitives in `{OUTPUT_ROOT}/indexes/hypothesis-ledger.md`
+   and the open directions (`python -m lab.tools.backlog direction list`), and add the cells that
+   no candidate or past program covers (the dedupe refuses the rest).
+
    Also append at the end of the completion message:
    ```
    Next step suggestion: If any HIGH opportunity looks actionable,

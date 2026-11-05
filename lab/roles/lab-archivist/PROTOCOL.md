@@ -21,11 +21,14 @@
 
 ## Novelty mode
 **Inputs:** the candidate's title, claim and base (in the task) · `{OUTPUT_ROOT}/indexes/backlog/candidates.jsonl` ·
-`{OUTPUT_ROOT}/cards/papers/*.md` · `{OUTPUT_ROOT}/experiments/**/VERDICT.md` · arXiv via `/fetch-arxiv` search.
+`{OUTPUT_ROOT}/cards/paper-cards/*.md` · `{OUTPUT_ROOT}/cards/hypotheses/*.md` · `{OUTPUT_ROOT}/experiments/**/VERDICT.md` ·
+arXiv via `/fetch-arxiv` search (where the network blocks the arXiv API, use web search restricted to
+arxiv.org, or a paper search connector such as Consensus, and say which in the note).
 **Output:** returned to the orchestrator only (no file).
 **Steps:**
 1. Write the claim's four parts: mechanism, task, baseline, size or regime.
-2. Search the lab's cards and verdicts, then arXiv with at least 3 queries built from those parts
+2. Search the lab's cards and verdicts (our own closed program on the same claim counts as prior
+   work), then arXiv with at least 3 queries built from those parts
    (synonyms included). Read the abstract of every hit that matches two or more parts.
 3. `prior_exists` only if a paper states the same claim at the same or larger scope. Partial
    overlap lowers the score and is named in the note, with what the candidate would add.

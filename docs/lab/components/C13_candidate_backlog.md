@@ -1,7 +1,7 @@
 # C13 — Candidate backlog and ingest gate
 
-**Date:** 2026-11-05 · **Status:** minimal version built (tool, gate skill, role modes); sources
-A–D and the portfolio director not built yet · **Background:** the review "Is ideation the
+**Date:** 2026-11-05 · **Status:** built and seeded 2026-11-05 (tool, gate skill, role modes, sources
+A–E, 7 directions, 62 gated candidates); the portfolio director is not built yet · **Background:** the review "Is ideation the
 bottleneck?" (Claude Doc, 2026-11-05)
 
 ## Why
@@ -49,10 +49,28 @@ false kills can be measured (`backlog report`).
 Roles stay separate: sources generate, the gate scores, a human selects. The gate never picks and the
 selector never re-scores.
 
+## Sources, where they live
+| Source | Component | Writes with |
+|---|---|---|
+| A build on a base | `/qml-build-on` (variant-generator, build-on mode); run on each STRONG_INTEREST card and weekly on the open directions' bases | `backlog add --source A` |
+| B open problems | `/qml-open-problems` over `open_questions.md`, card Limitations and hypothesis-card open risks | `backlog add --source B` |
+| C combination grid | `/qml-primitive-transfer` completion step and its grid mode (hypothesis-ledger primitives × directions) | `backlog add --source C` |
+| D programmatic search | a search job in `{OUTPUT_ROOT}/experiments/search/<name>/` with a signal check (fitness spread vs seed noise) and an honest classical twin; first job: `rydberg_graph_kernels` | `backlog add --source D` |
+| E scout, algorithms, variants | `/qml-daily-scout` (claims; STRONG_INTEREST papers go to A), `/qml-variants` Phase 3, new algorithms before `/qml-intake` | `backlog add --source E` |
+
+## First run (2026-11-05)
+62 candidates (A 20, B 13, C 13, D 5, E 11), gated by fresh archivist and screen-analyst agents in
+batches. Findings about the gate itself:
+- Word-set dedupe at `add` caught none of the near-duplicates of our own closed programs (e.g. a
+  Szegedy-walk variant of exp 08). The archivist's check against our verdicts did catch them, and
+  triage killed the one that restated a ledger entry. Keep dedupe cheap; rely on the novelty step.
+- The archivist caught two generator errors (a mis-described base paper, a base whose reported
+  edge does not exist). Sources write from cards; stub cards make this worse.
+- Batching (7 per novelty agent, 10 per triage agent) instead of one agent per candidate kept the
+  cost reasonable; no sign of cross-candidate contamination, but not tested.
+- Source D's first job found a fitness signal 20× seed noise, and an honest twin (the exact
+  independence polynomial) that matches it.
+
 ## Not built yet
-- Source adapters: A (widen `qml-variants` to any base), B (`/qml-open-problems` over card
-  limitations and `open_questions.md`), C (extend `qml-primitive-transfer`), D (search job in the
-  experiments venv), E (backlog writes from the scout and intake).
-- Portfolio director role and its weekly checkpoint: designed after the first ~64 candidates have
-  run through the gate.
-- Directions seeding from the hypothesis ledger.
+- Portfolio director role and its weekly checkpoint: designed after these candidates have run.
+- Semantic dedupe (embedding or LLM) if the word-set check keeps missing near-duplicates.

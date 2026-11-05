@@ -344,6 +344,17 @@ Before finalizing:
 
 ---
 
+## Feed the candidate backlog
+
+Each selected item scored STRONG_INTEREST (or Team Value Trigger fired) is a base for source A:
+list it in the briefing under "Build-on bases" and, when the run is unattended, run
+`/qml-build-on <arXiv id>` for it. An item that is itself a testable claim (a new algorithm from
+Adi or a paper's open question) goes straight in as source E:
+`python -m lab.tools.backlog add --source E --base "arXiv:<id>" --region <R> --title "…" --claim "…"`.
+The scout never scores or screens these; the ingest gate (`/qml-ingest`) does.
+
+---
+
 ## Completion
 
 **Analytics — write end event** (append to ANALYTICS_PATH after sending the briefing):
