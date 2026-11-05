@@ -28,6 +28,10 @@ allowed-tools: [Agent, Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, Web
 
 # /qml-intake
 
+A new algorithm or idea that has not been picked from the candidate backlog goes there first
+(`python -m lab.tools.backlog add --source E …`), so it passes the same ingest gate as every other
+source; intake normally runs on a thread made by `/qml-lab new --from-backlog <CID>`.
+
 **Essence:** [ESSENCE.md](ESSENCE.md) · **Roles:** `lab/roles/algorithm-analyst/`,
 `lab/roles/scoping-interviewer/` · **Templates:** `artifacts/lab/templates/{ALGORITHM_ANALYSIS,HYPOTHESIS}.md`
 

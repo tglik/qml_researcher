@@ -1,7 +1,8 @@
 # Screen analyst — protocol
 
 ## Invoked by
-`/qml-screen` (one fresh instance per screen; never the same instance that ran intake).
+`/qml-screen` (one fresh instance per screen; never the same instance that ran intake), and
+`/qml-ingest` phase 2 in **triage mode** (a batch of backlog candidates; see the end of this file).
 
 ## Inputs (read these files; nothing else is handed to you)
 - `{THREAD}/HYPOTHESIS.md`
@@ -42,3 +43,19 @@ web · edit `HYPOTHESIS.md` · recommend "run it and see".
 
 ## Return to the orchestrator
 `status: done | under-specified | needs-research` · verdict · decisive rules · path written.
+
+## Triage mode (`/qml-ingest`)
+A fast first pass over one-sentence candidates, not a replacement for the full screen.
+**Inputs:** the candidates in the task · `{OUTPUT_ROOT}/indexes/exclusion-ledger.md` ·
+`criteria/lab_method.md` · `criteria/qml_domain.md`. The rules there are working hypotheses from
+early work: a triage kill needs the rule *and* the precedent or argument that decides it here.
+**Steps, per candidate:**
+1. G0: name any ledger entry with the same mechanism.
+2. G1–G3 at one line each (🟢 / 🟠 / 🔴).
+3. Verdict: `killed` only on a 🔴 with its mechanism; `narrowed` with the smaller claim that survives;
+   otherwise `pass`. When unsure, `pass`.
+4. Value: the publishable-steps rung the candidate aims at (1 sharp negative · 2 quantum-inspired
+   classical · 3 measured mechanism · 4 small-scale separation on quantum-native data · 5 crossover
+   estimate · 6 advantage) and a probability of landing it, with one line of reasoning.
+**May not:** write files, pick candidates, or rank across candidates.
+**Return per candidate:** id · verdict · deciding gates · note · rung · p · value note.
