@@ -128,10 +128,11 @@ into `ESSENCE.md` (how it thinks — for scientific review) and a protocol (how 
 | `/qml-run` | One frozen phase: provenance for every number, gates computed from the lock, guard + lock checks |
 | `/qml-verdict` · `/qml-audit` | Verdict against frozen gates; independent fresh-context audit (lock diff, recomputation, reproduction, N1–N5) |
 | `/qml-variants` · `/qml-promote` | Variant mining + pivot (paper/IP) · promotion PR: ledger entry, verdict entity, hypothesis status, criteria proposals |
+| `/qml-ingest` | Common ingest gate of the candidate backlog: novelty vs arXiv, triage screen G0–G3, value (rung × p); every idea source writes candidates with `lab.tools.backlog add` ([C13](docs/lab/components/C13_candidate_backlog.md)) |
 
 Human checkpoints CP1 screen · CP2 freeze · CP3 phase · CP4 verdict · CP5 promotion start as
 `HUMAN_APPROVE` and step down only on measured agreement (`config/lab_autonomy.json`). Deterministic
-tools: `python -m lab.tools.<lock|state|autonomy|gates|guard|provenance|splits|ledger|validate|check_sizes>`
+tools: `python -m lab.tools.<lock|state|autonomy|gates|guard|provenance|splits|ledger|backlog|validate|check_sizes>`
 (stdlib only; tests: `python -m unittest discover -s tests/lab`).
 
 ### Experiments bridge

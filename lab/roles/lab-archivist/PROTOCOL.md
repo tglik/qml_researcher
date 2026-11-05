@@ -3,6 +3,7 @@
 ## Invoked by
 - `/qml-screen` phase 0 — **lookup mode** (before the screen analyst)
 - `/qml-promote` — **promote mode**
+- `/qml-ingest` phase 1 — **novelty mode** (one candidate per instance)
 
 ## Lookup mode
 **Inputs:** `{THREAD}/HYPOTHESIS.md` · `{THREAD}/ALGORITHM_ANALYSIS.md` (if present) ·
@@ -17,6 +18,21 @@
    stage ≠ closed whose topics overlap), and *Not found*.
 4. Set `near_duplicate` if a closed or open program tests the same claim.
 **May not:** rate rules, recommend a verdict, or edit anything but `PRIOR_WORK.md`.
+
+## Novelty mode
+**Inputs:** the candidate's title, claim and base (in the task) · `{OUTPUT_ROOT}/indexes/backlog/candidates.jsonl` ·
+`{OUTPUT_ROOT}/cards/papers/*.md` · `{OUTPUT_ROOT}/experiments/**/VERDICT.md` · arXiv via `/fetch-arxiv` search.
+**Output:** returned to the orchestrator only (no file).
+**Steps:**
+1. Write the claim's four parts: mechanism, task, baseline, size or regime.
+2. Search the lab's cards and verdicts, then arXiv with at least 3 queries built from those parts
+   (synonyms included). Read the abstract of every hit that matches two or more parts.
+3. `prior_exists` only if a paper states the same claim at the same or larger scope. Partial
+   overlap lowers the score and is named in the note, with what the candidate would add.
+4. Score: 1.0 nothing close · 0.7 related work, different mechanism or task · 0.4 same mechanism
+   and task, different baseline or size · 0.1 same claim, smaller scope.
+**May not:** judge whether the idea is good, rate rules, or edit any file.
+**Return:** `score` · `prior_exists` · `evidence` (arXiv ids read) · `note` (queries run, closest hit, what is new).
 
 ## Promote mode
 

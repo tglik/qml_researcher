@@ -20,7 +20,7 @@ triggers:
   - approve the screen / freeze / verdict
 
 input:
-  - "new <thread> --owner <person> --path algorithm|use-case [--from <card or report path>]"
+  - "new <thread> --owner <person> --path algorithm|use-case [--from <card or report path> | --from-backlog <CID>]"
   - "status [<thread>]"
   - "next <thread>"
   - "sign <thread> <CP> --by <person> --decision approve|reject --outcome unchanged|minor|material --minutes N [--note …]"
@@ -60,6 +60,10 @@ All state changes go through `python -m lab.tools.state` / `lab.tools.autonomy` 
 3. `python -m lab.tools.state new {THREAD} --owner <p> --path <path>`.
 4. Put the input in `{THREAD}/00_inputs/` (copy the paper/notes/code, or write `source.md` linking
    the card/report given by `--from`).
+   With `--from-backlog <CID>`: the candidate must be `picked` (`python -m lab.tools.backlog pick`);
+   write `source.md` with its title, claim, base, direction and gate record, then
+   `python -m lab.tools.backlog link <CID> --thread <thread>`. When the program closes, record
+   `python -m lab.tools.backlog outcome <CID> --furthest <stage> [--rung N]`.
 5. Write `{THREAD}/README.md`: one paragraph — the input, owner, entry path, and "stage: intake".
 6. Hand off: run `/qml-intake {thread}`.
 
@@ -67,8 +71,10 @@ All state changes go through `python -m lab.tools.state` / `lab.tools.autonomy` 
 Without a thread: for every `{EXPERIMENTS}/*/*/STATE.json` print one row —
 `thread · owner · stage · phase · open checkpoint (mode, waiting for) · budget % · open escalations`.
 Then **Waiting for you** grouped by person (eligible signers of each open checkpoint = people ≠ author),
-then the **Backlog** (C12 I5): `{OUTPUT_ROOT}/cards/hypotheses/*.md` with `strategic_value: actionable`
-that no `HYPOTHESIS.md` names as `source_hypothesis_card`.
+then the **Backlog** (C13): `python -m lab.tools.backlog queue --top 10` (ranked candidates that
+passed the ingest gate, the explore sample, and the unassigned count), plus — until they are added
+to the backlog — `{OUTPUT_ROOT}/cards/hypotheses/*.md` with `strategic_value: actionable` that no
+`HYPOTHESIS.md` names as `source_hypothesis_card` (C12 I5).
 With a thread: `python -m lab.tools.state show {THREAD}` plus the path of the open brief.
 
 ## `next <thread>`
