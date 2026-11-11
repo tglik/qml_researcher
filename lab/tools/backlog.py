@@ -50,7 +50,7 @@ EXPLORE_RATE = 0.10        # share of gated candidates shown regardless of score
 # 0 (no) · 1 (unclear or partly) · 2 (yes), plus the kind of evidence behind the claimed speedup.
 # Recorded and reported, never part of the gate decision or the rank until `report` shows it predicts.
 POTENTIAL = ("mechanism", "band", "window", "ensemble", "work", "output", "baseline")
-EVIDENCE = ("none", "heuristic", "stage1", "stage2")
+EVIDENCE = ("none", "conjectured", "heuristic", "stage1", "stage2")
 POTENTIAL_BANDS = ((0, 4, "low 0-4"), (5, 9, "mid 5-9"), (10, 14, "high 10-14"))
 STOP = set("a an the of on in for to and or with by at from is are be does do can vs versus than "
            "that this as its it into over under using via".split())
@@ -366,7 +366,9 @@ def cmd_report(_a) -> None:
     for title, key in (("source", lambda c: f"{c['source']} {SOURCES[c['source']]}"),
                        ("region", lambda c: c.get("region", "other")),
                        ("direction", lambda c: c.get("direction") or "unassigned"),
-                       ("potential (calibration: does a higher band reach further?)", potential_band),
+                       ("potential, split by target rung (calibration: does a higher band reach further?)",
+                        lambda c: f"{potential_band(c)} · rung "
+                        + ("1-2" if ((c.get("gate") or {}).get("value") or {}).get("rung", 1) <= 2 else "3-6")),
                        ("evidence class", lambda c: ((c.get("gate") or {}).get("potential") or {})
                         .get("evidence_class", "not scored"))):
         print(f"\nBy {title}")

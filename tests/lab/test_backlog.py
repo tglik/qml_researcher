@@ -126,7 +126,7 @@ class BacklogTest(unittest.TestCase):
         q = self.bl("queue")
         self.assertIn("pot  2/14 none", q)
         rep = self.bl("report")
-        self.assertIn("low 0-4", rep)
+        self.assertIn("low 0-4 · rung 3-6", rep)
         self.assertIn("By evidence class", rep)
         self.assertIn("backlog OK", self.bl("validate"))
         rows = (self.vault / "indexes/backlog/candidates.jsonl").read_text().replace('"work": 0', '"work": 5')

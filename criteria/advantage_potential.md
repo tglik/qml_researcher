@@ -93,13 +93,14 @@ The paper also requires an efficient check of the output, classical where possib
 - **1** small output, but concentration or verification has not been examined.
 - **0** a large output, an exponentially small quantity, or a value that concentrates.
 
-### Q7 `baseline` — How long has the classical side been attacked?
+### Q7 `baseline` — Has the claimed gap survived a long classical attack?
 The paper repeats that classical baselines are moving targets. Factoring has withstood decades. The
 quartic k-XOR speedup lost half its exponent for large k within about a year (Gupta, He, O'Donnell,
 Singer, SODA 2026). The first short-path regimes were dequantized (arXiv:2604.12131). The
 exponential-advantage claim for chemistry is disputed.
-- **2** the classical problem has a long record of strong attacks, or matching lower bounds in the
-  relevant restricted models.
+- **2** the gap itself has stood through a long record of strong classical attacks, or there are
+  matching lower bounds in the relevant restricted models. A mature classical field that already
+  solves the task is the opposite case and scores 0.
 - **1** a recent baseline with some hardness evidence.
 - **0** the classical comparison is a method nobody has tried hard to beat, or a toy baseline.
 
@@ -107,18 +108,21 @@ exponential-advantage claim for chemistry is disputed.
 
 ## 2. Evidence class
 
-One label for the kind of evidence behind the claimed speedup. The compendium separates an
+One label for the kind of evidence behind the speedup claim that the candidate makes or tests. The compendium separates an
 algorithm with a guarantee from a heuristic, and worst-case evidence from average-case instances.
 
 | Class | Meaning |
 |---|---|
-| `none` | no asymptotic speedup is claimed (most near-term learning studies; a negative-result or classical-method candidate) |
+| `none` | no asymptotic speedup is claimed or tested (most near-term learning studies; a classical method studied for its own sake) |
+| `conjectured` | a speedup is conjectured by extension from a proven case, with no algorithm analysis yet |
 | `heuristic` | an empirical scaling comparison between heuristics under matched criteria (QAOA on random 8-SAT) |
 | `stage1` | a quantum algorithm with worst-case evidence; no hard instance family yet |
 | `stage2` | an instance family that can be generated, with average-case evidence of a speedup beyond quadratic |
 
-`none` is not a fault. A sharp negative result or a quantum-inspired classical method is a
-legitimate publishable step (rungs 1–2) and will carry `none`.
+`none` is not a fault: a measured mechanism or a quantum-inspired classical method is a legitimate
+publishable step. A candidate that tests someone else's advantage claim (a negative result, a
+stress test) carries the class of the claim it tests, and its answers rate that claim in the
+variant and regime the study can reach, not the parent result.
 
 ---
 
@@ -168,10 +172,22 @@ questions for the *advantage claim it tests*, and say so in the note.
 
 - **Adopt as an input to the rank** once at least 10 scored candidates have closed and
   `backlog report` shows the high band reaching a rung clearly more often than the low band.
+  Read rungs 1–2 and 3–6 separately (the report splits them): for a negative-result candidate a
+  low profile on the tested claim makes the negative more likely to land, so the direction flips.
 - **Delete it** if, at 10 closed candidates, the bands do not differ. Record that as a result.
 - **Never a kill rule on its own.** A kill needs a 🔴 lab rule with its mechanism.
 
 ## 6. Limits
+
+Feedback from the first use (9 candidates, 2026-11-11), not yet acted on:
+- Q2 and Q7 are moved by the same events (a classical improvement lowers both), and Q2 and Q5
+  collapse together when the structure is classically exploitable. The seven answers are not
+  independent; do not read the total as seven separate pieces of evidence.
+- Q4 caps real-data candidates at 1 by definition, against Rule 2.
+- Q6 bundles size, precision or concentration, and checkability, which came apart in practice.
+- Q1 hardly separates candidates built on compendium entries: the table gives them a 2.
+- Nothing here asks whether the study is decidable at reachable sizes or within the lab's reach.
+  In three of nine candidates that, not a potential answer, moved the probability most.
 
 - It is a checklist written with hindsight from 24 curated entries. It filters; it will not invent
   a new mechanism, and an idea with a new mechanism will score low on Q3 and Q7 by construction.
