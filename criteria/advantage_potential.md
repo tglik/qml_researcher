@@ -5,7 +5,7 @@ not kill a candidate and does not enter the rank. `python -m lab.tools.backlog r
 candidates with a higher profile reach further; section 5 says when to adopt it or delete it.
 
 **Source:** *The Compendium of Super-Quadratic Computational Quantum Advantages* (Kammerlander,
-O'Brien, King, Somma, … Babbush; arXiv:2610.32595, Oct 2026). The compendium lists 25 problems with
+O'Brien, King, Somma, … Babbush; arXiv:2610.32595, Oct 2026). The compendium lists 24 problems (13 Stage II, 11 Stage I) with
 credible speedups beyond quadratic and, for each, the conditions an instance must meet ("Regimes of
 Advantage"). The seven questions are the conditions that recur across those entries. They are our
 reading of the paper, not a list the paper states.
@@ -173,7 +173,7 @@ questions for the *advantage claim it tests*, and say so in the note.
 
 ## 6. Limits
 
-- It is a checklist written with hindsight from about 25 successes. It filters; it will not invent
+- It is a checklist written with hindsight from 24 curated entries. It filters; it will not invent
   a new mechanism, and an idea with a new mechanism will score low on Q3 and Q7 by construction.
 - The compendium covers time speedups on fault-tolerant machines only. It excludes sample-complexity
   advantages for learning from quantum data, communication and space advantages, and anything
