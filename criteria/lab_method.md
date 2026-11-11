@@ -204,6 +204,12 @@ choosing the problem, together with readout.
   algorithm as a competitor: Tang's dequantization of the Kerenidis–Prakash recommender removed its
   exponential advantage this way.
 
+- Compare loading with the classical work, not with zero. Planted inference (tensor PCA, planted
+  k-XOR) reads a classical tensor of about n^p numbers and keeps a quartic speedup, because the
+  classical method works in dimension n^ℓ with ℓ well above p (arXiv:2610.32595, sec. 4). Stored
+  classical data is fatal when the classical cost is close to linear in it, not otherwise. See Q5
+  of `criteria/advantage_potential.md`.
+
 **Screen.** 🟢 the input is generated implicitly, or loading is provably small next to the classical
 cost. 🟠 it relies on QRAM or a loader that does not exist yet. 🔴 loading costs ≈ N and cancels the
 speedup, or classical sample-and-query access is cheap.

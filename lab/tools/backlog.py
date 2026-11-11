@@ -13,7 +13,7 @@ Every source writes candidates with `add`; nothing else writes the files. The in
     python -m lab.tools.backlog direction list
     python -m lab.tools.backlog add    --title T --claim TEXT --source A|B|C|D|E --base REF
                                        [--direction ID] [--region R] [--by WHO] [--force]
-    python -m lab.tools.backlog score  CID --gate novelty|screen|value ...
+    python -m lab.tools.backlog score  CID --gate novelty|screen|value|potential ...
     python -m lab.tools.backlog pending                      # candidates the gate has not finished
     python -m lab.tools.backlog queue  [--direction ID] [--top N]
     python -m lab.tools.backlog pick   CID --by WHO
@@ -46,6 +46,12 @@ RUNGS = {1: "sharp negative / dequantization", 2: "quantum-inspired classical me
          5: "crossover resource estimate", 6: "advantage on real data and hardware"}
 DUP_THRESHOLD = 0.6        # word-set Jaccard on title + claim
 EXPLORE_RATE = 0.10        # share of gated candidates shown regardless of score
+# Advantage-potential profile (criteria/advantage_potential.md): seven upfront questions, each rated
+# 0 (no) · 1 (unclear or partly) · 2 (yes), plus the kind of evidence behind the claimed speedup.
+# Recorded and reported, never part of the gate decision or the rank until `report` shows it predicts.
+POTENTIAL = ("mechanism", "band", "window", "ensemble", "work", "output", "baseline")
+EVIDENCE = ("none", "heuristic", "stage1", "stage2")
+POTENTIAL_BANDS = ((0, 4, "low 0-4"), (5, 9, "mid 5-9"), (10, 14, "high 10-14"))
 STOP = set("a an the of on in for to and or with by at from is are be does do can vs versus than "
            "that this as its it into over under using via".split())
 
@@ -146,6 +152,21 @@ def gate_state(c: dict) -> str:
     return "passed" if nov and scr else "pending"
 
 
+def potential_total(c: dict) -> int | None:
+    pot = (c.get("gate") or {}).get("potential")
+    return sum(pot["answers"].values()) if pot else None
+
+
+def potential_band(c: dict) -> str:
+    t = potential_total(c)
+    return "not scored" if t is None else next(name for lo, hi, name in POTENTIAL_BANDS if lo <= t <= hi)
+
+
+def potential_tag(c: dict) -> str:
+    pot = (c.get("gate") or {}).get("potential")
+    return f"pot {potential_total(c):>2}/14 {pot['evidence_class']:<9}" if pot else "pot  -/14          "
+
+
 def rank_score(c: dict) -> float:
     g = c.get("gate", {})
     nov = (g.get("novelty") or {}).get("score", 0.5)
@@ -235,8 +256,22 @@ def cmd_score(a) -> None:
         if a.rung not in RUNGS or a.p is None or not 0 <= a.p <= 1:
             raise LabError("value needs --rung 1–6 and --p in [0, 1]")
         g["value"] = {"rung": a.rung, "p": a.p, "note": a.note or "", "at": now()}
+    elif a.gate == "potential":
+        try:
+            vals = [int(x) for x in (a.answers or "").split(",")]
+        except ValueError:
+            vals = []
+        if len(vals) != len(POTENTIAL) or any(v not in (0, 1, 2) for v in vals):
+            raise LabError(f"potential needs --answers with {len(POTENTIAL)} values, each 0, 1 or 2, "
+                           f"in the order {','.join(POTENTIAL)}")
+        if a.evidence_class not in EVIDENCE:
+            raise LabError(f"potential needs --evidence-class {EVIDENCE}")
+        if not a.note:
+            raise LabError("potential needs --note naming the mechanism and the weakest answer")
+        g["potential"] = {"answers": dict(zip(POTENTIAL, vals)), "evidence_class": a.evidence_class,
+                          "note": a.note, "at": now()}
     else:
-        raise LabError("gate must be novelty | screen | value")
+        raise LabError("gate must be novelty | screen | value | potential")
     if c["stage"] == "new" and gate_state(c) != "pending":
         c["stage"] = "gated"
         c["history"].append({"at": now(), "stage": "gated", "gate": gate_state(c)})
@@ -247,7 +282,7 @@ def cmd_score(a) -> None:
 def cmd_pending(_a) -> None:
     for c in load_candidates():
         if c["stage"] == "new":
-            missing = [k for k in ("novelty", "screen", "value") if k not in c.get("gate", {})]
+            missing = [k for k in ("novelty", "screen", "value", "potential") if k not in c.get("gate", {})]
             print(f"{c['id']}  src {c['source']}  missing {','.join(missing)}  {c['title']}")
 
 
@@ -257,11 +292,15 @@ def cmd_queue(a) -> None:
     passed = sorted((c for c in cs if gate_state(c) == "passed"), key=rank_score, reverse=True)
     print(f"Ranked ({len(passed)} passed the gate):")
     for c in passed[: a.top]:
-        print(f"  {rank_score(c):>6}  {c['id']}  [{c['source']}/{c.get('direction') or 'unassigned'}]  {c['title']}")
+        print(f"  {rank_score(c):>6}  {potential_tag(c)}  {c['id']}  "
+              f"[{c['source']}/{c.get('direction') or 'unassigned'}]  {c['title']}")
     explore = [c for c in cs if c.get("explore") and c not in passed[: a.top]]
     print(f"Explore sample ({len(explore)}; shown regardless of score, incl. gate kills):")
     for c in explore:
         print(f"  {gate_state(c):>6}  {c['id']}  [{c['source']}/{c.get('direction') or 'unassigned'}]  {c['title']}")
+    unscored = sum(1 for c in cs if potential_total(c) is None)
+    if unscored:
+        print(f"No potential profile: {unscored} gated candidates (the rank does not use it; see `report`).")
     unassigned = sum(1 for c in cs if not c.get("direction"))
     if unassigned:
         print(f"Unassigned: {unassigned} gated candidates fit no direction — review for a new direction.")
@@ -326,7 +365,10 @@ def cmd_report(_a) -> None:
     cols = ("added", "gate_pending", "gate_killed", "gate_passed", "picked", "program", "rung")
     for title, key in (("source", lambda c: f"{c['source']} {SOURCES[c['source']]}"),
                        ("region", lambda c: c.get("region", "other")),
-                       ("direction", lambda c: c.get("direction") or "unassigned")):
+                       ("direction", lambda c: c.get("direction") or "unassigned"),
+                       ("potential (calibration: does a higher band reach further?)", potential_band),
+                       ("evidence class", lambda c: ((c.get("gate") or {}).get("potential") or {})
+                        .get("evidence_class", "not scored"))):
         print(f"\nBy {title}")
         print(f"  {'':<30}" + "".join(f"{h:>13}" for h in cols))
         for k, r in sorted(tally(cs, key).items()):
@@ -358,6 +400,11 @@ def validate() -> list[str]:
             errs.append(f"{cid}: bad stage")
         if c.get("direction") and c["direction"] not in dids:
             errs.append(f"{cid}: unknown direction {c['direction']}")
+        pot = (c.get("gate") or {}).get("potential")
+        if pot and (set(pot.get("answers", {})) != set(POTENTIAL)
+                    or any(v not in (0, 1, 2) for v in pot["answers"].values())
+                    or pot.get("evidence_class") not in EVIDENCE):
+            errs.append(f"{cid}: bad potential profile")
         if c.get("stage") == "program" and not c.get("thread"):
             errs.append(f"{cid}: stage program without a thread")
     return errs
@@ -385,6 +432,7 @@ def main() -> int:
     sc.add_argument("--score", type=float); sc.add_argument("--prior-exists", action="store_true")
     sc.add_argument("--evidence", nargs="*"); sc.add_argument("--verdict"); sc.add_argument("--gates")
     sc.add_argument("--rung", type=int); sc.add_argument("--p", type=float); sc.add_argument("--note")
+    sc.add_argument("--answers"); sc.add_argument("--evidence-class")
     sub.add_parser("pending")
     q = sub.add_parser("queue"); q.add_argument("--direction"); q.add_argument("--top", type=int, default=10)
     p = sub.add_parser("pick"); p.add_argument("cid"); p.add_argument("--by", required=True)

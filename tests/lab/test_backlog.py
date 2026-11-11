@@ -106,6 +106,33 @@ class BacklogTest(unittest.TestCase):
         self.assertIn("quantum-native", rep)
         self.assertIn("backlog OK", self.bl("validate"))
 
+    def test_potential_profile_is_recorded_and_reported_but_never_gates(self):
+        self.direction()
+        cid = self.add()
+        self.assertIn("potential", self.bl("pending"))
+        self.assertIn("7 values", self.bl("score", cid, "--gate", "potential", "--answers", "2,1",
+                                          "--evidence-class", "none", "--note", "x", ok=False))
+        self.assertIn("evidence-class", self.bl("score", cid, "--gate", "potential", "--answers",
+                                                "2,1,0,2,1,1,0", "--evidence-class", "proven", "--note", "x", ok=False))
+        self.assertIn("needs --note", self.bl("score", cid, "--gate", "potential", "--answers",
+                                              "2,1,0,2,1,1,0", "--evidence-class", "none", ok=False))
+        # the profile alone does not finish the gate, and a low profile does not kill
+        out = self.bl("score", cid, "--gate", "potential", "--answers", "0,0,0,1,0,1,0",
+                      "--evidence-class", "none", "--note", "no named mechanism; weakest: work over input")
+        self.assertIn("gate pending", out)
+        self.bl("score", cid, "--gate", "novelty", "--score", "0.8")
+        self.assertIn("gate passed", self.bl("score", cid, "--gate", "screen", "--verdict", "pass"))
+        self.bl("score", cid, "--gate", "value", "--rung", "3", "--p", "0.3")
+        q = self.bl("queue")
+        self.assertIn("pot  2/14 none", q)
+        rep = self.bl("report")
+        self.assertIn("low 0-4", rep)
+        self.assertIn("By evidence class", rep)
+        self.assertIn("backlog OK", self.bl("validate"))
+        rows = (self.vault / "indexes/backlog/candidates.jsonl").read_text().replace('"work": 0', '"work": 5')
+        (self.vault / "indexes/backlog/candidates.jsonl").write_text(rows)
+        self.assertIn("bad potential profile", self.bl("validate", ok=False))
+
     def test_close_direction_records_history(self):
         self.direction()
         out = self.bl("direction", "set", "rydberg-graph-kernels", "--status", "closed",

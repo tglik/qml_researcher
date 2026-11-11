@@ -387,6 +387,8 @@ If any `skill_error` event was written, set `outcome` to `"error"` instead.
    cell of the combination grid (primitive × workload). Add it as a candidate:
    `python -m lab.tools.backlog add --source C --base "<this card path>" --region <R> --title "<primitive> for <workload>" --claim "<one testable sentence: primitive beats <named baseline> on <workload> at <operating point>>"`
    Grid mode (no input card): take the primitives in `{OUTPUT_ROOT}/indexes/hypothesis-ledger.md`
+   and the known advantage mechanisms (the table under Q1 of `criteria/advantage_potential.md`:
+   start from the mechanism and ask which workload has the structure it needs, not the reverse),
    and the open directions (`python -m lab.tools.backlog direction list`), and add the cells that
    no candidate or past program covers (the dedupe refuses the rest).
 

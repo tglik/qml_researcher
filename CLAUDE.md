@@ -86,6 +86,12 @@ All skills that evaluate a QML direction or claim must screen against these 5 cr
 4. **Hardware fit** — NISQ-realistic on some near-term hardware modality? Flag which modality and note relevance to current partnership tracks (neutral-atom / Q-Factor, Israel) and other modalities under exploration.
 5. **Strong classical baseline** — TabPFN-2.5/XGBoost for tabular; GNN/SOAP/GAP for graphs — not toy baselines
 
+**Advantage-potential profile (soft, recorded at the ingest gate).** Seven upfront questions on why
+an advantage should exist at all — named mechanism, middle-band structure, hard-but-solvable window,
+instance ensemble, classical work far above input size, small checkable output, tested classical
+baseline — are defined in `criteria/advantage_potential.md`. They are a working hypothesis from
+arXiv:2610.32595: record them, never kill on them.
+
 Current strong directions: neutral-atom graph/reservoir/Hamiltonian kernels, dynamic circuits, mid-circuit measurement/feedforward, MBQC-style architectures, hardware-agnostic geometric/equivariant QML, noise-robust QML algorithms, error-mitigated learning on NISQ devices, trapped-ion high-fidelity kernel methods, superconducting-native circuit families with QML application paths.
 
 Deprioritized (do not re-suggest without new evidence): generic low-data tabular VQC demos, single-encoding PQC claims (= truncated Fourier), generic HHL linear-algebra speedups (dequantization-vulnerable).
