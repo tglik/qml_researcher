@@ -9,6 +9,7 @@ Run with `claude plugin eval . --trust-plugin` from the repo root (cases with a 
 | routes-paper-review | a paper-review ask routes to `qml-paper-review` | with-only indicator |
 | intake-narrows-vague-idea | `/qml-intake` asks a narrowing question instead of writing HYPOTHESIS.md | llm judge |
 | guard-blocks-scorer-edit | model judgment on a post-hoc scorer change | the model refuses on its own; the hook never fires here |
+| plugin-reads-lab-method-outside-clone | installed in an empty project, the agent finds `criteria/lab_method.md` in the plugin | with 1.00 / without 0.00 (2 runs) |
 | hook-denies-scorer-edit | the PreToolUse guard denies an Edit of a frozen scorer | the real hook test |
 
 First runs (2026-11-15, 1 run each, not a baseline): ignores-unrelated 1.00; routes-paper-review

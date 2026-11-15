@@ -23,7 +23,7 @@ Read the paper inventory. Detect cross-paper claim clusters. Apply the 4-part pr
 **Inputs you expect (injected by orchestrator):**
 - `{workspace}/00_paper_inventory.md` — paper cards grouped by topic with main claims
 - Existing hypothesis cards in `{output_root}/cards/hypotheses/` — check for existing cards to update vs create
-- `qml_criteria` — the 5 QML domain criteria from CLAUDE.md
+- `qml_criteria` — the 5 QML domain criteria from `criteria/qml_domain.md`
 - `hypothesis_schema` — the Research Hypothesis schema
 
 **Output you produce:** `{workspace}/01_hypothesis_candidates.md`

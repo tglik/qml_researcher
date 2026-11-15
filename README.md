@@ -200,10 +200,15 @@ The plugin encodes 17 known failure modes in QML research claims:
 /plugin install qml-researcher@qml-researcher-local
 ```
 
-The plugin carries the skills, the generated agents and the guard hook. Skills still expect to
-run from a clone of this repository (they read `criteria/`, `config/` and `lab/` by relative path),
-so the clone below remains the normal way to work; the plugin is what `claude plugin validate`
-and `claude plugin eval` (see `evals/`) test.
+The plugin carries the skills, the 37 registered agents, the guard hook and the workflows, and it
+works from any project, without a clone. On enable, Claude Code asks for **QML artifacts folder**
+(`output_root`): point it at your local qml_artifacts clone. A SessionStart/SubagentStart hook
+(`hooks/qml_env.py`) then tells skills and agents where the plugin's `criteria/`, `lab/` and
+`artifacts/` files are, puts `lab.tools` on `PYTHONPATH` for Bash, and sets `LAB_OUTPUT_ROOT`.
+Update with `/plugin update qml-researcher`. You need read access to this GitHub repo. The clone
+below is still the way to *edit* the plugin; Codex and Hermes keep using the installer path
+(they do not read Claude Code plugins, so the hook, registered agents and workflows don't apply
+there; the frozen scorer and lock checks are Python and hold everywhere).
 
 ### macOS / Linux (Claude Code + Codex + Hermes + Gemini)
 

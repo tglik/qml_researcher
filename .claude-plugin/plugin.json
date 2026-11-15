@@ -1,7 +1,7 @@
 {
   "name": "qml-researcher",
   "displayName": "QML Researcher",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "QML research workflows and the QML Lab: pre-registered experiments with a frozen scorer, an adversarial review panel and an independent audit.",
   "author": {
     "name": "Tsahi Glik"
@@ -54,5 +54,12 @@
     "./.claude/agents/variant-generator.md",
     "./.claude/agents/verdict-auditor.md",
     "./.claude/agents/verdict-writer.md"
-  ]
+  ],
+  "userConfig": {
+    "output_root": {
+      "type": "directory",
+      "title": "QML artifacts folder",
+      "description": "Your local clone of qml_artifacts. Skill outputs and lab programs are written here (overrides config/workspace.json)."
+    }
+  }
 }

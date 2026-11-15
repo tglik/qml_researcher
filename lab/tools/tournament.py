@@ -59,6 +59,8 @@ def read_jsonl(path: Path) -> list[dict]:
 def load(cands_path: Path, judg_path: Path) -> tuple[list[str], list[dict]]:
     cands = read_jsonl(cands_path)
     ids = [c["id"] for c in cands]
+    if not ids:
+        raise LabError(f"{cands_path}: no candidates")
     if len(set(ids)) != len(ids):
         raise LabError("duplicate candidate ids")
     known = set(ids)
