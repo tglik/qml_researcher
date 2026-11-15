@@ -213,7 +213,7 @@ the same structure.
 Read: {AGENTS_DIR}/problem-mapper.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="problem-mapper",   # Claude Code: registered agent .claude/agents/problem-mapper.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Map {primitive_name} to equivalent problems and ML workloads",
   prompt="""
 {AGENT_DEF}
@@ -272,7 +272,7 @@ not every workload can be HIGH.
 Read: {AGENTS_DIR}/business-rater.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="business-rater",   # Claude Code: registered agent .claude/agents/business-rater.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Rate business value of ML workloads derived from {primitive_name}",
   prompt="""
 {AGENT_DEF}
@@ -321,7 +321,7 @@ Next: Phase 3 — write Primitive Transfer Card.
 Read: {AGENTS_DIR}/opportunity-writer.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="opportunity-writer",   # Claude Code: registered agent .claude/agents/opportunity-writer.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Write Primitive Transfer Card for {primitive_name}",
   prompt="""
 {AGENT_DEF}

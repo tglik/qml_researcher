@@ -4,7 +4,6 @@ description: "Searches QML and quantum computing literature for papers that supp
 tools: "Read, Write, WebSearch, WebFetch"
 model: opus
 maxTurns: 12
-memory: true
 ---
 
 ## Soul

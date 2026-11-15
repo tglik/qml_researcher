@@ -621,7 +621,7 @@ STATUS: DONE
 | Anti-pattern | Why it fails | What to do instead |
 |---|---|---|
 | Main session writes synthesis | No generator/reviewer separation | Delegate to research-scientist agent |
-| Use `subagent_type` by name | Couples skill to global agent directory | Read from `./agents/` and inject inline |
+| Use a global agent of the same name from another repo (e.g. ai-os) | Couples the skill to a copy that drifts | Claude Code: the agent generated from `./agents/` into this repo's `.claude/agents/`; other runtimes: read from `./agents/` and inject inline |
 | Skip devil's advocate because draft looks good | QML failure modes are non-obvious | Always run Phase 4 in standard mode |
 | Abstract-only synthesis | Methods section often contradicts abstract | Require full-text fetch in literature-scout |
 | Merge Phases 3+6 | Skips audit; overstated claims enter report | Always run evidence-auditor between synthesis and final write |

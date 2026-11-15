@@ -36,9 +36,11 @@ PERSONAS = methodologist, dequantization-theorist, hardware-realist, baseline-ch
 ```
 
 ## Phase 1 — Six parallel reviews
-For each persona, in one message (parallel), spawn a fresh agent whose prompt is:
-`lab/roles/review-panel/ESSENCE.md` + `personas/<persona>.md` + `PROTOCOL.md` + LAB_METHOD + task
-(the hardware realist also gets `criteria/hardware_roadmaps.md`):
+For each persona, in one message (parallel), spawn a fresh agent. Claude Code: the registered
+agent `panel-<persona>` (it already holds the panel ESSENCE, the persona and the PROTOCOL, and reads
+LAB_METHOD itself). Hermes/Codex: paste `lab/roles/review-panel/ESSENCE.md` + `personas/<persona>.md`
++ `PROTOCOL.md` + LAB_METHOD + task into a `"claude"` spawn. The hardware realist also gets
+`criteria/hardware_roadmaps.md`. Task:
 ```
 Task: review {THREAD}, pass {n}. Inputs per the PROTOCOL for this pass. Write your issues to
 {THREAD}/panel/{n}/<persona>.md. Do not read other personas' files.

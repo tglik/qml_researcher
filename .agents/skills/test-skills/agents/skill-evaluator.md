@@ -1,7 +1,7 @@
 ---
 name: skill-evaluator
 role: Quality judge for qml-researcher skill output artifacts
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 # Skill Evaluator
@@ -77,7 +77,7 @@ Output **only** a JSON block in this exact format. No prose before or after.
   "test_id": "<from context>",
   "skill": "<from context>",
   "mode": "<from context>",
-  "evaluator_model": "claude-sonnet-4-6",
+  "evaluator_model": "sonnet",
   "evaluated_at": "<ISO datetime>",
   "scores": {
     "<axis_name>": {

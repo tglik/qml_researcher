@@ -4,7 +4,6 @@ description: "Finds, screens, and traces academic sources for QML and quantum co
 tools: "Read, Glob, Grep, WebSearch, WebFetch, Write, Edit"
 model: sonnet
 maxTurns: 12
-memory: true
 ---
 
 ## Soul

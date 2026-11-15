@@ -74,3 +74,32 @@ class StructureTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HarnessWiringTest(unittest.TestCase):
+    """The registered agents, plugin manifest and guard hook stay in step with their sources."""
+
+    def test_generated_agents_are_current(self):
+        import subprocess, sys
+        r = subprocess.run([sys.executable, str(REPO / "scripts" / "gen_agents.py"), "--check"],
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_every_lab_role_and_persona_is_registered(self):
+        agents = {p.stem for p in (REPO / ".claude" / "agents").glob("*.md")}
+        for role in (REPO / "lab" / "roles").iterdir():
+            if role.is_dir() and role.name != "review-panel":
+                self.assertIn(role.name, agents)
+        for persona in (REPO / "lab" / "roles" / "review-panel" / "personas").glob("*.md"):
+            self.assertIn(f"panel-{persona.stem}", agents)
+
+    def test_no_pinned_model_ids_in_agents(self):
+        for p in (REPO / ".claude" / "agents").glob("*.md"):
+            m = re.search(r"^model:\s*(\S+)", p.read_text(encoding="utf-8"), re.M)
+            self.assertIn(m.group(1), {"inherit", "opus", "sonnet", "haiku"}, p.name)
+
+    def test_guard_hook_is_wired_in_settings_and_plugin(self):
+        import json
+        for f in (REPO / ".claude" / "settings.json", REPO / "hooks" / "hooks.json"):
+            hooks = json.loads(f.read_text(encoding="utf-8"))["hooks"]["PreToolUse"]
+            self.assertTrue(any("lab_guard.py" in h["command"] for e in hooks for h in e["hooks"]), f)
