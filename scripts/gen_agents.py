@@ -60,7 +60,9 @@ SKILL_AGENT_MODEL = {
     "skill-evaluator": "sonnet", "regression-checker": "sonnet",
 }
 LAB_METHOD_LINE = ("Before you start, Read `criteria/lab_method.md` (the shared lab rules every role "
-                   "follows). Paths are relative to the qml_researcher repository root.")
+                   "follows). Repo paths (criteria/, lab/, artifacts/, config/) are relative to the qml-researcher "
+                   "root: the repository root in a clone, or the plugin folder your context names when "
+                   "installed as a plugin.")
 
 
 def _front(text: str) -> tuple[dict, str]:
