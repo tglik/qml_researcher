@@ -7,12 +7,12 @@ description: |
   and partial_fetch flag. Domain-agnostic — works for any research field.
   Can be invoked standalone or called from any skill that needs to read an
   arXiv paper (e.g. /qml-paper-review, /qml-deep-research).
-input:
+input: |
   - arXiv ID: 2401.12345 or 2401.12345v2
   - arXiv URL: https://arxiv.org/abs/2401.12345 or https://ar5iv.org/abs/...
   - arxiv: prefix: arxiv:2401.12345
   - Plain title or keyword string → triggers arXiv search
-output:
+output: |
   - Structured paper content: title, abstract, intro_text, arxiv_id, venue, venue_tier, partial_fetch
   - Printed to stdout in a readable block; usable as input to any downstream skill
 ---

@@ -26,7 +26,7 @@ triggers:
   - what papers exist on
   - annotated bibliography
 
-input:
+input: |
   - Research question or topic (required)
   - Optional --fast: skip phases 2 and 4-5 (Phase 0A → 0B → 1 → 3 → 6)
   - Optional --scope-only: stop after Phase 0B and wait for user review
@@ -34,7 +34,7 @@ input:
   - Optional --fact-check: verify a single claim or paper (Phase 1 targeted + Phase 5 only)
   - Optional --return-to <lab thread>: invoked by the QML Lab screen; scope is the question in <thread>/00_inputs/research_request.md
 
-output:
+output: |
   - Research workspace: {vault}/research/{slug}_{YYYY-MM-DD}/
     - 00_brief.md
     - 00_scope.md

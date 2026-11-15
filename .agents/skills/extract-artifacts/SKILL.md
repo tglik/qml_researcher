@@ -16,13 +16,13 @@ triggers:
   - ingest this paper review
   - update the knowledge base
 
-input:
+input: |
   - source_file_path: path to the Layer 1 source file (mutually exclusive with --dir)
   - --dir: path to a skill workspace directory; auto-discovers and processes all extractable files in dependency order
   - --dry-run: print what would be written without writing (optional)
   - --force: re-extract even if source is already marked extracted: true (optional)
 
-output:
+output: |
   - cards/paper-cards/ — new and updated paper cards (claims/evidence inline in card body)
   - cards/persons/ — new and updated person cards
   - cards/organizations/ — new and updated organization cards

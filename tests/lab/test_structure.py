@@ -85,6 +85,24 @@ class HarnessWiringTest(unittest.TestCase):
                            capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
+    def test_every_skill_frontmatter_is_valid_yaml(self):
+        # An invalid frontmatter loads the skill with no description, so it never auto-routes
+        # (found by the routes-paper-review eval: six skills were invisible to routing).
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("pyyaml not installed")
+        for skill in sorted((REPO / ".agents" / "skills").glob("*/SKILL.md")):
+            text = skill.read_text(encoding="utf-8")
+            m = re.match(r"^---\n(.*?)\n---", text, re.S)
+            self.assertIsNotNone(m, f"{skill}: no frontmatter")
+            try:
+                meta = yaml.safe_load(m.group(1))
+            except yaml.YAMLError as e:
+                self.fail(f"{skill.relative_to(REPO)}: invalid YAML frontmatter: {e}")
+            self.assertIsInstance(meta.get("description"), str, skill)
+            self.assertEqual(meta.get("name"), skill.parent.name, skill)
+
     def test_every_lab_role_and_persona_is_registered(self):
         agents = {p.stem for p in (REPO / ".claude" / "agents").glob("*.md")}
         for role in (REPO / "lab" / "roles").iterdir():
