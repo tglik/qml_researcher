@@ -15,9 +15,9 @@ Files (JSONL, one object per line):
         # next pairs to judge: Swiss pairing on the current fit, never a pair already judged
         # in that order, deterministic (ties broken by id). Prints JSON [{"a","b","order"}].
     python -m lab.tools.tournament record <judgments> --a X --b Y --winner a|b|tie --judge J --order ab|ba [--reason "…"]
-    python -m lab.tools.tournament ingest <judgments> <rows.json> --judge J
+    python -m lab.tools.tournament ingest <judgments> <rows.json | -> --judge J
         # append a JSON array of {a, b, winner, order, reason} (how the rank-ideas workflow records
-        # a round: the rows go through a file, never through shell arguments)
+        # a round: the rows go through a file or a quoted heredoc on stdin, never through shell arguments)
     python -m lab.tools.tournament rank   <candidates> <judgments> [--json]
         # Bradley-Terry (MM algorithm, weak prior of one tie against a virtual average idea),
         # rating on an Elo-like scale, wins/losses/ties, number of comparisons.
@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 
 from .common import LabError, main_wrapper
@@ -207,7 +208,8 @@ def main(argv=None) -> None:
         print(f"recorded {a.a} vs {a.b}: {a.winner}")
         return
     if a.cmd == "ingest":
-        rows = json.loads(Path(a.rows).read_text(encoding="utf-8"))
+        raw = sys.stdin.read() if a.rows == "-" else Path(a.rows).read_text(encoding="utf-8")
+        rows = json.loads(raw)
         with Path(a.judgments).open("a", encoding="utf-8") as f:
             for x in rows:
                 if x.get("winner") not in ("a", "b", "tie") or x.get("order") not in ("ab", "ba") or x["a"] == x["b"]:

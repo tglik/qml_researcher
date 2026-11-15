@@ -81,6 +81,11 @@ class TournamentTest(unittest.TestCase):
             ids, js = t.load(c, jp)
             self.assertEqual(js[0]["judge"], "wf")
             self.assertEqual(t.ranking(ids, js)[0][0], "c4")
+            import io
+            from unittest import mock
+            with mock.patch("sys.stdin", io.StringIO(json.dumps([{"a": "c1", "b": "c3", "winner": "b", "order": "ab"}]))):
+                t.main(["ingest", str(jp), "-", "--judge", "wf"])
+            self.assertEqual(len(t.load(c, jp)[1]), 2)
 
 
 if __name__ == "__main__":

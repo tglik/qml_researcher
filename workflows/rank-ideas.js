@@ -33,6 +33,7 @@ const PAIRS = { type: 'object', required: ['pairs'], properties: { pairs: { type
   properties: { a: { type: 'string' }, b: { type: 'string' }, order: { type: 'string', enum: ['ab', 'ba'] } } } } } }
 const CANDS = { type: 'object', required: ['candidates'], properties: { candidates: { type: 'array', items: {
   type: 'object', required: ['id', 'text'], properties: { id: { type: 'string' }, text: { type: 'string' } } } } } }
+const INGESTED = { type: 'object', required: ['ingested'], properties: { ingested: { type: 'integer' } } }
 const VERDICT = { type: 'object', required: ['winner', 'reason'], properties: {
   winner: { type: 'string', enum: ['A', 'B', 'tie'] }, reason: { type: 'string' } } }
 
@@ -44,6 +45,7 @@ const loaded = await agent(
 const text = Object.fromEntries(loaded.candidates.map(c => [c.id, c.text]))
 
 let judged = 0
+const all = []
 for (let r = 1; r <= rounds; r++) {
   phase('Pair')
   const next = await agent(
@@ -64,11 +66,20 @@ for (let r = 1; r <= rounds; r++) {
     ...p, winner: verdicts[i].winner === 'A' ? 'a' : verdicts[i].winner === 'B' ? 'b' : 'tie',
     reason: verdicts[i].reason })
     .filter(Boolean)
-  const file = `${args.judgments}.round${r}.json`
-  await agent(
-    `Write this JSON array, exactly as given, to ${file} with the Write tool:\n${JSON.stringify(rows)}\n` +
-    `Then run: ${T} ingest ${args.judgments} ${file} --judge workflow:rank-ideas\nReport its output.`,
-    { label: `record round ${r}`, phase: 'Record', model: 'haiku', effort: 'low' })
+  // Rows reach the tool through a quoted heredoc: the judges' text is never parsed by the shell.
+  // (In non-interactive runs, workflow agents may be refused Write, so no temp file is used.)
+  const cmd = `${T} ingest ${args.judgments} - --judge workflow:rank-ideas <<'QML_ROWS_EOF'\n` +
+    `${JSON.stringify(rows)}\nQML_ROWS_EOF`
+  const rec = await agent(
+    `Run this exact command in one Bash call, unchanged:\n${cmd}\n` +
+    `Return ingested = the number in its "ingested N judgments" output line, or 0 if it failed.`,
+    { schema: INGESTED, label: `record round ${r}`, phase: 'Record', model: 'haiku', effort: 'low' })
+  all.push(...rows)
+  if (!rec || rec.ingested !== rows.length) {
+    // Never carry on with a fit that silently lacks this round's judgments.
+    throw new Error(`round ${r}: recorded ${rec ? rec.ingested : 0} of ${rows.length} judgments; ` +
+      `rows: ${JSON.stringify(rows)}`)
+  }
   judged += rows.length
   log(`round ${r}: ${rows.length} judgments recorded`)
 }
@@ -80,4 +91,4 @@ const table = await agent(
   `\nReturn the outputs verbatim.`,
   { label: 'rank', phase: 'Rank', model: 'haiku', effort: 'low' })
 
-return { judged, table }
+return { judged, table, judgments: all }

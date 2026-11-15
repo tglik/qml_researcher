@@ -50,6 +50,9 @@ const ISSUES = {
   },
 }
 
+const MERGED = { type: 'object', required: ['written', 'validate'], properties: {
+  written: { type: 'boolean' }, validate: { type: 'string', description: 'validate output or the error' } } }
+
 phase('Six parallel reviews')
 const reviews = await parallel(PERSONAS.map(p => () => agent(
   `Review ${thread}, pass ${pass}, as the ${p} persona. Inputs per your PROTOCOL for this pass.` +
@@ -80,12 +83,19 @@ const merged = await agent(
   `\nCopy this methodologist section in verbatim:\n${methodologist}\n` +
   (missing.length ? `Add a line under Issues: "Missing persona reports: ${missing.join(', ')} — panel BLOCKED until rerun."\n` : '') +
   `Then run: python -m lab.tools.validate artifact ${thread}/PANEL_${pass}.md and append one line to ` +
-  `${thread}/decision_log.md: "panel pass ${pass}: ${verdict}, blocking ${blocking}". Return the validate output.`,
-  { label: 'merge', phase: 'Merge', effort: 'low' },
+  `${thread}/decision_log.md: "panel pass ${pass}: ${verdict}, blocking ${blocking}". ` +
+  `Return written = true only if PANEL_${pass}.md now exists and validate printed "valid".`,
+  { label: 'merge', phase: 'Merge', effort: 'low', schema: MERGED },
 )
+if (!merged || !merged.written) {
+  log(`PANEL_${pass}.md was NOT written; the issues are in this run's return value`)
+}
 
 return {
   thread, pass, verdict, blocking, non_blocking: rows.length - blocking, missing,
   by_persona: Object.fromEntries(PERSONAS.map((p, i) => [p, reviews[i] ? reviews[i].issues.length : null])),
-  path: `${thread}/PANEL_${pass}.md`, validate: merged,
+  path: merged && merged.written ? `${thread}/PANEL_${pass}.md` : null,
+  validate: merged ? merged.validate : 'merge agent failed',
+  // The rows travel back with the result so a refused write loses nothing.
+  issues: rows,
 }

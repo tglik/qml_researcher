@@ -304,6 +304,11 @@ topics: [graph-ml]
         out = self.run_tool("lab.tools.validate", "artifact", str(self.thread / "SCREEN.md"), ok=False)
         self.assertIn("missing section '## G0", out)
 
+    def test_validating_a_missing_file_fails(self):
+        self.new_program()
+        out = self.run_tool("lab.tools.validate", "artifact", str(self.thread / "PANEL_1.md"), ok=False)
+        self.assertIn("does not exist", out)
+
     def test_artifact_template_follows_format_version(self):
         self.new_program()
         hyp = self.thread / "HYPOTHESIS.md"
