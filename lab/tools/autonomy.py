@@ -64,7 +64,43 @@ def read_rows() -> list[dict]:
     return rows
 
 
-def sign(thread: Path, cp: str, by: str, decision: str, outcome: str, minutes: float, note: str) -> dict:
+def cp3_mechanical_problems(thread: Path) -> list[str]:
+    """Why CP3 for the current phase cannot pass without a person; [] means the verifier is enough.
+
+    CP3 asks one question: does the gate decision follow the pre-registered policy? That is
+    mechanical only when (a) the lock includes a frozen scorer, (b) the lock and guard pass, and
+    (c) every gate in gates.md was computed by the tool — none BLOCKED, none recorded as manual.
+    """
+    from . import guard as guard_mod
+    from .common import PHASE_DIRS, read_json
+    from .lock import expected_scorer
+    st = st_mod.load(thread)
+    phase = st.get("current_phase")
+    lock_path = thread / "PREREG.lock.json"
+    if not lock_path.exists():
+        return ["no PREREG.lock.json"]
+    if phase not in PHASE_DIRS:
+        return ["no current phase in STATE.json"]
+    problems = []
+    if expected_scorer(read_json(lock_path)) is None:
+        problems.append("lock has no frozen scorer — the measured numbers were written by the implementer")
+    problems += guard_mod.check(thread)
+    gates_md = thread / PHASE_DIRS[phase] / "results" / "gates.md"
+    if not gates_md.exists():
+        problems.append(f"{gates_md.relative_to(thread).as_posix()} missing — run lab.tools.gates")
+    else:
+        rows = [l for l in gates_md.read_text(encoding="utf-8").splitlines() if l.startswith("| ") and "---" not in l][1:]
+        if not rows:
+            problems.append("gates.md has no gate rows")
+        if any("BLOCKED" in r for r in rows):
+            problems.append("a gate is BLOCKED")
+        if any("(manual)" in r for r in rows):
+            problems.append("a gate was decided manually, not computed")
+    return problems
+
+
+def sign(thread: Path, cp: str, by: str, decision: str, outcome: str, minutes: float, note: str,
+         no_scorer: str | None = None) -> dict:
     cfg = config()
     if by not in cfg["people"]:
         raise LabError(f"{by!r} is not a lab signer ({cfg['people']})")
@@ -78,6 +114,14 @@ def sign(thread: Path, cp: str, by: str, decision: str, outcome: str, minutes: f
     author = c.get("author", "")
     if author == by or author == f"person:{by}":
         raise LabError(f"signer = author ({by}); another person must sign {key}")
+    if cp == "CP2" and decision == "approve":
+        from . import scorer as scorer_mod
+        if scorer_mod.manifest(thread) is None and not no_scorer:
+            raise LabError("CP2 signs the spec AND the scorer, and this thread has no scorer/. Write it "
+                           "(lab.tools.scorer) or pass --no-scorer \"<reason>\" to accept a program whose CP3 "
+                           "stays HUMAN_APPROVE")
+        if no_scorer:
+            note = f"{note} [no scorer: {no_scorer}]".strip()
     c.update({"status": "approved" if decision == "approve" else "rejected", "signer": by,
               "outcome": outcome, "decision": decision, "minutes": minutes, "closed_at": now()})
     st["history"].append({"at": now(), "event": f"{key} {c['status']} by {by} ({outcome})"})
@@ -105,6 +149,11 @@ def auto(thread: Path, cp: str, decision: str, note: str) -> dict:
         raise LabError(f"{key} is not open for {st['thread']}")
     if c["mode"] == "HUMAN_APPROVE":
         raise LabError(f"{key} is HUMAN_APPROVE — a person must sign it")
+    if cp == "CP3":
+        problems = cp3_mechanical_problems(thread)
+        if problems:
+            raise LabError(f"{key} cannot pass on the verifier alone — a person must sign it:\n  "
+                           + "\n  ".join(problems))
     cfg = config()
     import random
     sampled = c["mode"] == "HUMAN_SPOTCHECK" and random.random() < cfg["spotcheck"]["sample_rate"]
@@ -226,6 +275,16 @@ def main() -> int:
     s = sub.add_parser("sign"); s.add_argument("thread"); s.add_argument("cp", choices=CHECKPOINTS)
     s.add_argument("--by", required=True); s.add_argument("--decision", required=True, choices=["approve", "reject"])
     s.add_argument("--outcome", required=True); s.add_argument("--minutes", type=float, required=True); s.add_argument("--note", default="")
+    s.add_argument("--no-scorer", help="CP2 only: approve a program without a frozen scorer (CP3 then stays human)")
+    b = sub.add_parser("sign-batch", help="sign one checkpoint for several programs in one review sitting")
+    b.add_argument("cp", choices=CHECKPOINTS); b.add_argument("--threads", required=True, help="comma-separated")
+    b.add_argument("--by", required=True); b.add_argument("--decisions", required=True,
+                   help="comma-separated approve|reject, one per thread, same order")
+    b.add_argument("--outcome", required=True); b.add_argument("--minutes", type=float, required=True,
+                   help="total minutes for the sitting; split evenly across programs")
+    b.add_argument("--note", default="")
+    c3 = sub.add_parser("cp3-check", help="print why CP3 would or would not pass on the verifier alone")
+    c3.add_argument("thread")
     sub.add_parser("stats")
     au = sub.add_parser("auto"); au.add_argument("thread"); au.add_argument("cp", choices=CHECKPOINTS)
     au.add_argument("--decision", required=True, choices=["approve", "reject"]); au.add_argument("--note", default="")
@@ -237,8 +296,20 @@ def main() -> int:
     r = sub.add_parser("restore"); r.add_argument("cp", choices=CHECKPOINTS); r.add_argument("--reason", required=True)
     a = ap.parse_args()
     if a.cmd == "sign":
-        c = sign(resolve_thread(a.thread), a.cp, a.by, a.decision, a.outcome, a.minutes, a.note)
+        c = sign(resolve_thread(a.thread), a.cp, a.by, a.decision, a.outcome, a.minutes, a.note, a.no_scorer)
         print(f"{a.cp} {c['status']} by {a.by} ({a.outcome}); logged to {log_path()}")
+    elif a.cmd == "sign-batch":
+        threads = [t.strip() for t in a.threads.split(",") if t.strip()]
+        decisions = [d.strip() for d in a.decisions.split(",")]
+        if len(threads) != len(decisions) or any(d not in ("approve", "reject") for d in decisions):
+            raise LabError("--decisions needs one approve|reject per thread, in the same order")
+        each = round(a.minutes / len(threads), 1)
+        for t, d in zip(threads, decisions):
+            c = sign(resolve_thread(t), a.cp, a.by, d, a.outcome, each, f"batch review. {a.note}".strip())
+            print(f"{t}: {a.cp} {c['status']}")
+    elif a.cmd == "cp3-check":
+        problems = cp3_mechanical_problems(resolve_thread(a.thread))
+        print("CP3 can pass on the verifier" if not problems else "CP3 needs a person:\n  " + "\n  ".join(problems))
     elif a.cmd == "auto":
         c = auto(resolve_thread(a.thread), a.cp, a.decision, a.note)
         print(f"{a.cp} auto-{a.decision} ({c['mode']}); spot-check {c['spotcheck']}")

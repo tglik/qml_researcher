@@ -58,7 +58,9 @@ def _force_remove(func, path, _):
     func(path)
 
 
-class LabToolsTest(unittest.TestCase):
+class LabFixture(unittest.TestCase):
+    """Throwaway vault + config; no tests of its own, so other test files can reuse it."""
+
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         self.vault = self.tmp / "vault"
@@ -88,6 +90,7 @@ class LabToolsTest(unittest.TestCase):
     def new_program(self):
         self.run_tool("lab.tools.state", "new", str(self.thread), "--owner", "meir", "--path", "use-case")
 
+class LabToolsTest(LabFixture):
     # --- state -----------------------------------------------------------------------------
     def test_state_new_validate_and_preconditions(self):
         self.new_program()

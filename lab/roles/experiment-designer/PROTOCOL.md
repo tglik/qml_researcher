@@ -22,6 +22,11 @@ revisions: `{THREAD}/PANEL_1.md`.
   extrapolation ladder, and the **P0 analytic resource count** (gates, depth, shots, loading,
   readout at N_ind; best classical cost at N_ind; break-even N*)
 - `{THREAD}/frozen_definitions.md` — splits, metrics, instance generators, seeds (as `lock` blocks)
+- `{THREAD}/scorer/` — the frozen scorer (`lab/tools/scorer.py` explains the contract;
+  start from `artifacts/lab/templates/scorer/score.py`): `score.py` reads the phase's `raw/`
+  outputs and `scorer/heldout/` and prints one value per numeric gate id. Held-out labels go in
+  `scorer/heldout/`, never in a folder the implementer reads. A `scorer/README.md` says, per gate,
+  which raw file and columns it reads, so the implementer knows the output format to produce.
 - On revision: a `change_log.md` line per change, citing the panel issue number. Revision notes and
   panel issue numbers never appear in the plan or the experiment docs.
 
@@ -49,11 +54,16 @@ revisions: `{THREAD}/PANEL_1.md`.
    local machine (V1: local only, no cloud).
    Real data too large to run: plan real data at the largest simulable size, classical at full
    size, quantum modeled at full size (rule 2).
-9. **Verdict sentences.** Both sentences per gate, in that experiment's doc. *Fail if* any NO-GO
+9. **Scorer.** Write `scorer/` so that every numeric gate of every phase is computed by it from
+   `raw/` files whose format `scorer/README.md` fixes. Test it on a synthetic `raw/` you build in a
+   temp folder (one pass case, one fail case per gate); *fail if* any numeric gate id is not
+   produced or `python -m lab.tools.scorer hash {THREAD}` errors. The scorer is signed with the
+   spec at CP2 and frozen with the lock: after the freeze nobody edits it except by amendment.
+10. **Verdict sentences.** Both sentences per gate, in that experiment's doc. *Fail if* any NO-GO
    sentence is missing.
-10. **Decision.** Copy the decision the answer changes from `00_inputs/answers.md` into the plan's
+11. **Decision.** Copy the decision the answer changes from `00_inputs/answers.md` into the plan's
     *What the result decides*.
-11. **Self-check** before returning: every `lock` block has `id`, `kind`, `text`; ids unique; each
+12. **Self-check** before returning: every `lock` block has `id`, `kind`, `text`; ids unique; each
     experiment's plain-language decision rules say the same as its lock blocks;
     `python -m lab.tools.validate thread {THREAD}` passes; the prose follows `lab/STYLE.md`.
 
