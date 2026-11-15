@@ -21,7 +21,12 @@ date: {YYYY-MM-DD}
 2. {…}
 
 **The human's job here:** {e.g. CP2 — "is this the right question? is the operating point real?
-are the thresholds defensible?" — not re-deriving the analysis}
+are the thresholds defensible? does the frozen scorer compute exactly these gates, from files the
+implementer cannot change after the fact?" — not re-deriving the analysis. After CP2 the run
+checkpoints are checked against what you sign here by machine.}
+
+**Scorer (CP2 only):** hash `{root_sha256[:12]}` · {n} files · gate ids it produces: {…} ·
+held-out labels in `scorer/heldout/` · tested on: {synthetic pass / fail cases}
 
 **Reply with:**
 ```

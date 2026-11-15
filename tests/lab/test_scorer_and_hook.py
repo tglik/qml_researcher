@@ -85,6 +85,12 @@ class ScorerTest(LabFixture):
         self.run_tool("lab.tools.gates", str(self.thread), "P1")
         out = self.run_tool("lab.tools.autonomy", "cp3-check", str(self.thread))
         self.assertIn("CP3 can pass on the verifier", out)
+        (self.thread / "briefs").mkdir(exist_ok=True)
+        (self.thread / "briefs" / "DECISION_BRIEF_CP3_1.md").write_text("brief", encoding="utf-8")
+        self.run_tool("lab.tools.state", "open-cp", str(self.thread), "CP3", "--author", "agent:implementer",
+                      "--brief", "briefs/DECISION_BRIEF_CP3_1.md")
+        out = self.run_tool("lab.tools.autonomy", "auto", str(self.thread), "CP3", "--decision", "approve")
+        self.assertIn("CP3 auto-approve (AGENT)", out)
 
     def test_cp3_needs_a_person_without_a_scorer(self):
         self.new_program()
@@ -98,6 +104,15 @@ class ScorerTest(LabFixture):
         self.run_tool("lab.tools.gates", str(self.thread), "P1")
         out = self.run_tool("lab.tools.autonomy", "cp3-check", str(self.thread))
         self.assertIn("no frozen scorer", out)
+        # CP3 is AGENT in config, but this instance falls back to a person
+        (self.thread / "briefs").mkdir(exist_ok=True)
+        (self.thread / "briefs" / "DECISION_BRIEF_CP3_1.md").write_text("brief", encoding="utf-8")
+        self.run_tool("lab.tools.state", "open-cp", str(self.thread), "CP3", "--author", "agent:implementer",
+                      "--brief", "briefs/DECISION_BRIEF_CP3_1.md")
+        out = self.run_tool("lab.tools.autonomy", "auto", str(self.thread), "CP3", "--decision", "approve", ok=False)
+        self.assertIn("now waits for a person", out)
+        st = json.loads((self.thread / "STATE.json").read_text(encoding="utf-8"))
+        self.assertEqual(st["checkpoints"]["CP3:P1"]["mode"], "HUMAN_APPROVE")
 
 
 class GuardHookTest(LabFixture):

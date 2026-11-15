@@ -152,7 +152,12 @@ def auto(thread: Path, cp: str, decision: str, note: str) -> dict:
     if cp == "CP3":
         problems = cp3_mechanical_problems(thread)
         if problems:
-            raise LabError(f"{key} cannot pass on the verifier alone — a person must sign it:\n  "
+            # Fall back to a person for this instance, and say why in STATE and the log.
+            c["mode"] = "HUMAN_APPROVE"
+            c["fallback"] = problems
+            st["history"].append({"at": now(), "event": f"{key} falls back to HUMAN_APPROVE", "why": problems})
+            st_mod.save(thread, st, "auto")
+            raise LabError(f"{key} cannot pass on the verifier alone; it now waits for a person (HUMAN_APPROVE):\n  "
                            + "\n  ".join(problems))
     cfg = config()
     import random
