@@ -35,6 +35,12 @@ Pass 2: python -m lab.tools.state check {THREAD} --need lock
 PERSONAS = methodologist, dequantization-theorist, hardware-realist, baseline-champion, value-translator, mathematical-critic
 ```
 
+**Claude Code with the plugin installed:** prefer the workflow `/qml-researcher:review-panel` with
+args `{thread, pass}` after the Setup checks. It runs Phases 1-3 from `workflows/review-panel.js`:
+each persona returns its issues as schema-checked data, the script computes the verdict and the
+blocking count (a persona that fails to report blocks the panel), and the merge agent only formats.
+The phases below stay the procedure for Hermes/Codex and for runtimes without workflows.
+
 ## Phase 1 — Six parallel reviews
 For each persona, in one message (parallel), spawn a fresh agent. Claude Code: the registered
 agent `panel-<persona>` (it already holds the panel ESSENCE, the persona and the PROTOCOL, and reads
