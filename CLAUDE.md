@@ -59,20 +59,34 @@ Keep phases short. Each phase should be completable in one agent turn. Long phas
 
 ## Authoring an agent
 
-Agent definitions live in `.claude/agents/<agent-name>.md`:
+Agent sources live with their owner: lab roles in `lab/roles/<role>/` (ESSENCE.md + PROTOCOL.md),
+panel personas in `lab/roles/review-panel/personas/`, research agents in
+`.agents/skills/<skill>/agents/<name>.md` with this frontmatter:
 
 ```yaml
 ---
 name: agent-name
 description: One sentence on the agent's role and when it's invoked.
-model: claude-opus-4-7        # or claude-sonnet-4-6
-tools: [WebSearch, Read, ...]
+model: inherit        # inherit (frontier session model) | sonnet | haiku — aliases, never pinned ids
+tools: "Read, Grep, ..."
+maxTurns: 40
 ---
 ```
 
 Body: role definition, responsibilities, output contract, what this agent may and may not do.
 
+Then run `python scripts/gen_agents.py`. It renders every source into `.claude/agents/<name>.md`
+(registered subagents, so `model` and `tools` take effect) and updates the plugin manifest. Never
+edit `.claude/agents/` by hand; `tests/lab/test_structure.py` fails on stale output. Model routing
+for lab roles lives in the generator's `LAB_ROLE_CONFIG`.
+
 **Key constraint:** the agent that generates a claim must not be the agent that verifies it. Generation and verification roles must be separate agent files.
+
+## Enforced rules (hooks)
+
+`.claude/settings.json` runs `hooks/lab_guard.py` before every Write/Edit/Read/Grep/Glob/Bash. It
+blocks edits to frozen or tool-written lab files and reads of `scorer/heldout/` during a run, and
+asks before any post-freeze edit to the spec. Put any new "must never" rule there, not in prose.
 
 ---
 
@@ -111,8 +125,6 @@ to write into `recent.md` and other permanent vault files. Do not write to ai-os
 
 Artifact schemas (Research Question Card, Project Charter, Paper Card, Evidence Record,
 Experiment Passport, Claim Ledger, Review Panel Report) are defined in `artifacts/` in this repo.
-
-Artifact schemas (Research Question Card, Project Charter, Paper Card, Evidence Record, Experiment Passport, Claim Ledger, Review Panel Report) are defined in `artifacts/` in this repo.
 
 ---
 

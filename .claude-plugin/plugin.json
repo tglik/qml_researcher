@@ -1,0 +1,58 @@
+{
+  "name": "qml-researcher",
+  "displayName": "QML Researcher",
+  "version": "0.2.0",
+  "description": "QML research workflows and the QML Lab: pre-registered experiments with a frozen scorer, an adversarial review panel and an independent audit.",
+  "author": {
+    "name": "Tsahi Glik"
+  },
+  "repository": "https://github.com/tglik/qml_researcher",
+  "keywords": [
+    "quantum",
+    "qml",
+    "research",
+    "lab"
+  ],
+  "skills": [
+    "./.agents/skills/"
+  ],
+  "agents": [
+    "./.claude/agents/algorithm-analyst.md",
+    "./.claude/agents/business-rater.md",
+    "./.claude/agents/card-writer.md",
+    "./.claude/agents/claim-extractor.md",
+    "./.claude/agents/classical-competitor-champion.md",
+    "./.claude/agents/consensus-researcher.md",
+    "./.claude/agents/devils-advocate-scientist.md",
+    "./.claude/agents/entity-extractor.md",
+    "./.claude/agents/evidence-auditor.md",
+    "./.claude/agents/experiment-designer.md",
+    "./.claude/agents/hypothesis-synthesizer.md",
+    "./.claude/agents/implementer.md",
+    "./.claude/agents/index-updater.md",
+    "./.claude/agents/lab-archivist.md",
+    "./.claude/agents/lab-director.md",
+    "./.claude/agents/literature-scout.md",
+    "./.claude/agents/opportunity-writer.md",
+    "./.claude/agents/panel-baseline-champion.md",
+    "./.claude/agents/panel-dequantization-theorist.md",
+    "./.claude/agents/panel-hardware-realist.md",
+    "./.claude/agents/panel-mathematical-critic.md",
+    "./.claude/agents/panel-methodologist.md",
+    "./.claude/agents/panel-value-translator.md",
+    "./.claude/agents/paper-analyst.md",
+    "./.claude/agents/problem-mapper.md",
+    "./.claude/agents/quantum-domain-analyst.md",
+    "./.claude/agents/regression-checker.md",
+    "./.claude/agents/research-scientist.md",
+    "./.claude/agents/review-synthesizer.md",
+    "./.claude/agents/scoping-interviewer.md",
+    "./.claude/agents/screen-analyst.md",
+    "./.claude/agents/skill-evaluator.md",
+    "./.claude/agents/source-classifier.md",
+    "./.claude/agents/synthesis-writer.md",
+    "./.claude/agents/variant-generator.md",
+    "./.claude/agents/verdict-auditor.md",
+    "./.claude/agents/verdict-writer.md"
+  ]
+}

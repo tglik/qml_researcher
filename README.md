@@ -27,7 +27,7 @@ This plugin automates the labor and enforces the rigor.
 Skills are `SKILL.md` files — YAML frontmatter + markdown workflow steps. Claude loads them at runtime and executes them with its standard tools. There is no framework, no separate runtime, no new infrastructure to maintain.
 
 ```
-/deep-research "does neutral-atom reservoir computing beat classical reservoir on time-series?"
+/qml-deep-research "does neutral-atom reservoir computing beat classical reservoir on time-series?"
 ```
 
 Claude reads the skill, runs the 7-phase workflow (scope → literature → domain classification → synthesis → devil's advocate → evidence audit → final report), writes the output artifact to `artifacts/`, and commits it.
@@ -59,59 +59,22 @@ The third repo, `qml_experiments`, was retired on 2026-09-30 and its contents co
 
 ## Skill catalog
 
-### Research workflows
-*Automate multi-hour tasks that currently require sustained manual effort.*
+Every skill below exists in `.agents/skills/`. Earlier versions of this README listed planned
+skills (`/qml-skeptic`, `/journal-club`, `/claim-audit`, …) that were never built; they were
+removed so that no agent follows an instruction to a skill that is not there.
 
-| Skill | What it does | Output artifact |
-|-------|-------------|-----------------|
+### Research and paper tools
+
+| Skill | What it does | Output |
+|-------|-------------|--------|
 | `/qml-deep-research` | 7-phase literature-to-report: scope → search → domain classification → synthesis → devil's advocate → evidence audit → final report | `research/<topic>_<date>/` |
-| `/project-intake` | Converts a vague idea into a Research Question Card + charter decision (approve / read more / reject) | `research_question_card.md` |
-| `/literature-review` | Systematic search across arXiv/Semantic Scholar/OpenAlex, paper cards, citation chain analysis, gap map | `literature_matrix.md`, `paper_cards/` |
-| `/experiment-design` | Defines minimal decisive experiment, kill criteria, ablations, QML reproducibility fields | `experiment_passport.md` |
-| `/claim-promotion` | Evidence-gated promotion of a claim through statuses: speculative → plausible → observed → supported → strong | `claim_ledger.md` update |
-| `/weekly-review` | Per-project status: current question, evidence, strongest counterargument, claim ledger, continue/pivot/kill | `weekly_review_<date>.md` |
-| `/portfolio-review` | Monthly: promote, pause, pivot, kill, or convert each active project | `portfolio_review_<date>.md` |
-| `/experiment-postmortem` | Structured debrief after a failed or ambiguous experiment | `postmortem_<date>.md` |
-
-### Paper & evidence tools
-*Replace hours of manual reading with structured extraction.*
-
-| Skill | What it does | Output artifact |
-|-------|-------------|-----------------|
-| `/paper-card` | Extracts structured knowledge from a paper: problem, main claim, method, evidence, baselines, assumptions, limitations, follow-up actions, and belief-update questions | `paper_card_<id>.md` |
-| `/journal-club` | Multi-role structured analysis: literature scout summarizes, quantum theorist audits assumptions, classical skeptic audits baselines, hardware reviewer audits realism, director decides roadmap impact | `journal_club_<date>.md` |
-| `/literature-monitor` | Scans new arXiv/Semantic Scholar papers on a topic, flags by relevance to active research questions | `literature_digest_<date>.md` |
-| `/citation-verify` | Verifies every citation in an artifact against primary sources — no fabricated DOIs, PMIDs, or author names | verification report inline |
-
-### QML domain reviewers
-*Second set of eyes — specialized critics that run independently from the researcher.*
-
-| Skill | What it does |
-|-------|-------------|
-| `/qml-skeptic` | Devil's advocate: attacks the quantum advantage claim from every angle — toy baseline, state-prep cost, dequantization, hardware gap, business relevance |
-| `/classical-baseline-check` | Identifies the strongest classical alternatives for the task and checks whether the comparison is fair (strong, tuned baselines — not MLPs vs quantum kernels) |
-| `/hardware-realism` | Assesses NISQ feasibility on neutral-atom hardware (Q-Factor): qubits, depth, topology, noise, connectivity, shot count, wall-clock cost |
-| `/claim-audit` | Screens a QML claim against all 5 criteria: dequantization risk, geometric difference, trainability/simulability trilemma, hardware fit, strong classical baseline |
-| `/quantum-assumption-audit` | Identifies hidden assumptions: QRAM, oracle construction, block-encoding cost, state preparation, readout/sample complexity |
-
-### Brainstorming & consulting
-*On-demand research partner for thinking through ideas, preparing meetings, and making decisions.*
-
-| Skill | What it does |
-|-------|-------------|
-| `/research-question` | Sharpens a vague idea into a testable hypothesis: what would support it, what would falsify it, minimal next action |
-| `/idea-ranking` | Ranks a set of QML ideas against startup-relevant criteria: near-term feasibility, classical-baseline gap, hardware fit, business defensibility, team fit |
-| `/meeting-prep` | Synthesizes open questions, claim ledger status, and recent evidence into meeting-ready talking points |
-| `/brainstorm-qml-angles` | Given a classical ML problem, surfaces candidate QML primitives that might apply — with explicit failure-mode flags for each |
-
-### Integrity & reproducibility
-*Enforce the same standards as a strong peer-reviewed lab.*
-
-| Skill | What it does |
-|-------|-------------|
-| `/integrity-check` | Verifies citations, claim-to-evidence alignment, figure/table provenance, and that wording matches claim strength |
-| `/reproducibility-audit` | Checks QML reproducibility fields: code commit, seeds, dataset version, backend, circuit family, qubit count, depth, shots, noise model, optimizer, hyperparameters |
-| `/negative-result` | Structures a failed experiment as a durable artifact: what failed, hypothesis status, what was learned, what should not be retried |
+| `/qml-paper-review` | Deep critical review of one QML paper: claim extraction, five-criteria screen, consensus search, verdict | review folder + card |
+| `/fetch-arxiv` | Fetch any arXiv paper by id, URL or title | source text |
+| `/extract-artifacts` | Promote a Layer 1 source (review, research run) into cards in the `qml_artifacts` vault | cards, indexes |
+| `/qml-daily-scout` | Scan new arXiv papers against the active directions; triage cards | `triage/`, `triage_log.jsonl` |
+| `/synthesize-hypotheses` | Cross-paper claim clusters scored into hypothesis candidates | hypothesis cards |
+| `/qml-primitive-transfer` | Map a quantum primitive onto ML workloads and rate business value | opportunity report |
+| `/test-skills` | LLM-graded score cards per skill against committed baselines (see also `evals/`) | `tests/reports/` |
 
 ### QML Lab — from candidate direction to audited verdict
 *The experiment half of the researcher. Design: [`docs/lab/`](docs/lab/01_high_level_plan.md) ·
@@ -124,15 +87,34 @@ into `ESSENCE.md` (how it thinks — for scientific review) and a protocol (how 
 | `/qml-intake` | Algorithm path (Adi's Stage 0 analysis) or use-case path → `HYPOTHESIS.md` with numbered falsifiable hypotheses; one question per turn until 5/5 |
 | `/qml-screen` | Prior-work lookup, then paper screen G0–G3 + seven rules + five QML criteria → PASS / PASS-NARROWED / KILLED-ON-PAPER / ASK-HUMAN; engages the exclusion ledger by mechanism |
 | `/qml-prereg` | Pre-registration (phases P1–P5, arms incl. the classical twin, locked thresholds, gray zones, both verdict sentences) → freeze into `PREREG.lock.json` |
-| `/qml-review-panel` | Five adversarial personas, pass 1 on the proposal, pass 2 on raw results before any verdict |
+| `/qml-review-panel` | Six adversarial personas, pass 1 on the proposal, pass 2 on raw results before any verdict |
 | `/qml-run` | One frozen phase: provenance for every number, gates computed from the lock, guard + lock checks |
 | `/qml-verdict` · `/qml-audit` | Verdict against frozen gates; independent fresh-context audit (lock diff, recomputation, reproduction, N1–N5) |
 | `/qml-variants` · `/qml-promote` | Variant mining + pivot (paper/IP) · promotion PR: ledger entry, verdict entity, hypothesis status, criteria proposals |
 
-Human checkpoints CP1 screen · CP2 freeze · CP3 phase · CP4 verdict · CP5 promotion start as
-`HUMAN_APPROVE` and step down only on measured agreement (`config/lab_autonomy.json`). Deterministic
-tools: `python -m lab.tools.<lock|state|autonomy|gates|guard|provenance|splits|ledger|validate|check_sizes>`
+Human checkpoints (`config/lab_autonomy.json`): people sign the **spec and the frozen scorer** at
+CP2, and the verdict (CP4) and promotion (CP5). CP3 (phase gate) passes on the verifier when the
+lock holds a frozen scorer and every gate was computed (`lab.tools.autonomy cp3-check`). CP1 is
+signed in a weekly batch (`lab.tools.autonomy sign-batch`). Deterministic tools:
+`python -m lab.tools.<lock|scorer|state|autonomy|gates|guard|provenance|splits|ledger|validate|check_sizes>`
 (stdlib only; tests: `python -m unittest discover -s tests/lab`).
+
+### Harness rules that are enforced, not requested
+
+- **Frozen scorer.** The implementer never writes the code that grades its method: `scorer/` is
+  written before CP2, hashed into the lock and run by `lab.tools.gates` in its own process.
+- **PreToolUse guard hook** (`hooks/lab_guard.py`, wired in `.claude/settings.json` and the plugin's
+  `hooks/hooks.json`): blocks edits to frozen or tool-written files and reads of
+  `scorer/heldout/` during a run; asks a person before any post-freeze edit to the spec.
+- **Registered subagents** (`.claude/agents/`, generated by `scripts/gen_agents.py` from
+  `lab/roles/` and each skill's `agents/`): each role runs with its own model, tools and turn limit.
+- **Workflows** (`workflows/`, Claude Code dynamic workflows): `/qml-researcher:review-panel` runs
+  the six personas in parallel and computes the panel verdict in code, so no agent can soften a
+  BLOCKING issue; `/qml-researcher:rank-ideas` ranks candidates by a pairwise tournament (each
+  pair judged in both orders, Bradley-Terry fit by `lab.tools.tournament`, replayable against
+  known outcomes with `tournament replay`).
+- **Plugin evals** (`evals/`, `claude plugin eval . --trust-plugin`): skill routing, intake
+  behaviour and the guard hook, each against a no-plugin baseline. See `evals/README.md`.
 
 ### Experiments bridge
 *Closed/legacy experiments in the vault — see [Two-repo layout](#two-repo-layout) below. Live lab programs go through `/qml-lab`.*
@@ -145,17 +127,12 @@ tools: `python -m lab.tools.<lock|state|autonomy|gates|guard|provenance|splits|l
 
 ## Agent roles
 
-Skills invoke specialized agents for different parts of the work. Each agent has a defined responsibility and output contract — the generator and the reviewer are never the same agent.
-
-| Agent | Responsibility |
-|-------|---------------|
-| `research-scientist` | Orchestrates workflow execution, maintains project state |
-| `literature-scout` | Searches and screens papers; builds paper cards and literature matrix |
-| `evidence-auditor` | Verifies citations from tool results only — never from memory; extracts quote spans |
-| `devils-advocate-scientist` | Attacks claims, assumptions, and baselines; forces decisive tests |
-| `quantum-domain-analyst` | Audits quantum assumptions; NISQ/FT classification; resource accounting |
-| `quantum-experiment-planner` | Designs minimal decisive experiments; defines kill criteria and ablations |
-| `synthesis-writer` | Writes only from promoted claims; preserves uncertainty and limitations |
+The generator and the reviewer are never the same agent. Agent sources live with their owner:
+lab roles in `lab/roles/<role>/` (ESSENCE + PROTOCOL), panel personas in
+`lab/roles/review-panel/personas/`, research agents in `.agents/skills/<skill>/agents/`.
+`python scripts/gen_agents.py` renders all of them into `.claude/agents/` with model routing
+(judgment roles inherit the session's frontier model; extraction and formatting run on Haiku;
+search and graders on Sonnet). Edit the sources, never the generated files.
 
 ---
 
@@ -215,6 +192,18 @@ The plugin encodes 17 known failure modes in QML research claims:
 ---
 
 ## Installation
+
+### As a Claude Code plugin
+
+```
+/plugin marketplace add tglik/qml_researcher
+/plugin install qml-researcher@qml-researcher-local
+```
+
+The plugin carries the skills, the generated agents and the guard hook. Skills still expect to
+run from a clone of this repository (they read `criteria/`, `config/` and `lab/` by relative path),
+so the clone below remains the normal way to work; the plugin is what `claude plugin validate`
+and `claude plugin eval` (see `evals/`) test.
 
 ### macOS / Linux (Claude Code + Codex + Hermes + Gemini)
 
@@ -277,7 +266,7 @@ The local Claude install is v0. The longer-term target is SageLab — a hosted a
 
 1. **Research Wiki** — git-backed viewer/editor for all artifacts, research runs, agent definitions, and skill cards. Partners can read, search, and edit. Edits to skills/agents require a validation pass before activation.
 
-2. **Research Chat Runner** — a web interface for running workflows. Partners select a workflow (`/deep-research`, `/paper-card`, `/claim-audit`), see structured progress events (not raw terminal output), provide approvals at human-input gates, and receive artifact links on completion.
+2. **Research Chat Runner** — a web interface for running workflows. Partners select a workflow (`/qml-deep-research`, `/qml-paper-review`, `/qml-lab`), see structured progress events (not raw terminal output), provide approvals at human-input gates, and receive artifact links on completion.
 
 Human judgment remains central — the agent runs the research labor, humans decide on direction, claim strength, and startup relevance.
 

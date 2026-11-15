@@ -4,7 +4,6 @@ description: "Audits every claim in the QML research draft against its cited sou
 tools: "Read, Glob, Grep, WebSearch, WebFetch, Write, Edit"
 model: opus
 maxTurns: 10
-memory: true
 ---
 
 ## Soul

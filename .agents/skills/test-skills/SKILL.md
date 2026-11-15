@@ -241,7 +241,7 @@ For each expected artifact:
 Read: .agents/skills/test-skills/agents/skill-evaluator.md → EVAL_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="skill-evaluator",   # Claude Code: registered agent .claude/agents/skill-evaluator.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Evaluate {test_id} quality axes",
   prompt="""
 {EVAL_DEF}
@@ -315,7 +315,7 @@ If file not found: `baseline_status = NO_BASELINE` — record as informational, 
 Read: .agents/skills/test-skills/agents/regression-checker.md → RC_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="regression-checker",   # Claude Code: registered agent .claude/agents/regression-checker.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Check regressions for {N} test cases",
   prompt="""
 {RC_DEF}

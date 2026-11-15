@@ -23,7 +23,8 @@ input:
   - "new <thread> --owner <person> --path algorithm|use-case [--from <card or report path>]"
   - "status [<thread>]"
   - "next <thread>"
-  - "sign <thread> <CP> --by <person> --decision approve|reject --outcome unchanged|minor|material --minutes N [--note …]"
+  - "sign <thread> <CP> --by <person> --decision approve|reject --outcome unchanged|minor|material --minutes N [--note …] [--no-scorer <reason>]"
+  - "sign-batch CP1 --threads <t1,t2,…> --decisions approve|reject,… --by <person> --outcome … --minutes N"
   - "escalate <thread> <type> --to <person>"
   - "amend <thread>"
   - "stats"
@@ -66,7 +67,9 @@ All state changes go through `python -m lab.tools.state` / `lab.tools.autonomy` 
 ## `status [<thread>]`
 Without a thread: for every `{EXPERIMENTS}/*/*/STATE.json` print one row —
 `thread · owner · stage · phase · open checkpoint (mode, waiting for) · budget % · open escalations`.
-Then **Waiting for you** grouped by person (eligible signers of each open checkpoint = people ≠ author),
+Then **Waiting for you** grouped by person (eligible signers of each open checkpoint = people ≠ author;
+open CP1s are listed together as **this week's CP1 batch**, with the one `sign-batch` command that
+closes them),
 then the **Backlog** (C12 I5): `{OUTPUT_ROOT}/cards/hypotheses/*.md` with `strategic_value: actionable`
 that no `HYPOTHESIS.md` names as `source_hypothesis_card`.
 With a thread: `python -m lab.tools.state show {THREAD}` plus the path of the open brief.
@@ -88,10 +91,15 @@ With a thread: `python -m lab.tools.state show {THREAD}` plus the path of the op
    ≤ 1 page, recommendation, 3–5 evidence bullets with links, cost to continue, options, the exact
    reply command, and **the human's job at this checkpoint**:
    CP1 "is this the right question; did G0 engage honestly?" · CP2 "right question, real operating
-   point, defensible thresholds?" · CP3 "does the gate decision follow the pre-registered policy?" ·
+   point, defensible thresholds, and does the frozen scorer compute exactly those gates?" ·
+   CP3 "does the gate decision follow the pre-registered policy?" (normally answered by the verifier) ·
    CP4 "does the verdict mean what it says; is any exclusion the narrowest one?" · CP5 "merge?".
 2. `python -m lab.tools.state open-cp {THREAD} <CP> --author <agent:role|person:name> --brief briefs/…`
-3. Mode from STATE: `HUMAN_APPROVE` → stop and tell the user who can sign.
+3. Mode from STATE: `HUMAN_APPROVE` → stop and tell the user who can sign (CP1: add it to the
+   weekly batch; do not chase a signer per program).
+   `AGENT` at CP3 → `python -m lab.tools.autonomy auto {THREAD} CP3 --decision <recommendation>`. It
+   passes only if `cp3-check` is clean (frozen scorer, lock and guard clean, every gate computed);
+   otherwise the tool switches this CP3 to HUMAN_APPROVE, prints why, and you stop and tell the user.
    `HUMAN_SPOTCHECK` or `AGENT` → `python -m lab.tools.autonomy auto {THREAD} <CP> --decision <the
    brief's recommendation> --note "<one line>"` and continue. A sampled spot-check (rate in config;
    always for GO/CONDITIONAL-GO verdicts) shows under "Waiting for you" with a 48 h deadline; the
@@ -102,6 +110,9 @@ With a thread: `python -m lab.tools.state show {THREAD}` plus the path of the op
 ## `sign …`
 `python -m lab.tools.autonomy sign {THREAD} <CP> --by <p> --decision … --outcome … --minutes N --note …`
 (enforces signer ≠ author, logs the autonomy row, restores supervision on a material finding).
+CP2 approval is refused when the thread has no `scorer/` unless the signer passes
+`--no-scorer "<reason>"` (that program's CP3s then always need a person).
+`sign-batch CP1 …` signs several programs' CP1 in one sitting: one log row each, minutes split evenly.
 Then: CP2 approve → `python -m lab.tools.lock freeze {THREAD} --by <p>` and
 `python -m lab.tools.state set {THREAD} --by /qml-lab --stage run --frozen-question "<the one-sentence claim in HYPOTHESIS.md (legacy: its Claim section)>"`.
 Other approvals → advance `stage` per the stage machine. Reject → stage stays; the brief's

@@ -58,7 +58,9 @@ def _force_remove(func, path, _):
     func(path)
 
 
-class LabToolsTest(unittest.TestCase):
+class LabFixture(unittest.TestCase):
+    """Throwaway vault + config; no tests of its own, so other test files can reuse it."""
+
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         self.vault = self.tmp / "vault"
@@ -88,6 +90,7 @@ class LabToolsTest(unittest.TestCase):
     def new_program(self):
         self.run_tool("lab.tools.state", "new", str(self.thread), "--owner", "meir", "--path", "use-case")
 
+class LabToolsTest(LabFixture):
     # --- state -----------------------------------------------------------------------------
     def test_state_new_validate_and_preconditions(self):
         self.new_program()
@@ -300,6 +303,11 @@ topics: [graph-ml]
         (self.thread / "SCREEN.md").write_text("---\nverdict: PASS\n---\n# Screen\n\n## Verdict\nPASS\n", encoding="utf-8")
         out = self.run_tool("lab.tools.validate", "artifact", str(self.thread / "SCREEN.md"), ok=False)
         self.assertIn("missing section '## G0", out)
+
+    def test_validating_a_missing_file_fails(self):
+        self.new_program()
+        out = self.run_tool("lab.tools.validate", "artifact", str(self.thread / "PANEL_1.md"), ok=False)
+        self.assertIn("does not exist", out)
 
     def test_artifact_template_follows_format_version(self):
         self.new_program()

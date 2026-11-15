@@ -139,6 +139,9 @@ def main() -> int:
     ap.add_argument("path")
     a = ap.parse_args()
     p = resolve_thread(a.path) if a.kind == "thread" else Path(a.path)
+    if not p.exists():
+        # A gate that validates a file nobody wrote must fail, not print "valid".
+        raise LabError(f"{p}: does not exist")
     if a.kind in ("state", "lock", "provenance"):
         errs = validate_json(p, a.kind)
     elif a.kind == "entity":

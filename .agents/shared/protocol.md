@@ -20,23 +20,18 @@ Python control flow over many tool calls or nontrivial data processing.
 ## Agent Spawn Convention
 
 All skills own their agents. Agent definitions live in `agents/` alongside each skill's
-`SKILL.md`. **Never** use named `subagent_type` values — always `subagent_type="claude"` and
-inject the agent definition into the prompt.
+`SKILL.md` (lab roles: `lab/roles/<role>/`). Those files are the only source anyone edits.
 
-Before every Agent call:
-
-1. Read the agent file: `Read .agents/skills/<skill>/agents/<agent-name>.md → AGENT_DEF`
-2. Spawn with the definition injected first, then a `---` separator, then the task:
+**Claude Code** — spawn the registered agent. `scripts/gen_agents.py` renders every source into
+`.claude/agents/<name>.md` with its `model`, `tools` and `maxTurns`, so routing and tool limits
+take effect (a pasted definition runs on the session model with every tool). Pass only the task
+and the context the agent cannot read itself:
 
 ```
 Agent(
-  subagent_type="claude",
+  subagent_type="<agent-name>",          # e.g. card-writer, experiment-designer, panel-methodologist
   description="<short description>",
   prompt="""
-{AGENT_DEF}
-
----
-
 ## QML Domain Criteria  ← inject when skill uses QML_DOMAIN
 {QML_DOMAIN}
 
@@ -49,14 +44,18 @@ Agent(
 )
 ```
 
-**Why this pattern:** agents are self-contained within their skill; changing an agent here
-cannot affect any other skill.
+After editing any agent source, run `python scripts/gen_agents.py` (tests fail on stale output).
 
-When running in **Claude Code**: use the `Agent` tool with `subagent_type="claude"`.  
-When running in **Codex CLI**: `codex exec "<prompt>" -s read-only`.  
-When running in **Hermes**: use Hermes parallel task spawning.  
-When running in **Gemini CLI**: use Gemini's agent mode.  
-Task prompts are agent-agnostic — inject them into whichever spawn mechanism your runtime supports.
+**Hermes, Codex, Gemini** — no registered agents: read the source and paste it first.
+
+1. `Read .agents/skills/<skill>/agents/<agent-name>.md → AGENT_DEF`
+2. Spawn with `{AGENT_DEF}`, a `---` separator, then the same prompt as above, through the
+   runtime's mechanism: Codex `codex exec "<prompt>" -s read-only`; Hermes parallel task spawning;
+   Gemini agent mode. Skill examples written as `subagent_type="<name>"` mean exactly this in
+   those runtimes.
+
+**Why this pattern:** agents stay self-contained within their skill (changing one cannot affect
+another skill), and Claude Code still gets per-agent models and tools.
 
 ---
 

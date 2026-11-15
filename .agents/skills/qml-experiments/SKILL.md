@@ -22,13 +22,13 @@ triggers:
 # Narrowed (docs/lab C12): live lab programs are driven through /qml-lab (status, next, sign);
 # this skill is the helper for closed/legacy experiments and supplies /qml-run's rerun mechanics.
 
-input:
+input: |
   - subcommand: status (default, no slug) | show <slug> | run-status <slug> | rerun <slug> [--yes] | edit <slug> "<change description>"
   - slug: an experiment identifier — program slug (e.g. `recsys-classical-twin`), folder
     name (`04_recsys_classical_twin`), `thread/NN_name` (`spectral_graph/04_recsys_classical_twin`),
     or a plain number if unambiguous across threads. See Slug Resolution.
 
-output:
+output: |
   - status: one table across every experiment — question, verdict, results freshness,
     uncommitted-changes flag, and whether VERDICT.md has entity frontmatter
   - show: the experiment's README.md + VERDICT.md content (frontmatter included) and its git log

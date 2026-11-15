@@ -16,13 +16,13 @@ triggers:
   - ingest this paper review
   - update the knowledge base
 
-input:
+input: |
   - source_file_path: path to the Layer 1 source file (mutually exclusive with --dir)
   - --dir: path to a skill workspace directory; auto-discovers and processes all extractable files in dependency order
   - --dry-run: print what would be written without writing (optional)
   - --force: re-extract even if source is already marked extracted: true (optional)
 
-output:
+output: |
   - cards/paper-cards/ — new and updated paper cards (claims/evidence inline in card body)
   - cards/persons/ — new and updated person cards
   - cards/organizations/ — new and updated organization cards
@@ -56,14 +56,14 @@ Any Layer 1 source file → entity cards extracted → knowledge base updated �
 ## Agent Spawn Convention
 
 All agent definitions live in `agents/` alongside this SKILL.md.
-Always `subagent_type="claude"`. Inject the agent definition and all required context into the prompt.
+In Claude Code, spawn the registered agent of the same name (`subagent_type="<agent-name>"`, generated into `.claude/agents/` by `scripts/gen_agents.py`) and pass only the task and context; its model and tools come from the agent file. In Hermes/Codex, use `subagent_type="claude"` and inject the agent definition into the prompt.
 
 ```
 [Orchestrator]
 Read: .claude/skills/extract-artifacts/agents/<agent-name>.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="<agent-name>",   # Claude Code: registered agent .claude/agents/<agent-name>.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="<short description>",
   prompt="""
 {AGENT_DEF}
@@ -270,7 +270,7 @@ Place this file in the workspace directory. The `source_date` applies to all fil
 Read: .claude/skills/extract-artifacts/agents/source-classifier.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="source-classifier",   # Claude Code: registered agent .claude/agents/source-classifier.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Parse source file and extract all raw entities",
   prompt="""
 {AGENT_DEF}
@@ -317,7 +317,7 @@ Note: claim_card_schema and evidence_card_schema are retired. Claims and evidenc
 Read: .agents/skills/extract-artifacts/agents/entity-extractor.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="entity-extractor",   # Claude Code: registered agent .claude/agents/entity-extractor.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Generate canonical card content for all extracted entities",
   prompt="""
 {AGENT_DEF}
@@ -369,7 +369,7 @@ Update `state.json`: `"phase": "phase-2-complete"`.
 Read: .claude/skills/extract-artifacts/agents/card-writer.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="card-writer",   # Claude Code: registered agent .claude/agents/card-writer.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Write or merge entity cards into the artifact repo",
   prompt="""
 {AGENT_DEF}
@@ -410,7 +410,7 @@ Update `state.json`: `"phase": "phase-3-complete"`.
 Read: .claude/skills/extract-artifacts/agents/index-updater.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="index-updater",   # Claude Code: registered agent .claude/agents/index-updater.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Update knowledge base indexes and mark source as extracted",
   prompt="""
 {AGENT_DEF}

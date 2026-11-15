@@ -51,8 +51,10 @@ Spawn `implementer` (or, when Meir fills the slot, work with him under the same 
 ```
 Task: execute phase <Pk> of {THREAD} per experiments/E<k>_*.md (legacy threads: PROPOSAL.md §5)
 and your PROTOCOL. Record every material
-number with python -m lab.tools.provenance record. Write <Pk_dir>/results/measured.json keyed by
-lock id. Then python -m lab.tools.gates {THREAD} <Pk>, then PHASE_REPORT.md from the template.
+number with python -m lab.tools.provenance record. Write raw outputs in the format scorer/README.md
+fixes; do not compute gate numbers yourself. Then python -m lab.tools.gates {THREAD} <Pk> (it runs
+the frozen scorer and writes measured.json and gates.md), then PHASE_REPORT.md from the template.
+Legacy threads without a scorer: write <Pk_dir>/results/measured.json keyed by lock id first.
 ```
 Budget: after each major step `python -m lab.tools.state spend {THREAD} --phase <Pk> cpu_h=…`; a
 `budget_2x` error ⇒ stop and `/qml-lab escalate {thread} budget_2x --to adi`.
@@ -72,8 +74,9 @@ python -m lab.tools.check_sizes
 A guard failure is never "fixed" by the implementer — it goes to `/qml-lab escalate … unplanned_failure`.
 
 ## Phase 5 — Hand to CP3
-`/qml-lab` opens **CP3** (author `agent:implementer` or `person:<name>`) with the gate table and
-the proposal: PROCEED (all key hypotheses confirmed) · STOP-PREREGISTERED (a locked stop rule
+`python -m lab.tools.autonomy cp3-check {THREAD}` says whether the verifier alone can pass CP3
+(frozen scorer, lock and guard clean, every gate computed). `/qml-lab` opens **CP3** (author
+`agent:implementer` or `person:<name>`) with the gate table and the proposal: PROCEED (all key hypotheses confirmed) · STOP-PREREGISTERED (a locked stop rule
 fired — stage `panel2`) · ESCALATE (anything else).
 
 ## Completion message

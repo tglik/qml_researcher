@@ -4,7 +4,6 @@ description: "Writes the final QML research report from audited evidence — con
 tools: "Read, Glob, Grep, Write, Edit"
 model: opus
 maxTurns: 8
-memory: true
 ---
 
 ## Soul

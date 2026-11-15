@@ -42,14 +42,14 @@ Paper cards → claim patterns detected → Pareto filter applied → Research H
 ## Agent Spawn Convention
 
 All agent definitions live in `agents/` alongside this SKILL.md.
-Always `subagent_type="claude"`. Inject the agent definition and all required context into the prompt.
+In Claude Code, spawn the registered agent of the same name (`subagent_type="<agent-name>"`, generated into `.claude/agents/` by `scripts/gen_agents.py`) and pass only the task and context; its model and tools come from the agent file. In Hermes/Codex, use `subagent_type="claude"` and inject the agent definition into the prompt.
 
 ```
 [Orchestrator]
 Read: .agents/skills/synthesize-hypotheses/agents/<agent-name>.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="<agent-name>",   # Claude Code: registered agent .claude/agents/<agent-name>.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="<short description>",
   prompt="""
 {AGENT_DEF}
@@ -145,7 +145,7 @@ Write `{OUTPUT_ROOT}/extractions/synthesis_{date}/00_paper_inventory.md`:
 Read: .agents/skills/synthesize-hypotheses/agents/hypothesis-synthesizer.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="hypothesis-synthesizer",   # Claude Code: registered agent .claude/agents/hypothesis-synthesizer.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Detect cross-paper claim clusters and score hypothesis candidates",
   prompt="""
 {AGENT_DEF}

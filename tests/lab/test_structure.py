@@ -74,3 +74,50 @@ class StructureTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HarnessWiringTest(unittest.TestCase):
+    """The registered agents, plugin manifest and guard hook stay in step with their sources."""
+
+    def test_generated_agents_are_current(self):
+        import subprocess, sys
+        r = subprocess.run([sys.executable, str(REPO / "scripts" / "gen_agents.py"), "--check"],
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_every_skill_frontmatter_is_valid_yaml(self):
+        # An invalid frontmatter loads the skill with no description, so it never auto-routes
+        # (found by the routes-paper-review eval: six skills were invisible to routing).
+        try:
+            import yaml
+        except ImportError:
+            self.skipTest("pyyaml not installed")
+        for skill in sorted((REPO / ".agents" / "skills").glob("*/SKILL.md")):
+            text = skill.read_text(encoding="utf-8")
+            m = re.match(r"^---\n(.*?)\n---", text, re.S)
+            self.assertIsNotNone(m, f"{skill}: no frontmatter")
+            try:
+                meta = yaml.safe_load(m.group(1))
+            except yaml.YAMLError as e:
+                self.fail(f"{skill.relative_to(REPO)}: invalid YAML frontmatter: {e}")
+            self.assertIsInstance(meta.get("description"), str, skill)
+            self.assertEqual(meta.get("name"), skill.parent.name, skill)
+
+    def test_every_lab_role_and_persona_is_registered(self):
+        agents = {p.stem for p in (REPO / ".claude" / "agents").glob("*.md")}
+        for role in (REPO / "lab" / "roles").iterdir():
+            if role.is_dir() and role.name != "review-panel":
+                self.assertIn(role.name, agents)
+        for persona in (REPO / "lab" / "roles" / "review-panel" / "personas").glob("*.md"):
+            self.assertIn(f"panel-{persona.stem}", agents)
+
+    def test_no_pinned_model_ids_in_agents(self):
+        for p in (REPO / ".claude" / "agents").glob("*.md"):
+            m = re.search(r"^model:\s*(\S+)", p.read_text(encoding="utf-8"), re.M)
+            self.assertIn(m.group(1), {"inherit", "opus", "sonnet", "haiku"}, p.name)
+
+    def test_guard_hook_is_wired_in_settings_and_plugin(self):
+        import json
+        for f in (REPO / ".claude" / "settings.json", REPO / "hooks" / "hooks.json"):
+            hooks = json.loads(f.read_text(encoding="utf-8"))["hooks"]["PreToolUse"]
+            self.assertTrue(any("lab_guard.py" in h["command"] for e in hooks for h in e["hooks"]), f)

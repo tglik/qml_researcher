@@ -18,7 +18,7 @@ input:
   - "<thread>"
 
 output:
-  - "{THREAD}/PROPOSAL.md, experiments/E<k>_<slug>.md, 00_operating_point.md, frozen_definitions.md"
+  - "{THREAD}/PROPOSAL.md, experiments/E<k>_<slug>.md, 00_operating_point.md, frozen_definitions.md, scorer/"
   - "{THREAD}/PANEL_1.md (via /qml-review-panel)"
   - "PREREG.lock.json is written only at freeze (CP2 approval), by lab.tools.lock"
 
@@ -42,13 +42,15 @@ Spawn `experiment-designer`:
 ```
 Task: write the pre-registration for {THREAD} — PROPOSAL.md (the plan, from the template), one
 experiments/E<k>_<slug>.md per phase (from EXPERIMENT.md), 00_operating_point.md,
-frozen_definitions.md. Every threshold, split, stop rule, gray zone and the baseline adequacy bar
+frozen_definitions.md, and scorer/ (the frozen scorer: score.py + heldout/ + README.md, from
+artifacts/lab/templates/scorer/). Every threshold, split, stop rule, gray zone and the baseline adequacy bar
 goes in a ```lock block (id, kind, text; op/value where the gate is numeric): a phase's blocks in
 its experiment doc, program-level blocks in the plan. Leave the classical rows of the models
 tables to the classical competitor champion. Write for a reader outside the field (lab/STYLE.md).
 ```
 **Gate:** `python -m lab.tools.lock show {THREAD}` lists ≥ 1 block of each kind threshold, split,
-stop_rule; every planned phase has a stop_rule and a gray_zone.
+stop_rule; every planned phase has a stop_rule and a gray_zone; `python -m lab.tools.scorer hash
+{THREAD}` lists score.py, and every numeric gate id appears in `scorer/README.md`.
 
 ## Phase 2 — Classical baselines
 Spawn `classical-competitor-champion` in **spec mode** on the draft. **Gate:** classical rows of the models tables filled;
@@ -69,7 +71,10 @@ panel_blocked_twice --to adi`.
 ## Phase 5 — Hand to CP2
 `python -m lab.tools.validate thread {THREAD}` must pass (plan and every experiment doc). `/qml-lab` opens **CP2**
 (author `agent:experiment-designer`; the brief lists the gates in plain language, the operating
-point, each panel BLOCKING issue and its resolution, and "physics-bearing thresholds: yes/no").
+point, each panel BLOCKING issue and its resolution, "physics-bearing thresholds: yes/no", and
+the scorer: its hash from `lab.tools.scorer hash`, what each gate reads, and where the held-out
+labels live). The signer approves the spec **and** the scorer: after the freeze, run checkpoints
+are checked against them by machine.
 On approval `/qml-lab sign` freezes the lock and sets stage `run`.
 
 ## Completion message
