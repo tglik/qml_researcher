@@ -133,6 +133,54 @@ class BacklogTest(unittest.TestCase):
         (self.vault / "indexes/backlog/candidates.jsonl").write_text(rows)
         self.assertIn("bad potential profile", self.bl("validate", ok=False))
 
+    def explainer(self, cid, bet="mechanism-probe", qc="weak", status="draft", extra="", body_extra=""):
+        h = self.bl("explain-hash", cid)
+        heads = ["In plain words", "Background", "The real motivation", "Why quantum, honestly",
+                 "Why it might fail", "What we learn either way", "Cost and feasibility", "Sources"]
+        filler = " ".join(["plain words explain the idea for a reader outside the field"] * 8)
+        body = "".join(f"## {h_}\n\n{filler}\n\n" for h_ in heads) + body_extra
+        meta = (f"---\nid: {cid}\nkind: candidate\nbet: {bet}\nquantum_case: {qc}\n"
+                f"tagline: Does the detuning kernel see graphs differently from WL?\nconfidence: speculative\n"
+                f"claim_hash: {h}\nsources: [arXiv:2509.09421]\nwritten_by: explainer\nwritten_at: 2026-11-18\n"
+                f"check_status: {status}\n{extra}---\n")
+        d = self.vault / "indexes/backlog/explainers/candidates"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / f"{cid}.md").write_text(meta + body, encoding="utf-8")
+
+    def test_explainer_lint_status_and_candor_caps(self):
+        self.direction()
+        cid = self.add()
+        self.bl("score", cid, "--gate", "novelty", "--score", "0.8")
+        self.bl("score", cid, "--gate", "screen", "--verdict", "pass")
+        self.bl("score", cid, "--gate", "value", "--rung", "1", "--p", "0.3")
+        self.assertIn(f"missing  candidate {cid}", self.bl("explain-status"))
+        self.explainer(cid, bet="kill-test", qc="weak")
+        self.assertIn("backlog OK", self.bl("validate", "--explainers"))
+        self.assertIn(f"draft    candidate {cid}", self.bl("explain-status"))
+        # a kill test may not claim a plausible quantum case, nor use advantage words
+        self.explainer(cid, bet="kill-test", qc="plausible")
+        self.assertIn("quantum_case plausible on a kill-test", self.bl("validate", "--explainers", ok=False))
+        self.explainer(cid, bet="kill-test", qc="none", body_extra="It outperforms every kernel.\n")
+        self.assertIn("advantage wording", self.bl("validate", "--explainers", ok=False))
+        # the bet must follow the rung; strong needs mechanism=2 and window=2
+        self.explainer(cid, bet="advantage-bet", qc="strong")
+        out = self.bl("validate", "--explainers", ok=False)
+        self.assertIn("value rung says kill-test", out)
+        self.assertIn("quantum_case strong needs", out)
+        # signing needs a separate checker; cited ids must be listed
+        self.explainer(cid, bet="kill-test", qc="none", status="signed",
+                       body_extra="See arXiv:2011.01938 for the measure.\n")
+        out = self.bl("validate", "--explainers", ok=False)
+        self.assertIn("signed without a separate checker", out)
+        self.assertIn("2011.01938", out)
+        self.explainer(cid, bet="kill-test", qc="none", status="signed",
+                       extra="checked_by: explanation-checker\nchecked_at: 2026-11-18\n")
+        self.assertIn("backlog OK", self.bl("validate", "--explainers"))
+        self.assertNotIn(cid, self.bl("explain-status"))
+        # changing the gate record makes the page stale
+        self.bl("score", cid, "--gate", "value", "--rung", "1", "--p", "0.2", "--note", "re-scored")
+        self.assertIn(f"stale    candidate {cid}", self.bl("explain-status"))
+
     def test_close_direction_records_history(self):
         self.direction()
         out = self.bl("direction", "set", "rydberg-graph-kernels", "--status", "closed",

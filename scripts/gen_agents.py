@@ -48,6 +48,8 @@ LAB_ROLE_CONFIG = {
     "verdict-auditor":               {"model": "inherit", "tools": NO_WEB, "maxTurns": 80},
     "variant-generator":             {"model": "inherit", "tools": ALL_TOOLS, "maxTurns": 60},
     "lab-archivist":                 {"model": "haiku", "tools": NO_WEB, "maxTurns": 40},
+    "explainer":                     {"model": "inherit", "tools": ALL_TOOLS, "maxTurns": 80},
+    "explanation-checker":           {"model": "inherit", "tools": ALL_TOOLS, "maxTurns": 80},
     "review-panel":                  None,     # rendered per persona below
 }
 PANEL_CONFIG = {"model": "inherit", "tools": "Read, Write, Glob, Grep, WebSearch, WebFetch", "maxTurns": 40}

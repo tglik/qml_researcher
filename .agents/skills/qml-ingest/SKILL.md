@@ -6,7 +6,8 @@ description: |
   `lab.tools.backlog add` and the gate has not finished: novelty check against the lab and arXiv
   (lab archivist, novelty mode), then a batch triage screen G0–G3, the seven-question advantage-potential
   profile and a value estimate (screen analyst, triage mode). Records results with `lab.tools.backlog score`; never picks or opens a
-  program. Run nightly, or after a source adds a batch.
+  program. Then writes a plain-language explainer page per candidate and changed direction (explainer),
+  signed by a separate explanation checker. Run nightly, or after a source adds a batch.
 
 triggers:
   - qml-ingest
@@ -20,6 +21,7 @@ input:
 output:
   - "{OUTPUT_ROOT}/indexes/backlog/candidates.jsonl — gate fields filled"
   - "{OUTPUT_ROOT}/indexes/backlog/gate_runs/<date>.md — one line per candidate with evidence"
+  - "{OUTPUT_ROOT}/indexes/backlog/explainers/{candidates,directions}/<id>.md — explainer pages"
 
 allowed-tools: [Agent, Read, Write, Glob, Grep, Bash, WebFetch]
 ---
@@ -27,7 +29,7 @@ allowed-tools: [Agent, Read, Write, Glob, Grep, Bash, WebFetch]
 # /qml-ingest
 
 **Essence:** [ESSENCE.md](ESSENCE.md) · **Roles:** `lab/roles/lab-archivist/` (novelty mode),
-`lab/roles/screen-analyst/` (triage mode) · **Design:** `docs/lab/components/C13_candidate_backlog.md`
+`lab/roles/screen-analyst/` (triage mode), `lab/roles/explainer/`, `lab/roles/explanation-checker/` · **Design:** `docs/lab/components/C13_candidate_backlog.md`
 
 Sources (A build on a base, B open problems, C combination grid, D programmatic search, E scout /
 algorithms / variants) only `add`. This skill only `score`s. The portfolio decision (pick, open,
@@ -72,7 +74,29 @@ decision or the rank.
 Write `{OUTPUT_ROOT}/indexes/backlog/gate_runs/<YYYY-MM-DD>.md`: one line per candidate —
 id · novelty (score, evidence) · screen (verdict, deciding gate) · potential (total of 14, evidence
 class, weakest answer) · value (rung × p). Then print
-`python -m lab.tools.backlog queue`. Commit both backlog files and the log in `{OUTPUT_ROOT}`.
+`python -m lab.tools.backlog queue`. Commit both backlog files and the log in `{OUTPUT_ROOT}` (phase 4 commits the explainers after it).
+
+## Phase 4 — Explain
+The team reads the backlog as a site (overview plus one page per direction and candidate,
+rendered by `scripts/render_backlog.py` in qml_artifacts). Each page comes from an explainer file.
+```
+python -m lab.tools.backlog explain-status     # missing / stale / draft pages: the work list
+```
+Batch the listed entities: at most 6 candidates of one direction, or at most 3 directions, per spawn.
+Killed candidates get a page too; their "Why quantum, honestly" is the kill reason.
+1. Spawn a **fresh** `explainer` per batch:
+   ```
+   Task: write explainer pages for <ids> per your PROTOCOL. OUTPUT_ROOT=<path>.
+   ```
+2. Then a **fresh** `explanation-checker` per batch (never the instance that wrote it):
+   ```
+   Task: check and sign or return the explainer pages for <ids> per your PROTOCOL. OUTPUT_ROOT=<path>.
+   ```
+3. Returned pages: one more explainer round with the checker's notes, then one more check. A page
+   still failing stays `draft` and the site shows it with a draft badge.
+
+**Gate:** `python -m lab.tools.backlog validate --explainers` passes, and `explain-status` lists no
+missing or stale entity. Drafts are allowed and reported.
 
 ## Failure modes to check
 - Novelty scored from memory instead of a retrieved paper: every novelty note names what was
@@ -83,3 +107,6 @@ class, weakest answer) · value (rung × p). Then print
   until `backlog report` shows that it predicts outcomes.
 - Treating the low-confidence rules as settled: a triage kill cites the rule *and* the evidence or
   precedent that decides it.
+- An explainer that sells: a kill test or mechanism probe written up as a quantum-advantage story.
+  The page states the real motivation; "a publishable negative" is a complete answer.
+- A quantum case stronger than the potential profile allows (the lint enforces the caps).

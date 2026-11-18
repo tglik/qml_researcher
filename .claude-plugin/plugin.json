@@ -27,6 +27,8 @@
     "./.claude/agents/entity-extractor.md",
     "./.claude/agents/evidence-auditor.md",
     "./.claude/agents/experiment-designer.md",
+    "./.claude/agents/explainer.md",
+    "./.claude/agents/explanation-checker.md",
     "./.claude/agents/hypothesis-synthesizer.md",
     "./.claude/agents/implementer.md",
     "./.claude/agents/index-updater.md",
