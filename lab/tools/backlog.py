@@ -20,7 +20,9 @@ Every source writes candidates with `add`; nothing else writes the files. The in
     python -m lab.tools.backlog link   CID --thread PATH
     python -m lab.tools.backlog outcome CID --furthest STAGE [--rung N]
     python -m lab.tools.backlog report                       # yield per source, region, direction
-    python -m lab.tools.backlog validate
+    python -m lab.tools.backlog validate [--explainers]   # --explainers also lints explainer pages
+    python -m lab.tools.backlog explain-hash ID            # claim hash an explainer records
+    python -m lab.tools.backlog explain-status             # missing / stale / draft / signed explainers
 """
 from __future__ import annotations
 
@@ -412,6 +414,171 @@ def validate() -> list[str]:
     return errs
 
 
+# --- explainers (C13 phase 4) --------------------------------------------------------------
+# One markdown page per direction and candidate under indexes/backlog/explainers/. Written by the
+# explainer role, signed by the explanation-checker. The renderer in qml_artifacts lays them out;
+# keep its claim_hash and bet rules in step with these.
+BETS = {1: "kill-test", 2: "quantum-inspired", 3: "mechanism-probe", 4: "advantage-bet",
+        5: "resource-estimate", 6: "advantage-bet"}
+BET_NAMES = set(BETS.values()) | {"unscreened", "mixed"}
+QUANTUM_CASE = ("none", "weak", "plausible", "strong")
+CHECK_STATUS = ("draft", "signed")
+CONFIDENCE = ("speculative", "plausible", "observed")
+CAND_HEADINGS = ["In plain words", "Background", "The real motivation", "Why quantum, honestly",
+                 "Why it might fail", "What we learn either way", "Cost and feasibility", "Sources"]
+DIR_HEADINGS = ["In plain words", "Background", "The real motivation", "Why quantum, honestly",
+                "The case against", "If it works", "Why now", "What closes it", "Sources"]
+WORDS = {"candidate": (450, 1100), "direction": (800, 1700)}
+ADVANTAGE_WORDS = re.compile(r"\b(outperform\w*|beats? classical|exponential speed-?up\w*|superior|revolutionary)\b", re.I)
+HYPE_WORDS = re.compile(r"\b(breakthrough|unprecedented|game[- ]chang\w*)\b", re.I)
+ARXIV_RE = re.compile(r"arXiv:\s?(\d{4}\.\d{4,5})")
+
+
+def explainer_dir() -> Path:
+    return root() / "explainers"
+
+
+def expected_bet(c: dict) -> str:
+    rung = ((c.get("gate") or {}).get("value") or {}).get("rung")
+    return BETS.get(rung, "unscreened")
+
+
+def claim_hash(entity: dict, kind: str) -> str:
+    """Hash of what an explainer explains; a change makes the page stale."""
+    if kind == "direction":
+        parts = [entity.get(k) or "" for k in ("title", "thesis", "close_criteria", "status")]
+    else:
+        g = entity.get("gate") or {}
+        parts = [entity.get("title") or "", entity.get("claim") or ""] + \
+                [(g.get(k) or {}).get("note") or "" for k in ("screen", "value", "potential")]
+    return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()[:12]
+
+
+def parse_explainer(text: str) -> tuple[dict, str]:
+    """Flat front matter (`key: value`, lists as `[a, b]`) and the body."""
+    if not text.startswith("---\n"):
+        raise LabError("no front matter")
+    end = text.find("\n---\n", 4)
+    if end < 0:
+        raise LabError("unterminated front matter")
+    meta = {}
+    for line in text[4:end].splitlines():
+        if not line.strip():
+            continue
+        k, sep, v = line.partition(":")
+        if not sep:
+            raise LabError(f"bad front matter line {line!r}")
+        v = v.strip()
+        if v.startswith("[") and v.endswith("]"):
+            v = [x.strip() for x in v[1:-1].split(",") if x.strip()]
+        meta[k.strip()] = v
+    return meta, text[end + 5:]
+
+
+def explainer_path(kind: str, eid: str) -> Path:
+    return explainer_dir() / ("directions" if kind == "direction" else "candidates") / f"{eid}.md"
+
+
+def lint_explainer(path: Path, entity: dict, kind: str) -> list[str]:
+    name = f"{kind} {entity['id']}"
+    try:
+        meta, body = parse_explainer(path.read_text(encoding="utf-8"))
+    except LabError as e:
+        return [f"{name}: explainer {e}"]
+    errs = []
+    if meta.get("id") != entity["id"] or meta.get("kind") != kind:
+        errs.append(f"{name}: explainer id/kind mismatch")
+    bet, qc = meta.get("bet"), meta.get("quantum_case")
+    if bet not in BET_NAMES:
+        errs.append(f"{name}: bad bet {bet!r}")
+    if qc not in QUANTUM_CASE:
+        errs.append(f"{name}: bad quantum_case {qc!r}")
+    if meta.get("check_status") not in CHECK_STATUS:
+        errs.append(f"{name}: bad check_status")
+    if meta.get("check_status") == "signed" and meta.get("checked_by") in (None, "", meta.get("written_by")):
+        errs.append(f"{name}: signed without a separate checker")
+    if meta.get("confidence") not in CONFIDENCE:
+        errs.append(f"{name}: bad confidence")
+    tag = meta.get("tagline") or ""
+    if not tag or len(tag) > 140:
+        errs.append(f"{name}: tagline missing or over 140 characters")
+    if kind == "candidate":
+        want = expected_bet(entity)
+        if bet != want:
+            errs.append(f"{name}: bet {bet} but value rung says {want}")
+        pot = ((entity.get("gate") or {}).get("potential") or {}).get("answers") or {}
+        if bet in ("kill-test", "quantum-inspired") and qc in ("plausible", "strong"):
+            errs.append(f"{name}: quantum_case {qc} on a {bet}")
+        if qc == "strong" and not (bet in ("advantage-bet", "resource-estimate")
+                                   and pot.get("mechanism") == 2 and pot.get("window") == 2):
+            errs.append(f"{name}: quantum_case strong needs an advantage bet with mechanism=2 and window=2")
+        if qc == "plausible" and pot and pot.get("mechanism", 0) < 1:
+            errs.append(f"{name}: quantum_case plausible with mechanism=0")
+    heads = re.findall(r"^## (.+?)\s*$", body, re.M)
+    want_heads = DIR_HEADINGS if kind == "direction" else CAND_HEADINGS
+    if heads != want_heads:
+        errs.append(f"{name}: headings {heads} != {want_heads}")
+    n = len(re.findall(r"\b\w[\w'-]*\b", body))
+    lo, hi = WORDS[kind]
+    if not lo <= n <= hi:
+        errs.append(f"{name}: {n} words, want {lo}-{hi}")
+    if qc not in ("plausible", "strong") and ADVANTAGE_WORDS.search(body):
+        errs.append(f"{name}: advantage wording {ADVANTAGE_WORDS.search(body).group(0)!r} with quantum_case {qc}")
+    if HYPE_WORDS.search(body):
+        errs.append(f"{name}: hype word {HYPE_WORDS.search(body).group(0)!r}")
+    srcs = {s.replace("arXiv:", "").strip() for s in meta.get("sources") or [] if isinstance(s, str)}
+    missing = sorted(set(ARXIV_RE.findall(body)) - srcs)
+    if missing:
+        errs.append(f"{name}: arXiv ids cited but not in sources: {missing}")
+    return errs
+
+
+def explainer_state(entity: dict, kind: str) -> str:
+    p = explainer_path(kind, entity["id"])
+    if not p.exists():
+        return "missing"
+    try:
+        meta, _ = parse_explainer(p.read_text(encoding="utf-8"))
+    except LabError:
+        return "broken"
+    if meta.get("claim_hash") != claim_hash(entity, kind):
+        return "stale"
+    return meta.get("check_status") or "draft"
+
+
+def validate_explainers() -> list[str]:
+    errs = []
+    for kind, ents in (("direction", load_directions()), ("candidate", load_candidates())):
+        for e in ents:
+            p = explainer_path(kind, e["id"])
+            if p.exists():
+                errs += lint_explainer(p, e, kind)
+    known = {("directions", d["id"]) for d in load_directions()} | {("candidates", c["id"]) for c in load_candidates()}
+    for p in sorted(explainer_dir().glob("*/*.md")) if explainer_dir().exists() else []:
+        if (p.parent.name, p.stem) not in known:
+            errs.append(f"orphan explainer {p.parent.name}/{p.name}")
+    return errs
+
+
+def cmd_explain_hash(a) -> None:
+    ds = {d["id"]: d for d in load_directions()}
+    if a.id in ds:
+        print(claim_hash(ds[a.id], "direction"))
+    else:
+        print(claim_hash(get(load_candidates(), a.id), "candidate"))
+
+
+def cmd_explain_status(a) -> None:
+    rows = [("direction", d) for d in load_directions()] + [("candidate", c) for c in load_candidates()]
+    tally = Counter()
+    for kind, e in rows:
+        st = explainer_state(e, kind)
+        tally[st] += 1
+        if st != "signed":
+            print(f"{st:<8} {kind:<9} {e['id']}  {e.get('title', '')}")
+    print("\n" + ", ".join(f"{k} {v}" for k, v in sorted(tally.items())))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -441,17 +608,18 @@ def main() -> int:
     l = sub.add_parser("link"); l.add_argument("cid"); l.add_argument("--thread", required=True)
     o = sub.add_parser("outcome"); o.add_argument("cid"); o.add_argument("--furthest", required=True)
     o.add_argument("--rung", type=int)
-    sub.add_parser("report"); sub.add_parser("validate")
+    sub.add_parser("report"); v = sub.add_parser("validate"); v.add_argument("--explainers", action="store_true")
+    eh = sub.add_parser("explain-hash"); eh.add_argument("id"); sub.add_parser("explain-status")
     a = ap.parse_args()
     if a.cmd == "validate":
-        errs = validate()
+        errs = validate() + (validate_explainers() if a.explainers else [])
         if errs:
             raise LabError(f"{len(errs)} backlog problem(s):\n  " + "\n  ".join(errs))
         print(f"backlog OK — {len(load_directions())} directions, {len(load_candidates())} candidates")
         return 0
     {"direction": cmd_direction, "add": cmd_add, "score": cmd_score, "pending": cmd_pending,
      "queue": cmd_queue, "pick": cmd_pick, "link": cmd_link, "outcome": cmd_outcome,
-     "report": cmd_report}[a.cmd](a)
+     "report": cmd_report, "explain-hash": cmd_explain_hash, "explain-status": cmd_explain_status}[a.cmd](a)
     return 0
 
 
