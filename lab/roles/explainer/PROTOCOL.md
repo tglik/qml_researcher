@@ -76,7 +76,8 @@ Direction (800 to 1,700 words): `## In plain words`, `## Background`, `## The re
   the same data)". One analogy per page is plenty.
 - No notation beyond simple inline symbols; no LaTeX.
 - Banned unless quantum_case is plausible or strong: "outperforms", "beats classical",
-  "quantum advantage" used as a fact, "exponential speedup", "superior", "revolutionary". Words
+  "quantum advantage" used as a fact, "superior", "revolutionary". Naming a claimed speedup you are
+  testing ("the claimed exponential speedup") is fine; asserting one is not. Words
   like "breakthrough", "unprecedented", "game-changing" are banned everywhere.
 - Attribute results: "the authors report", "the gate found".
 

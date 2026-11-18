@@ -429,7 +429,8 @@ CAND_HEADINGS = ["In plain words", "Background", "The real motivation", "Why qua
 DIR_HEADINGS = ["In plain words", "Background", "The real motivation", "Why quantum, honestly",
                 "The case against", "If it works", "Why now", "What closes it", "Sources"]
 WORDS = {"candidate": (450, 1100), "direction": (800, 1700)}
-ADVANTAGE_WORDS = re.compile(r"\b(outperform\w*|beats? classical|exponential speed-?up\w*|superior|revolutionary)\b", re.I)
+# "exponential speedup" stays allowed: kill tests must name the speedup they try to dequantize.
+ADVANTAGE_WORDS = re.compile(r"\b(outperform\w*|beats? classical|superior|revolutionary)\b", re.I)
 HYPE_WORDS = re.compile(r"\b(breakthrough|unprecedented|game[- ]chang\w*)\b", re.I)
 ARXIV_RE = re.compile(r"arXiv:\s?(\d{4}\.\d{4,5})")
 
