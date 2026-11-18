@@ -45,6 +45,9 @@ variant" / "Variants not generated" with a reason); every row fills every column
 G0–G3 quick check and the cheapest kill test; the disclosure warning is present verbatim.
 
 ## Phase 3 — Route
+Add each ranked variant to the candidate backlog (source E), so it competes with every other idea:
+`python -m lab.tools.backlog add --source E --base "<thread>" --region <R> --title "…" --claim "<draft claim>"`
+(a duplicate refusal means it is already there).
 `python -m lab.tools.state set {THREAD} --by /qml-variants --stage promote`. If the recommendation
 is `ip-first`, add a line to the CP5 brief so the promotion PR is not merged publicly before a
 decision on filing.

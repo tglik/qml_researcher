@@ -1,7 +1,8 @@
 # Variant generator — protocol
 
 ## Invoked by
-`/qml-variants`, after CP4 (or after CP1 approved a KILLED-ON-PAPER screen).
+`/qml-variants`, after CP4 (or after CP1 approved a KILLED-ON-PAPER screen). `/qml-build-on`, in
+build-on mode (see the end of this file).
 
 ## Inputs
 `{THREAD}/VERDICT.md` + `AUDIT.md` (or `SCREEN.md` for a paper kill) · `HYPOTHESIS.md` ·
@@ -36,3 +37,19 @@ rate or screen its own variants beyond the step 4 quick check.
 
 ## Return
 Number of variants · recommendation · covered cases (for the ledger entry) · salvage list.
+
+## Build-on mode (`/qml-build-on`)
+Input: one base (paper card, hypothesis card, or a closed thread's VERDICT.md), the exclusion
+ledger, and the direction's thesis if one is given. No verdict is needed.
+1. **Read the base, not the card alone.** A stub card ("report-level extraction") ⇒ read the paper.
+   Write down the base's claim, its operating point, and its weakest point in one line each.
+2. **Propose ≤ 5 steps**, each one of: *stress-test* (stronger baseline, bigger size, noise, a
+   classical twin), *extend* (new task or data in the same mechanism), *combine* (with a second
+   base or primitive; name it), *generalize* (a family the base is one member of).
+3. For each: a one-sentence claim a number could contradict (≥ 8 words, names the baseline and the
+   operating point), its rung (1–6, `docs/lab/components/C13_candidate_backlog.md`), the deciding
+   experiment in ≤ 2 lines, and the region (classical-data | quantum-native | other).
+4. Drop a step that sits inside an exclusion-ledger entry or only renames the dataset.
+May not: score novelty or screen the steps (the ingest gate does that), or add them to the backlog
+(the skill does).
+Return: a table — kind · title · claim · rung · deciding experiment · region.

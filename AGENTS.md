@@ -87,6 +87,13 @@ All skills that evaluate a QML direction or claim screen against these 5 criteri
 
 **Any CRITICAL = SKIP immediately.**
 
+### Advantage-potential profile (soft, recorded at the ingest gate)
+
+Seven upfront questions on why an advantage should exist at all — named mechanism, middle-band
+structure, hard-but-solvable window, instance ensemble, classical work far above input size, small
+checkable output, tested classical baseline. Defined in `criteria/advantage_potential.md`; a working
+hypothesis from arXiv:2610.32595. Record them, never kill on them.
+
 ### Current strong directions (read unless criterion fails outright)
 - Neutral-atom graph kernels and Rydberg-native ML
 - Quantum reservoir computing on neutral-atom hardware
