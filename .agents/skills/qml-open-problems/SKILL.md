@@ -31,7 +31,9 @@ allowed-tools: [Read, Glob, Grep, Bash, WebFetch, WebSearch]
 Read, in order: the notes file given by `--from` (default: the team's `open_questions.md` in the
 vault, read-only); the Limitations, Open Questions and Follow-up Actions of every paper card that is
 not a stub (`grep -L "report-level extraction" {OUTPUT_ROOT}/cards/paper-cards/*.md`); the open
-questions of each hypothesis card. One row per question in the log, with its source.
+questions of each hypothesis card; and, for a review or compendium given by `--from`, its
+future-directions notes and the stated conditions for advantage (each unmet or untested condition
+is a question). One row per question in the log, with its source.
 **Gate:** every question has a source line.
 
 ## Phase 2 — Sharpen

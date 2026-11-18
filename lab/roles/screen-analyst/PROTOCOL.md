@@ -47,15 +47,22 @@ web · edit `HYPOTHESIS.md` · recommend "run it and see".
 ## Triage mode (`/qml-ingest`)
 A fast first pass over one-sentence candidates, not a replacement for the full screen.
 **Inputs:** the candidates in the task · `{OUTPUT_ROOT}/indexes/exclusion-ledger.md` ·
-`criteria/lab_method.md` · `criteria/qml_domain.md`. The rules there are working hypotheses from
+`criteria/lab_method.md` · `criteria/qml_domain.md` · `criteria/advantage_potential.md`. The rules there are working hypotheses from
 early work: a triage kill needs the rule *and* the precedent or argument that decides it here.
 **Steps, per candidate:**
 1. G0: name any ledger entry with the same mechanism.
 2. G1–G3 at one line each (🟢 / 🟠 / 🔴).
 3. Verdict: `killed` only on a 🔴 with its mechanism; `narrowed` with the smaller claim that survives;
    otherwise `pass`. When unsure, `pass`.
-4. Value: the publishable-steps rung the candidate aims at (1 sharp negative · 2 quantum-inspired
+4. Potential profile, per `criteria/advantage_potential.md`: the seven questions in order
+   (mechanism, band, window, ensemble, work, output, baseline), each 0 / 1 / 2, and the evidence
+   class (`none` · `heuristic` · `stage1` · `stage2`). One line naming the mechanism and the weakest
+   answer. For a candidate that claims no advantage itself (a negative result, a classical method),
+   rate the advantage claim it tests and say so. The profile is recorded, never a reason to kill.
+5. Value: the publishable-steps rung the candidate aims at (1 sharp negative · 2 quantum-inspired
    classical · 3 measured mechanism · 4 small-scale separation on quantum-native data · 5 crossover
-   estimate · 6 advantage) and a probability of landing it, with one line of reasoning.
+   estimate · 6 advantage) and a probability of landing it, with one line of reasoning that cites
+   the potential answer that moved the probability most.
 **May not:** write files, pick candidates, or rank across candidates.
-**Return per candidate:** id · verdict · deciding gates · note · rung · p · value note.
+**Return per candidate:** id · verdict · deciding gates · note · potential answers · evidence class ·
+potential note · rung · p · value note.

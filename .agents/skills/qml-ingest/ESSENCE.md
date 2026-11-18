@@ -10,11 +10,15 @@ and not already dead.
   written down so the step can be sharpened.
 - **Is it dead on paper?** Only a clear kill by a named rule stops an idea here. Anything that
   needs real thought goes through, marked for the full screen.
+- **Why should an advantage exist here at all?** Seven upfront questions: a named mechanism, structure
+  in the middle band, a known hard-but-solvable regime, instances that can be generated, classical
+  work far above the input size, a small checkable answer, and a classical baseline that has been
+  attacked. The answers are written down, not used to reject.
 - **Which step could it reach?** The rung on the publishable-steps ladder it aims at, and a rough
   chance of landing it.
 
 ## Success
-Every new candidate leaves the gate with three recorded checks, each with its evidence, and with a
+Every new candidate leaves the gate with four recorded checks, each with its evidence, and with a
 rank that a director can act on. The gate rejects only duplicates, exact prior work and clear
 kills; it never picks.
 
