@@ -19,6 +19,11 @@ fails on any difference not covered by an approved amendment. `diff` prints diff
     python -m lab.tools.lock verify  <thread>
     python -m lab.tools.lock diff    <thread>
     python -m lab.tools.lock amend   <thread> --touches ID[,ID] --reason "…" --phase P3 --by <person>
+
+The frozen scorer (`scorer/`, see lab.tools.scorer) is part of the lock: every file under it is
+hashed at freeze, `verify` fails on any change, and an amendment that changes it lists `scorer` in
+--touches. A lock frozen without a scorer records `"scorer": null`; such a program keeps CP3 under
+human approval (lab.tools.autonomy refuses to auto-pass it).
 """
 from __future__ import annotations
 
@@ -26,6 +31,7 @@ import argparse
 import re
 from pathlib import Path
 
+from . import scorer as scorer_mod
 from .common import (LabError, PHASES, PHASE_DIRS, git, main_wrapper, now, read_json,
                      resolve_thread, sha256_text, today, write_json)
 
@@ -99,7 +105,7 @@ def freeze(thread: Path, by: str) -> dict:
         raise LabError(f"cannot freeze: no lock block of kind {sorted(missing)}")
     lock = {"schema": "qml-lab/lock@1", "locked_at": now(), "locked_by": by,
             "git_commit": git(thread, "rev-parse", "HEAD"), "items": sorted(items, key=lambda i: i["id"]),
-            "root_sha256": _root(items), "amendments": []}
+            "root_sha256": _root(items), "scorer": scorer_mod.manifest(thread), "amendments": []}
     write_json(lock_path, lock)
     return lock
 
@@ -110,6 +116,15 @@ def _expected(lock: dict) -> dict[str, dict]:
     for a in lock.get("amendments", []):
         for it in a.get("new_items", []):
             cur[it["id"]] = it
+    return cur
+
+
+def expected_scorer(lock: dict) -> dict | None:
+    """The scorer manifest as it should read now: frozen, overridden by approved amendments in order."""
+    cur = lock.get("scorer")
+    for a in lock.get("amendments", []):
+        if "new_scorer" in a:
+            cur = a["new_scorer"]
     return cur
 
 
@@ -127,13 +142,16 @@ def diff(thread: Path) -> list[str]:
             out.append(f"ADDED    {i}  ({actual[i]['source']}: {actual[i]['text'][:100]})")
         elif actual[i]["sha256"] != expected[i]["sha256"]:
             out.append(f"CHANGED  {i}  ({actual[i]['source']})\n  locked: {expected[i]['text']}\n  now:    {actual[i]['text']}")
+    lock = read_json(lock_path)
+    if "scorer" in lock:          # locks frozen before the scorer existed carry no key: nothing to compare
+        out += scorer_mod.diff(expected_scorer(lock), thread)
     return out
 
 
 def verify(thread: Path) -> None:
     changes = diff(thread)
     if changes:
-        raise LabError("lock mismatch — thresholds/splits/stop rules changed without an approved amendment:\n"
+        raise LabError("lock mismatch — thresholds/splits/stop rules/scorer changed without an approved amendment:\n"
                        + "\n".join(changes))
 
 
@@ -156,22 +174,27 @@ def amend(thread: Path, touches: list[str], reason: str, phase: str, by: str) ->
         raise LabError(f"amendment refused: {phase} already has data (first provenance record {started}). "
                        "Amendments must precede data access for the phase they touch.")
     actual = parse_blocks(thread)
-    changed = {c.split()[1] for c in diff(thread)}
+    changes = diff(thread)
+    changed = {("scorer" if c.startswith("SCORER") else c.split()[1]) for c in changes}
     if not changed:
         raise LabError("nothing to amend — the lock blocks match the lock")
     if set(touches) != changed:
         raise LabError(f"--touches {sorted(touches)} does not match the changed ids {sorted(changed)}")
-    new_items = [actual[i] for i in touches if i in actual]
+    item_touches = [t for t in touches if t != "scorer"]
+    new_items = [actual[i] for i in item_touches if i in actual]
     n = len(lock["amendments"]) + 1
     expected = _expected(lock)
     for it in new_items:
         expected[it["id"]] = it
-    for i in touches:
+    for i in item_touches:
         if i not in actual:
             expected.pop(i, None)
-    lock["amendments"].append({"n": n, "date": today(), "at": now(), "touches": touches, "reason": reason,
-                               "precedes_data_access_for": phase, "approved_by": by,
-                               "new_items": new_items, "new_root_sha256": _root(list(expected.values()))})
+    entry = {"n": n, "date": today(), "at": now(), "touches": touches, "reason": reason,
+             "precedes_data_access_for": phase, "approved_by": by,
+             "new_items": new_items, "new_root_sha256": _root(list(expected.values()))}
+    if "scorer" in touches:
+        entry["new_scorer"] = scorer_mod.manifest(thread)
+    lock["amendments"].append(entry)
     write_json(lock_path, lock)
     return lock["amendments"][-1]
 
@@ -190,6 +213,11 @@ def main() -> int:
     if a.cmd == "freeze":
         lock = freeze(thread, a.by)
         print(f"frozen: {len(lock['items'])} items, root {lock['root_sha256'][:12]}")
+        if lock["scorer"] is None:
+            print("WARNING: no scorer/ — gates will read an implementer-written measured.json and CP3 "
+                  "stays HUMAN_APPROVE for this program (see lab.tools.scorer)")
+        else:
+            print(f"scorer frozen: {len(lock['scorer']['files'])} files, root {lock['scorer']['root_sha256'][:12]}")
     elif a.cmd == "verify":
         verify(thread)
         print("lock OK")

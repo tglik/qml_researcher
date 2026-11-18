@@ -4,7 +4,6 @@ description: "Synthesizes QML and quantum computing literature into structured d
 tools: "Read, Glob, Grep, WebSearch, WebFetch, Bash, Write, Edit"
 model: opus
 maxTurns: 16
-memory: true
 ---
 
 ## Soul

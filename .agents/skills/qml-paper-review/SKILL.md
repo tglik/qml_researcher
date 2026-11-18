@@ -29,12 +29,12 @@ triggers:
   - fact check this paper
   - should we trust this result
 
-input:
+input: |
   - arXiv ID (2401.12345), arXiv URL, local PDF path, or http/https URL (required)
   - Optional --fast: skip Phase 3 (consensus research); verdict from paper alone
   - Optional --claim "<text>": focus the review on one specific claim
 
-output:
+output: |
   - Review workspace: {output_root}/reviews/{slug}_{YYYY-MM-DD}/
     - 00_paper_content.md       — fetched full paper text
     - 01_claim_registry.md      — claims grouped by category (TOP/SUPPORT/GENERAL/MOTIVATIONAL)

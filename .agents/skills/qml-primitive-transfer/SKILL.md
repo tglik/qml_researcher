@@ -23,14 +23,14 @@ triggers:
   - quantum to ml bridge
   - what can we do with this solver
 
-input:
+input: |
   - Quantum primitive description (required) — name, native structure, hardware modality, regime.
     May be given as: (a) a plain prompt describing the primitive, or (b) a path to a
     /qml-deep-research or /qml-paper-review workspace — skill will extract the primitive from it.
   - Optional --no-business: skip Phase 2 (business rating); produce problem+workload map only.
   - Optional --from-report <path>: explicitly point to a prior research workspace to extract the primitive from.
 
-output:
+output: |
   - Transfer card workspace: {output_root}/sources/reports/primitives-analysis/{slug}_{YYYY-MM-DD}/
     - 00_primitive.md           — structured primitive profile
     - 01_equivalent_problems.md — equivalent NP-hard / combinatorial problem map
@@ -213,7 +213,7 @@ the same structure.
 Read: {AGENTS_DIR}/problem-mapper.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="problem-mapper",   # Claude Code: registered agent .claude/agents/problem-mapper.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Map {primitive_name} to equivalent problems and ML workloads",
   prompt="""
 {AGENT_DEF}
@@ -272,7 +272,7 @@ not every workload can be HIGH.
 Read: {AGENTS_DIR}/business-rater.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="business-rater",   # Claude Code: registered agent .claude/agents/business-rater.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Rate business value of ML workloads derived from {primitive_name}",
   prompt="""
 {AGENT_DEF}
@@ -321,7 +321,7 @@ Next: Phase 3 — write Primitive Transfer Card.
 Read: {AGENTS_DIR}/opportunity-writer.md → AGENT_DEF
 
 Agent(
-  subagent_type="claude",
+  subagent_type="opportunity-writer",   # Claude Code: registered agent .claude/agents/opportunity-writer.md (prompt = task only); Hermes/Codex: "claude" + pasted AGENT_DEF
   description="Write Primitive Transfer Card for {primitive_name}",
   prompt="""
 {AGENT_DEF}

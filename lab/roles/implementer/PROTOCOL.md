@@ -12,8 +12,9 @@ assistance; the rules below bind either way.
 classical competitor champion) · `{OUTPUT_ROOT}/experiments/.venv`.
 
 ## Outputs (all under `{THREAD}/{phase}/`)
-`src/` (proposed-method and harness code) · `raw/` (per instance/seed/size, CSV/JSON/Parquet) ·
-`figures/` · `RUN_LOG.md` · `provenance.json` · `results/gates.md` (via `lab.tools.gates`) ·
+`src/` (proposed-method code) · `raw/` (per instance/seed/size, CSV/JSON/Parquet, in the format
+`scorer/README.md` fixes) · `figures/` · `RUN_LOG.md` · `provenance.json` · `results/gates.md` and
+`results/measured.json` (both written by `lab.tools.gates`, which runs the frozen scorer) ·
 `PHASE_REPORT.md` (from template) · appended `{THREAD}/env.md` and `{THREAD}/change_log.md`.
 
 ## Steps
@@ -26,13 +27,18 @@ classical competitor champion) · `{OUTPUT_ROOT}/experiments/.venv`.
 5. **Dry run** at the smallest size; record time and memory.
 6. **Full run.** Every material number recorded with `python -m lab.tools.provenance record …`.
    Deviations → `change_log.md`. Fallbacks only as pre-written.
-7. **Gates.** `python -m lab.tools.gates {THREAD} {phase}` writes `results/gates.md`.
+7. **Gates.** `python -m lab.tools.gates {THREAD} {phase}` runs the frozen scorer on `raw/`,
+   writes `results/measured.json` and `results/gates.md`, and records the gate numbers in
+   provenance. You never compute or write a gate number yourself. Legacy threads frozen without a
+   scorer: write `results/measured.json` keyed by lock id first (CP3 then stays human).
 8. **Phase report** from the template: every number with a provenance id; gate-decision proposal.
 9. **Close.** `python -m lab.tools.guard {THREAD}` (no protected file touched) and
    `python -m lab.tools.lock verify {THREAD}` must both pass.
 
 ## May not
 Write `PREREG.lock.json`, `PROPOSAL.md`, `experiments/*.md`, `frozen_definitions.md`, `VERDICT.md`, `AUDIT.md` ·
+write anything under `scorer/` or read `scorer/heldout/` · hand-write `results/measured.json` or
+`results/gates.md` (the PreToolUse hook `hooks/lab_guard.py` blocks these) ·
 put interpretation in `gates.md` · use the network during evaluation · spend beyond 2× the phase
 budget without escalation.
 

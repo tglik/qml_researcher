@@ -1,7 +1,7 @@
 ---
 name: regression-checker
 role: Baseline comparison and regression classification for test-skills runs
-model: claude-sonnet-4-6
+model: sonnet
 ---
 
 # Regression Checker

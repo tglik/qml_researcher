@@ -1,0 +1,14 @@
+{
+  "name": "qml-researcher-local",
+  "owner": {
+    "name": "Tsahi Glik"
+  },
+  "plugins": [
+    {
+      "name": "qml-researcher",
+      "source": "./",
+      "description": "QML research skills, lab roles, guard hook, evals"
+    }
+  ],
+  "description": "Local marketplace for the qml-researcher plugin"
+}

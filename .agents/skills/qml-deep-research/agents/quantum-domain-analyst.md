@@ -4,7 +4,6 @@ description: "Classifies QML and quantum computing literature claims by domain, 
 tools: "Read, Glob, Grep, WebSearch, WebFetch, Write, Edit"
 model: opus
 maxTurns: 10
-memory: true
 ---
 
 ## Soul

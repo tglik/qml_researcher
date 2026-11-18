@@ -4,7 +4,6 @@ description: "Stress-tests QML research conclusions by hunting for dequantizatio
 tools: "Read, Glob, Grep, WebSearch, WebFetch, Write, Edit"
 model: opus
 maxTurns: 8
-memory: true
 ---
 
 ## Soul
