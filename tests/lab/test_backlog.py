@@ -271,6 +271,19 @@ class BacklogTest(unittest.TestCase):
         self.assertEqual(rs[0]["status"], "accepted")
         self.assertIn("backlog OK", self.bl("validate"))
 
+    def test_summary_and_payoff_are_one_short_sentence(self):
+        self.direction()
+        out = self.bl("direction", "edit", "rydberg-graph-kernels", "--summary", "Too short.", "--reason", "x", ok=False)
+        self.assertIn("8-35 words", out)
+        out = self.bl("direction", "edit", "rydberg-graph-kernels", "--summary",
+                      "Measures what blockade features capture. Then it measures more things too.", "--reason", "x", ok=False)
+        self.assertIn("exactly one sentence", out)
+        self.bl("direction", "edit", "rydberg-graph-kernels", "--summary",
+                "Measures what neutral-atom graph features capture against a cheap classical twin.",
+                "--payoff", "A calibrated answer for the partnership, or a clean publishable negative.", "--reason", "table")
+        self.assertIn("backlog OK", self.bl("validate"))
+        self.assertNotIn("stale", self.bl("direction", "list"))
+
     def test_close_direction_records_history(self):
         self.direction()
         out = self.bl("direction", "set", "rydberg-graph-kernels", "--status", "closed",

@@ -24,7 +24,8 @@ Every source writes candidates with `add`; nothing else writes the files. The in
     python -m lab.tools.backlog order  [--direction ID]       # recommended start order inside a direction
     python -m lab.tools.backlog decide A B --status accepted|rejected --by WHO   # a person's call on a proposal
     python -m lab.tools.backlog move   CID --to ID --reason TEXT   # apply an accepted move or merge
-    python -m lab.tools.backlog direction edit ID [--title T] [--thesis TEXT] --reason TEXT
+    python -m lab.tools.backlog direction edit ID [--title T] [--thesis TEXT] [--summary S] [--payoff S] --reason TEXT
+                                    # summary: one sentence, what it is; payoff: one sentence, impact if it works
     python -m lab.tools.backlog add    --title T --claim TEXT --source A|B|C|D|E --base REF
                                        [--direction ID] [--region R] [--by WHO] [--force]
     python -m lab.tools.backlog score  CID --gate novelty|screen|value|potential ...
@@ -216,6 +217,18 @@ def rank_score(c: dict) -> float:
 
 
 # --- portfolio: direction score, independence, candidate order -----------------------------
+SENTENCE_WORDS = 35        # the table's two lines per direction: what it is, and what success buys
+
+
+def lint_sentence(name: str, text: str) -> None:
+    """One plain sentence for the overview row: --summary (what it is) or --payoff (impact if it works)."""
+    n = len(text.split())
+    if n < 8 or n > SENTENCE_WORDS:
+        raise LabError(f"--{name} must be one sentence of 8-{SENTENCE_WORDS} words (got {n})")
+    if len(re.findall(r"[.!?](\s|$)", text.strip())) != 1 or not text.strip().endswith((".", "!", "?")):
+        raise LabError(f"--{name} must be exactly one sentence")
+
+
 def direction_score(d: dict) -> float | None:
     a = d.get("assessment")
     return round(a["plausibility"] * a["impact"], 2) if a else None
@@ -369,13 +382,18 @@ def cmd_direction(a) -> None:
         d = next((x for x in ds if x["id"] == a.id), None)
         if not d:
             raise LabError(f"no direction {a.id}")
-        if not (a.title or a.thesis):
-            raise LabError("edit needs --title and/or --thesis")
-        changed = {k: v for k, v in (("title", a.title), ("thesis", a.thesis)) if v}
+        changed = {k: v for k, v in (("title", a.title), ("thesis", a.thesis), ("summary", a.summary),
+                                     ("payoff", a.payoff)) if v}
+        if not changed:
+            raise LabError("edit needs --title, --thesis, --summary or --payoff")
+        for k in ("summary", "payoff"):
+            if k in changed:
+                lint_sentence(k, changed[k])
         d.update(changed)
         d["history"].append({"at": now(), "status": d["status"], "reason": a.reason, "edited": sorted(changed)})
         save_directions(ds)
-        print(f"direction {a.id}: edited {', '.join(sorted(changed))} (its explainer is now stale)")
+        stale = {"title", "thesis"} & set(changed)
+        print(f"direction {a.id}: edited {', '.join(sorted(changed))}" + (" (its explainer is now stale)" if stale else ""))
     elif a.dcmd == "score":
         d = next((x for x in ds if x["id"] == a.id), None)
         if not d:
@@ -954,6 +972,7 @@ def main() -> int:
     dsc.add_argument("--impact-note", required=True); dsc.add_argument("--by")
     dsub.add_parser("rank")
     de = dsub.add_parser("edit"); de.add_argument("id"); de.add_argument("--title"); de.add_argument("--thesis")
+    de.add_argument("--summary"); de.add_argument("--payoff")
     de.add_argument("--reason", required=True)
     dc = sub.add_parser("decide"); dc.add_argument("a"); dc.add_argument("b")
     dc.add_argument("--status", required=True); dc.add_argument("--by", required=True)
