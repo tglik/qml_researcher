@@ -87,6 +87,21 @@ mechanism and looking for problems that fit it does better. Source C's grid mode
 mechanisms table as rows. The 68 candidates gated before this date have no potential profile;
 backfilling them is one triage pass.
 
+## Portfolio step (2026-11-20)
+The team funds one direction at a time, so directions are ranked, not only candidates.
+- **Direction score** = plausibility × impact (0–5), stored as `assessment` in `directions.json`
+  with a note for each factor (`backlog direction score`, `direction rank`).
+- **Independence:** directions should not need each other's results. `backlog independence` shows
+  mechanical signals (cross-direction prerequisites, misfiled candidates, shared bases); judged
+  relations with merge / move proposals go to `relations.json` (`backlog relate`). Proposals are
+  never applied by the tool.
+- **Start order:** `requires` edges between candidates (`backlog require`); `backlog order` sorts
+  each direction: prerequisites first, then the candidate others wait on, then rank.
+- The page (`scripts/render_backlog.py` in qml_artifacts) shows one table of ranked directions with
+  collapsible candidate rows in start order, and computes "fund first" as the top direction that
+  would survive the open proposals.
+First pass: `indexes/backlog/gate_runs/2026-11-20-portfolio.md` in qml_artifacts.
+
 ## Not built yet
 - Portfolio director role and its weekly checkpoint: designed after these candidates have run.
 - Semantic dedupe (embedding or LLM) if the word-set check keeps missing near-duplicates.

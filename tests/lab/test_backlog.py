@@ -181,6 +181,96 @@ class BacklogTest(unittest.TestCase):
         self.bl("score", cid, "--gate", "value", "--rung", "1", "--p", "0.2", "--note", "re-scored")
         self.assertIn(f"stale    candidate {cid}", self.bl("explain-status"))
 
+    def gated(self, title, claim, rung, p, direction="rydberg-graph-kernels"):
+        cid = self.bl("add", "--title", title, "--claim", claim, "--source", "A", "--base", "arXiv:2509.09421",
+                      "--direction", direction, "--force")
+        self.bl("score", cid, "--gate", "novelty", "--score", "0.5")
+        self.bl("score", cid, "--gate", "screen", "--verdict", "pass")
+        self.bl("score", cid, "--gate", "value", "--rung", str(rung), "--p", str(p))
+        return cid
+
+    def test_direction_score_needs_reasons_and_ranks_by_expected_impact(self):
+        self.direction()
+        self.bl("direction", "add", "--id", "kikuchi", "--title", "Planted inference", "--thesis", "x",
+                "--target-rung", "3", "--close-criteria", "Close if guiding-state enhancement vanishes on every non-Gaussian model")
+        note = "the core candidate is a coin flip against a tuned classical twin"
+        out = self.bl("direction", "score", "kikuchi", "--plausibility", "1.4", "--impact", "3", "--confidence", "low",
+                      "--plausibility-note", note + " c-20261105-001", "--impact-note", note, ok=False)
+        self.assertIn("plausibility must be in [0, 1]", out)
+        out = self.bl("direction", "score", "kikuchi", "--plausibility", "0.3", "--impact", "4", "--confidence", "low",
+                      "--plausibility-note", note, "--impact-note", note, ok=False)
+        self.assertIn("must cite its evidence", out)
+        self.bl("direction", "score", "kikuchi", "--plausibility", "0.3", "--impact", "4", "--confidence", "medium",
+                "--plausibility-note", note + " (arXiv:2610.32595)", "--impact-note", note)
+        self.bl("direction", "score", "rydberg-graph-kernels", "--plausibility", "0.7", "--impact", "1",
+                "--confidence", "high", "--plausibility-note", note + " experiments/search/rydberg", "--impact-note", note)
+        rank = self.bl("direction", "rank").splitlines()
+        self.assertIn("kikuchi", rank[0])           # 1.2 beats 0.7: likely-but-minor ranks below
+        self.assertIn("1.2", rank[0])
+        self.assertIn("backlog OK", self.bl("validate"))
+
+    def test_requires_sets_start_order_and_rejects_cycles(self):
+        self.direction()
+        twin = self.gated("Monte Carlo twin", "Glauber Monte Carlo matches blockade features within two points at sixteen nodes", 1, 0.3)
+        app = self.gated("Protein variant", "Blockade features beat WL subtree features on PROTEINS residue contact graphs", 3, 0.6)
+        other = self.gated("Shot cost", "One thousand shots keep blockade feature accuracy within three points at ten nodes", 3, 0.4)
+        self.assertIn("--why", self.bl("require", app, "--on", twin, ok=False))
+        self.bl("require", app, "--on", twin, "--why", "an applied variant is moot if the twin matches")
+        order = self.bl("order", "--direction", "rydberg-graph-kernels").splitlines()[1:]
+        ids = [next(w for w in line.split() if w.startswith("c-")) for line in order]
+        # the twin has a dependent, so it goes first despite the lowest rank; the variant waits for it
+        self.assertEqual(ids[0], twin)
+        self.assertLess(ids.index(twin), ids.index(app))
+        self.assertIn(other, ids)
+        out = self.bl("require", twin, "--on", app, "--why", "a deliberately circular requirement for this test", ok=False)
+        self.assertIn("cycle", out)
+        self.bl("require", app, "--on", twin, "--drop")
+        self.assertIn("backlog OK", self.bl("validate"))
+
+    def test_cross_direction_requires_need_a_recorded_relation(self):
+        self.direction()
+        self.bl("direction", "add", "--id", "dequant", "--title", "Kills", "--thesis", "x", "--target-rung", "1",
+                "--close-criteria", "Close after four kills in a row already refuted before we finished")
+        rff = self.gated("RFF twin", "Random Fourier features match the detuning kernel within two points on MUTAG", 1, 0.5,
+                         direction="dequant")
+        noise = self.gated("Noise", "Detuning kernel accuracy drops under three points at one percent SPAM noise", 3, 0.4)
+        self.bl("require", noise, "--on", rff, "--why", "if RFF matches the kernel the noisy version is moot")
+        self.assertIn("cross_requires", self.bl("independence"))
+        self.assertIn("no recorded relation", self.bl("validate", ok=False))
+        out = self.bl("relate", "dequant", "rydberg-graph-kernels", "--kind", "dependent", "--proposal", "keep",
+                      "--note", "the kill tests test the kernel this direction studies", ok=False)
+        self.assertIn("not separate directions", out)
+        self.bl("relate", "dequant", "rydberg-graph-kernels", "--kind", "dependent", "--proposal", "move",
+                "--move", f"{rff}:rydberg-graph-kernels", "--evidence", rff,
+                "--note", "the kill tests test the kernel this direction studies")
+        self.assertIn("dependent, move (proposed)", self.bl("independence"))
+        self.assertIn("backlog OK", self.bl("validate"))
+        rs = json.loads((self.vault / "indexes/backlog/relations.json").read_text())
+        self.assertEqual(rs[0]["moves"], [{"id": rff, "to": "rydberg-graph-kernels"}])
+
+    def test_accepted_relation_is_applied_with_move_and_recorded(self):
+        self.direction()
+        self.bl("direction", "add", "--id", "dequant", "--title", "Kills", "--thesis", "x", "--target-rung", "1",
+                "--close-criteria", "Close after four kills in a row already refuted before we finished")
+        rff = self.gated("RFF twin", "Random Fourier features match the detuning kernel within two points on MUTAG", 1, 0.5,
+                         direction="dequant")
+        self.bl("relate", "dequant", "rydberg-graph-kernels", "--kind", "dependent", "--proposal", "merge",
+                "--into", "rydberg-graph-kernels", "--note", "the kill tests test the kernel this direction studies")
+        self.assertIn("accepted or rejected", self.bl("decide", "dequant", "rydberg-graph-kernels",
+                                                      "--status", "maybe", "--by", "tsahi", ok=False))
+        self.bl("decide", "dequant", "rydberg-graph-kernels", "--status", "accepted", "--by", "tsahi")
+        self.bl("move", rff, "--to", "rydberg-graph-kernels", "--reason", "merge accepted by tsahi")
+        self.bl("direction", "set", "dequant", "--status", "closed", "--reason", "merged into rydberg-graph-kernels")
+        self.bl("direction", "edit", "rydberg-graph-kernels", "--title", "Rydberg kernels, kill first",
+                "--reason", "merged with dequant")
+        cs = [json.loads(l) for l in (self.vault / "indexes/backlog/candidates.jsonl").read_text().splitlines()]
+        row = next(c for c in cs if c["id"] == rff)
+        self.assertEqual(row["direction"], "rydberg-graph-kernels")
+        self.assertEqual(row["history"][-1]["moved"], {"from": "dequant", "to": "rydberg-graph-kernels"})
+        rs = json.loads((self.vault / "indexes/backlog/relations.json").read_text())
+        self.assertEqual(rs[0]["status"], "accepted")
+        self.assertIn("backlog OK", self.bl("validate"))
+
     def test_close_direction_records_history(self):
         self.direction()
         out = self.bl("direction", "set", "rydberg-graph-kernels", "--status", "closed",

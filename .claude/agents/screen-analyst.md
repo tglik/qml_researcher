@@ -131,3 +131,21 @@ early work: a triage kill needs the rule *and* the precedent or argument that de
 **May not:** write files, pick candidates, or rank across candidates.
 **Return per candidate:** id · verdict · deciding gates · note · potential answers · evidence class ·
 potential note · rung · p · value note.
+
+## Portfolio mode (`/qml-ingest` phase 5)
+Rank directions so a human can fund one at a time, and check that they are really separate.
+**Inputs:** `directions.json`, `candidates.jsonl` (gate records), the direction explainer pages,
+the output of `backlog independence`, the exclusion ledger.
+**Steps:**
+1. Per direction: plausibility (0–1), the chance its thesis holds at its target rung before its close
+   criteria fire, with a note that cites the candidates, papers or experiments that set it; impact
+   (1–5, the `IMPACT` scale) with a note; confidence low / medium / high (low when most candidates
+   are ungated). A kill-test direction's likely negative is impact 1–2, however plausible.
+2. Independence: for every flagged pair, and any pair you see yourself, say whether one direction
+   needs the other's result (`dependent`), shares candidates (`overlap`), shares only tools, or is
+   independent. Dependent pairs get `merge` (name `into`) or `move` (name the candidates); never `keep`.
+3. Prerequisites: inside each direction, which candidate's result decides whether another is worth
+   running. One line of why per edge. Do not add edges to make an order look tidy.
+**May not:** write files, change a candidate's direction, merge directions, or pick what to fund.
+**Return:** per direction id · P · I · confidence · two notes; per pair kind · proposal · into/moves ·
+evidence · note; per edge CID · on · why.
