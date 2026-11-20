@@ -112,6 +112,8 @@ python -m lab.tools.backlog direction score <ID> --plausibility P --impact I --c
 python -m lab.tools.backlog relate <A> <B> --kind dependent|overlap|shared-tooling|independent \
        --proposal merge|move|keep [--into ID] [--move CID:DIR …] --evidence c-… --note "…"
 python -m lab.tools.backlog require <CID> --on <CID2> --why "…"
+python -m lab.tools.backlog direction edit <ID> --summary "what it is, one sentence" \
+       --payoff "what we have if it works, one sentence" --reason "…"
 python -m lab.tools.backlog direction rank && python -m lab.tools.backlog order
 ```
 Score = plausibility × impact. Plausibility is the chance the direction's thesis holds at its target
@@ -119,8 +121,11 @@ rung before its close criteria fire; impact is the 1–5 scale in `lab/tools/bac
 A `dependent` pair is not two directions: it gets `merge` or `move`, never `keep`. Relations are
 always recorded `proposed`; merging or moving candidates is a human decision, applied by editing the
 backlog in a PR. Append a section to the run log.
+The summary and payoff are the two lines the team reads in the overview table: plain words, no
+jargon a non-specialist cannot follow, one sentence each (8–35 words, enforced), and the payoff as
+candid as the score (say "a publishable negative" when that is the realistic win).
 **Gate:** `validate` passes (it fails on a cross-direction `requires` with no relation, and on
-requires cycles); every open direction has an assessment; every pair `independence` lists is judged.
+requires cycles); every open direction has an assessment, a summary and a payoff; every pair `independence` lists is judged.
 
 ## Failure modes to check
 - Novelty scored from memory instead of a retrieved paper: every novelty note names what was

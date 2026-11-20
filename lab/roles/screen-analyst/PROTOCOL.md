@@ -81,6 +81,8 @@ the output of `backlog independence`, the exclusion ledger.
    independent. Dependent pairs get `merge` (name `into`) or `move` (name the candidates); never `keep`.
 3. Prerequisites: inside each direction, which candidate's result decides whether another is worth
    running. One line of why per edge. Do not add edges to make an order look tidy.
+4. Per direction, two plain sentences for the overview table: summary (what it is) and payoff (what
+   we have if it works, as candid as the score). One sentence each, 8–35 words.
 **May not:** write files, change a candidate's direction, merge directions, or pick what to fund.
-**Return:** per direction id · P · I · confidence · two notes; per pair kind · proposal · into/moves ·
+**Return:** per direction id · P · I · confidence · two notes · summary · payoff; per pair kind · proposal · into/moves ·
 evidence · note; per edge CID · on · why.
