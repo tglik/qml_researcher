@@ -98,9 +98,14 @@ The team funds one direction at a time, so directions are ranked, not only candi
 - **Start order:** `requires` edges between candidates (`backlog require`); `backlog order` sorts
   each direction: prerequisites first, then the candidate others wait on, then rank.
 - The page (`scripts/render_backlog.py` in qml_artifacts) shows one table of ranked directions with
-  collapsible candidate rows in start order, and computes "fund first" as the top direction that
-  would survive the open proposals.
+  collapsible candidate rows in start order; the top row is the one to fund.
 First pass: `indexes/backlog/gate_runs/2026-11-20-portfolio.md` in qml_artifacts.
+- **Own-algorithm rule (2026-11-20, Tsahi):** each direction is a chain of small publishable steps
+  toward an algorithm we own. Impact (`IMPACT`) now measures that progress: refuting or reproducing
+  others' work is impact 1. Directions carry `target_algorithm` (`direction edit --target`);
+  candidates whose only result concerns someone else's method get `path.off` (`backlog path --off
+  --why`) and leave the start order. The page shows the target in each direction's details and lists
+  off-path candidates under the ordered ones.
 
 ## Not built yet
 - Portfolio director role and its weekly checkpoint: designed after these candidates have run.
