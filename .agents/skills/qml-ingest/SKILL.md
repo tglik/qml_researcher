@@ -7,7 +7,9 @@ description: |
   (lab archivist, novelty mode), then a batch triage screen G0–G3, the seven-question advantage-potential
   profile and a value estimate (screen analyst, triage mode). Records results with `lab.tools.backlog score`; never picks or opens a
   program. Then writes a plain-language explainer page per candidate and changed direction (explainer),
-  signed by a separate explanation checker. Run nightly, or after a source adds a batch.
+  signed by a separate explanation checker. Then the portfolio step: direction scores (plausibility ×
+  impact), the independence check with merge proposals, and candidate prerequisites that set the start
+  order inside each direction. Run nightly, or after a source adds a batch.
 
 triggers:
   - qml-ingest
@@ -22,6 +24,7 @@ output:
   - "{OUTPUT_ROOT}/indexes/backlog/candidates.jsonl — gate fields filled"
   - "{OUTPUT_ROOT}/indexes/backlog/gate_runs/<date>.md — one line per candidate with evidence"
   - "{OUTPUT_ROOT}/indexes/backlog/explainers/{candidates,directions}/<id>.md — explainer pages"
+  - "{OUTPUT_ROOT}/indexes/backlog/directions.json (assessment), relations.json, candidates.jsonl (requires)"
 
 allowed-tools: [Agent, Read, Write, Glob, Grep, Bash, WebFetch]
 ---
@@ -98,6 +101,27 @@ Killed candidates get a page too; their "Why quantum, honestly" is the kill reas
 **Gate:** `python -m lab.tools.backlog validate --explainers` passes, and `explain-status` lists no
 missing or stale entity. Drafts are allowed and reported.
 
+## Phase 5 — Portfolio: direction score, independence, start order
+The team funds one direction at a time; the page leads with "fund first". Run when a direction or any
+of its candidates changed this run, and on every direction that has no `assessment`.
+Spawn a **fresh** `screen-analyst` in **portfolio mode** with the directions, their candidates' gate
+records and `python -m lab.tools.backlog independence`. Record what it returns:
+```
+python -m lab.tools.backlog direction score <ID> --plausibility P --impact I --confidence low|medium|high \
+       --plausibility-note "… cites c-… / arXiv:… / experiments/…" --impact-note "…" --by screen-analyst
+python -m lab.tools.backlog relate <A> <B> --kind dependent|overlap|shared-tooling|independent \
+       --proposal merge|move|keep [--into ID] [--move CID:DIR …] --evidence c-… --note "…"
+python -m lab.tools.backlog require <CID> --on <CID2> --why "…"
+python -m lab.tools.backlog direction rank && python -m lab.tools.backlog order
+```
+Score = plausibility × impact. Plausibility is the chance the direction's thesis holds at its target
+rung before its close criteria fire; impact is the 1–5 scale in `lab/tools/backlog.py` (`IMPACT`).
+A `dependent` pair is not two directions: it gets `merge` or `move`, never `keep`. Relations are
+always recorded `proposed`; merging or moving candidates is a human decision, applied by editing the
+backlog in a PR. Append a section to the run log.
+**Gate:** `validate` passes (it fails on a cross-direction `requires` with no relation, and on
+requires cycles); every open direction has an assessment; every pair `independence` lists is judged.
+
 ## Failure modes to check
 - Novelty scored from memory instead of a retrieved paper: every novelty note names what was
   searched and what was found.
@@ -110,3 +134,8 @@ missing or stale entity. Drafts are allowed and reported.
 - An explainer that sells: a kill test or mechanism probe written up as a quantum-advantage story.
   The page states the real motivation; "a publishable negative" is a complete answer.
 - A quantum case stronger than the potential profile allows (the lint enforces the caps).
+- A direction score inflated by a kill-test direction's high plausibility: a likely negative is
+  impact 1–2, whatever its plausibility.
+- Silent merges: the portfolio step proposes; it never changes a candidate's direction.
+- Prerequisites invented to make an order look tidy: a `requires` must say what the earlier result
+  decides for the later one.
