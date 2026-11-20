@@ -23,8 +23,9 @@ Every source writes candidates with `add`; nothing else writes the files. The in
     python -m lab.tools.backlog require CID --on CID2 --why TEXT [--drop]
     python -m lab.tools.backlog order  [--direction ID]       # recommended start order inside a direction
     python -m lab.tools.backlog decide A B --status accepted|rejected --by WHO   # a person's call on a proposal
+    python -m lab.tools.backlog path   CID --off --why TEXT | --on   # step toward our own algorithm, or not
     python -m lab.tools.backlog move   CID --to ID --reason TEXT   # apply an accepted move or merge
-    python -m lab.tools.backlog direction edit ID [--title T] [--thesis TEXT] [--summary S] [--payoff S] --reason TEXT
+    python -m lab.tools.backlog direction edit ID [--title T] [--thesis TEXT] [--summary S] [--payoff S] [--target T] --reason TEXT
                                     # summary: one sentence, what it is; payoff: one sentence, impact if it works
     python -m lab.tools.backlog add    --title T --claim TEXT --source A|B|C|D|E --base REF
                                        [--direction ID] [--region R] [--by WHO] [--force]
@@ -72,11 +73,13 @@ POTENTIAL_BANDS = ((0, 4, "low 0-4"), (5, 9, "mid 5-9"), (10, 14, "high 10-14"))
 # Direction score = plausibility × impact (expected impact, 0–5): what to fund first.
 # plausibility: chance the direction's thesis holds at its target rung before its close criteria fire.
 # impact: what the lab has if it does, on this scale.
-IMPACT = {1: "a minor note; nobody changes what they do",
-          2: "a solid paper or a clean negative that prunes a route",
-          3: "a result the field cites, or an instrument others reuse, with relevance to our hardware tracks",
-          4: "changes what the field believes about one route to an advantage",
-          5: "credible evidence of an advantage on a path to real use"}
+# impact: how far the direction moves us toward an algorithm WE own (Tsahi, 2026-11-20). Refuting or
+# reproducing other people's work is publishable but is not a step toward our own method.
+IMPACT = {1: "no step toward an algorithm we own: refutes or reproduces other people's work",
+          2: "a measured property, baseline or tool our own method needs",
+          3: "a working small-scale version of our own method, or its cheapest fatal check passed",
+          4: "our method beats a strong classical baseline in a named regime: a claim we own",
+          5: "our method shows an advantage on a path to real data or hardware"}
 SCORE_CONFIDENCE = ("low", "medium", "high")
 RELATION_KINDS = ("dependent", "overlap", "shared-tooling", "independent")
 PROPOSALS = ("merge", "move", "keep")
@@ -244,9 +247,14 @@ def requires_ids(c: dict) -> list[str]:
     return [r["id"] for r in c.get("requires") or []]
 
 
+def off_path(c: dict) -> bool:
+    """Marked as not a step toward the direction's own target algorithm (e.g. only refutes others' work)."""
+    return bool((c.get("path") or {}).get("off"))
+
+
 def startable(c: dict) -> bool:
-    """Candidates that belong in a start order: not killed, not duplicates, not closed."""
-    return gate_state(c) != "killed" and c.get("stage") != "closed"
+    """Candidates that belong in a start order: not killed, not closed, on the path to our algorithm."""
+    return gate_state(c) != "killed" and c.get("stage") != "closed" and not off_path(c)
 
 
 def start_order(cs: list[dict], direction: str | None) -> list[tuple[int, dict]]:
@@ -383,9 +391,11 @@ def cmd_direction(a) -> None:
         if not d:
             raise LabError(f"no direction {a.id}")
         changed = {k: v for k, v in (("title", a.title), ("thesis", a.thesis), ("summary", a.summary),
-                                     ("payoff", a.payoff)) if v}
+                                     ("payoff", a.payoff), ("target_algorithm", a.target)) if v}
         if not changed:
-            raise LabError("edit needs --title, --thesis, --summary or --payoff")
+            raise LabError("edit needs --title, --thesis, --summary, --payoff or --target")
+        if "target_algorithm" in changed and not 6 <= len(changed["target_algorithm"].split()) <= 60:
+            raise LabError("--target must name the algorithm we would own, or say 'None: …' (6-60 words)")
         for k in ("summary", "payoff"):
             if k in changed:
                 lint_sentence(k, changed[k])
@@ -648,6 +658,17 @@ def cmd_require(a) -> None:
     save_candidates(cs)
     print(f"{c['id']} " + ("no longer requires" if a.drop else "requires") + f" {on['id']}"
           + ("" if c.get("direction") == on.get("direction") else "  (cross-direction: record a relation)"))
+
+
+def cmd_path(a) -> None:
+    """Mark a candidate on or off the path to its direction's own target algorithm."""
+    cs = load_candidates()
+    c = get(cs, a.cid)
+    if a.off and len((a.why or "").split()) < 6:
+        raise LabError("--off needs --why: what the candidate does instead of advancing our algorithm (≥ 6 words)")
+    c["path"] = {"off": bool(a.off), "why": a.why or "", "at": now()}
+    save_candidates(cs)
+    print(f"{c['id']}: " + ("off path" if a.off else "on path"))
 
 
 def cmd_decide(a) -> None:
@@ -972,7 +993,9 @@ def main() -> int:
     dsc.add_argument("--impact-note", required=True); dsc.add_argument("--by")
     dsub.add_parser("rank")
     de = dsub.add_parser("edit"); de.add_argument("id"); de.add_argument("--title"); de.add_argument("--thesis")
-    de.add_argument("--summary"); de.add_argument("--payoff")
+    de.add_argument("--summary"); de.add_argument("--payoff"); de.add_argument("--target")
+    pa = sub.add_parser("path"); pa.add_argument("cid"); g_ = pa.add_mutually_exclusive_group(required=True)
+    g_.add_argument("--off", action="store_true"); g_.add_argument("--on", action="store_true"); pa.add_argument("--why")
     de.add_argument("--reason", required=True)
     dc = sub.add_parser("decide"); dc.add_argument("a"); dc.add_argument("b")
     dc.add_argument("--status", required=True); dc.add_argument("--by", required=True)
@@ -1016,7 +1039,7 @@ def main() -> int:
     {"direction": cmd_direction, "add": cmd_add, "score": cmd_score, "pending": cmd_pending,
      "queue": cmd_queue, "pick": cmd_pick, "link": cmd_link, "outcome": cmd_outcome,
      "report": cmd_report, "relate": cmd_relate, "independence": cmd_independence,
-     "require": cmd_require, "order": cmd_order, "move": cmd_move, "decide": cmd_decide, "explain-hash": cmd_explain_hash, "explain-status": cmd_explain_status}[a.cmd](a)
+     "require": cmd_require, "order": cmd_order, "move": cmd_move, "decide": cmd_decide, "path": cmd_path, "explain-hash": cmd_explain_hash, "explain-status": cmd_explain_status}[a.cmd](a)
     return 0
 
 

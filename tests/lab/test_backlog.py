@@ -284,6 +284,23 @@ class BacklogTest(unittest.TestCase):
         self.assertIn("backlog OK", self.bl("validate"))
         self.assertNotIn("stale", self.bl("direction", "list"))
 
+    def test_off_path_leaves_start_order_and_target_is_recorded(self):
+        self.direction()
+        twin = self.gated("Monte Carlo twin", "Glauber Monte Carlo matches blockade features within two points at sixteen nodes", 1, 0.3)
+        app = self.gated("Protein variant", "Blockade features beat WL subtree features on PROTEINS residue contact graphs", 3, 0.6)
+        self.assertIn("--why", self.bl("path", twin, "--off", ok=False))
+        self.bl("path", twin, "--off", "--why", "only refutes a published method, not a step to our own")
+        ids = " ".join(self.bl("order", "--direction", "rydberg-graph-kernels").splitlines()[1:])
+        self.assertNotIn(twin, ids)
+        self.assertIn(app, ids)
+        self.bl("path", twin, "--on")
+        self.assertIn(twin, self.bl("order", "--direction", "rydberg-graph-kernels"))
+        self.assertIn("words", self.bl("direction", "edit", "rydberg-graph-kernels", "--target", "Too short.",
+                                       "--reason", "x", ok=False))
+        self.bl("direction", "edit", "rydberg-graph-kernels", "--target",
+                "A neutral-atom graph feature map of our own that beats its classical twin on a named task.", "--reason", "own algorithm")
+        self.assertIn("backlog OK", self.bl("validate"))
+
     def test_close_direction_records_history(self):
         self.direction()
         out = self.bl("direction", "set", "rydberg-graph-kernels", "--status", "closed",

@@ -75,7 +75,8 @@ the output of `backlog independence`, the exclusion ledger.
 1. Per direction: plausibility (0–1), the chance its thesis holds at its target rung before its close
    criteria fire, with a note that cites the candidates, papers or experiments that set it; impact
    (1–5, the `IMPACT` scale) with a note; confidence low / medium / high (low when most candidates
-   are ungated). A kill-test direction's likely negative is impact 1–2, however plausible.
+   are ungated). Impact is progress toward an algorithm we own: a refutation or reproduction of
+   someone else's work is impact 1, however publishable; a direction with no target algorithm caps at 2.
 2. Independence: for every flagged pair, and any pair you see yourself, say whether one direction
    needs the other's result (`dependent`), shares candidates (`overlap`), shares only tools, or is
    independent. Dependent pairs get `merge` (name `into`) or `move` (name the candidates); never `keep`.
@@ -83,6 +84,10 @@ the output of `backlog independence`, the exclusion ledger.
    running. One line of why per edge. Do not add edges to make an order look tidy.
 4. Per direction, two plain sentences for the overview table: summary (what it is) and payoff (what
    we have if it works, as candid as the score). One sentence each, 8–35 words.
+5. Per direction, the target algorithm: the method of ours its steps build toward, naming the
+   candidates that are the first versions of it. Per candidate, off path or not: off path when its only
+   result is about someone else's method (refutation, crossover estimate for an algorithm we would not
+   own), with one line of why.
 **May not:** write files, change a candidate's direction, merge directions, or pick what to fund.
-**Return:** per direction id · P · I · confidence · two notes · summary · payoff; per pair kind · proposal · into/moves ·
+**Return:** per direction id · P · I · confidence · two notes · summary · payoff · target; per off-path candidate CID · why; per pair kind · proposal · into/moves ·
 evidence · note; per edge CID · on · why.

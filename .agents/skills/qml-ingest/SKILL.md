@@ -102,7 +102,7 @@ Killed candidates get a page too; their "Why quantum, honestly" is the kill reas
 missing or stale entity. Drafts are allowed and reported.
 
 ## Phase 5 — Portfolio: direction score, independence, start order
-The team funds one direction at a time; the page leads with "fund first". Run when a direction or any
+The team funds one direction at a time; the page ranks directions by score. Run when a direction or any
 of its candidates changed this run, and on every direction that has no `assessment`.
 Spawn a **fresh** `screen-analyst` in **portfolio mode** with the directions, their candidates' gate
 records and `python -m lab.tools.backlog independence`. Record what it returns:
@@ -113,11 +113,18 @@ python -m lab.tools.backlog relate <A> <B> --kind dependent|overlap|shared-tooli
        --proposal merge|move|keep [--into ID] [--move CID:DIR …] --evidence c-… --note "…"
 python -m lab.tools.backlog require <CID> --on <CID2> --why "…"
 python -m lab.tools.backlog direction edit <ID> --summary "what it is, one sentence" \
-       --payoff "what we have if it works, one sentence" --reason "…"
+       --payoff "what we have if it works, one sentence" \
+       --target "the algorithm of ours this direction builds toward, one or two sentences" --reason "…"
+python -m lab.tools.backlog path <CID> --off --why "why it is no step toward our own algorithm"   # or --on
 python -m lab.tools.backlog direction rank && python -m lab.tools.backlog order
 ```
 Score = plausibility × impact. Plausibility is the chance the direction's thesis holds at its target
-rung before its close criteria fire; impact is the 1–5 scale in `lab/tools/backlog.py` (`IMPACT`).
+rung before its close criteria fire; impact is the 1–5 scale in `lab/tools/backlog.py` (`IMPACT`),
+which measures progress toward an algorithm we own (Tsahi, 2026-11-20): each direction is a chain of
+small publishable steps toward a method that becomes our IP. Refuting or reproducing other people's
+work can be publishable, but it is impact 1. A direction with no target algorithm caps at impact 2.
+A candidate whose only result is about someone else's method (a refutation, a crossover estimate for
+an algorithm we would not own) is marked off path: it stays in the backlog, but leaves the start order.
 A `dependent` pair is not two directions: it gets `merge` or `move`, never `keep`. Relations are
 always recorded `proposed`; merging or moving candidates is a human decision, applied by editing the
 backlog in a PR. Append a section to the run log.
@@ -125,7 +132,8 @@ The summary and payoff are the two lines the team reads in the overview table: p
 jargon a non-specialist cannot follow, one sentence each (8–35 words, enforced), and the payoff as
 candid as the score (say "a publishable negative" when that is the realistic win).
 **Gate:** `validate` passes (it fails on a cross-direction `requires` with no relation, and on
-requires cycles); every open direction has an assessment, a summary and a payoff; every pair `independence` lists is judged.
+requires cycles); every open direction has an assessment, a summary, a payoff and a target algorithm (or an impact ≤ 2
+that says why it has none); every pair `independence` lists is judged.
 
 ## Failure modes to check
 - Novelty scored from memory instead of a retrieved paper: every novelty note names what was
@@ -141,6 +149,8 @@ requires cycles); every open direction has an assessment, a summary and a payoff
 - A quantum case stronger than the potential profile allows (the lint enforces the caps).
 - A direction score inflated by a kill-test direction's high plausibility: a likely negative is
   impact 1–2, whatever its plausibility.
+- Impact credited for clearing the field: a refutation of someone else's method is impact 1 and off
+  path, however publishable. Only steps toward our own target algorithm raise impact.
 - Silent merges: the portfolio step proposes; it never changes a candidate's direction.
 - Prerequisites invented to make an order look tidy: a `requires` must say what the earlier result
   decides for the later one.
