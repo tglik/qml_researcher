@@ -22,6 +22,9 @@ Every source writes candidates with `add`; nothing else writes the files. The in
     python -m lab.tools.backlog independence                  # cross-direction signals vs recorded relations
     python -m lab.tools.backlog require CID --on CID2 --why TEXT [--drop]
     python -m lab.tools.backlog order  [--direction ID]       # recommended start order inside a direction
+    python -m lab.tools.backlog decide A B --status accepted|rejected --by WHO   # a person's call on a proposal
+    python -m lab.tools.backlog move   CID --to ID --reason TEXT   # apply an accepted move or merge
+    python -m lab.tools.backlog direction edit ID [--title T] [--thesis TEXT] --reason TEXT
     python -m lab.tools.backlog add    --title T --claim TEXT --source A|B|C|D|E --base REF
                                        [--direction ID] [--region R] [--by WHO] [--force]
     python -m lab.tools.backlog score  CID --gate novelty|screen|value|potential ...
@@ -362,6 +365,17 @@ def cmd_direction(a) -> None:
         print(f"direction {a.id} → {a.status}")
         if a.status == "closed":
             print("closed: propose an exclusion-ledger entry via /qml-promote if the close criteria fired")
+    elif a.dcmd == "edit":
+        d = next((x for x in ds if x["id"] == a.id), None)
+        if not d:
+            raise LabError(f"no direction {a.id}")
+        if not (a.title or a.thesis):
+            raise LabError("edit needs --title and/or --thesis")
+        changed = {k: v for k, v in (("title", a.title), ("thesis", a.thesis)) if v}
+        d.update(changed)
+        d["history"].append({"at": now(), "status": d["status"], "reason": a.reason, "edited": sorted(changed)})
+        save_directions(ds)
+        print(f"direction {a.id}: edited {', '.join(sorted(changed))} (its explainer is now stale)")
     elif a.dcmd == "score":
         d = next((x for x in ds if x["id"] == a.id), None)
         if not d:
@@ -391,12 +405,12 @@ def cmd_direction(a) -> None:
             mine = [c for c in cs if c.get("direction") == d["id"]]
             gated = sum(1 for c in mine if gate_state(c) != "pending")
             flags = [f"{r['proposal']} with {r['b'] if r['a'] == d['id'] else r['a']}" for r in rs
-                     if d["id"] in (r["a"], r["b"]) and r["proposal"] != "keep" and r["status"] != "rejected"]
+                     if d["id"] in (r["a"], r["b"]) and r["proposal"] != "keep" and r["status"] == "proposed"]
             score_s = f"{s:>4}" if s is not None else "   -"
             print(f"{i:>2}. {score_s}  P {ass.get('plausibility', '-'):<4} × I {ass.get('impact', '-'):<3} "
                   f"conf {ass.get('confidence', '-'):<6} {d['status']:<6} gated {gated}/{len(mine):<3} "
                   f"{d['id']}" + (f"   [{'; '.join(flags)}]" if flags else ""))
-            fold = folded(d, rs, cs)
+            fold = folded(d, rs, cs) if d["status"] == "open" else None
             if fold:
                 print(f"        not an independent direction if the proposals are accepted: {fold}")
         unscored = [d["id"] for d in ds if not d.get("assessment")]
@@ -616,6 +630,36 @@ def cmd_require(a) -> None:
     save_candidates(cs)
     print(f"{c['id']} " + ("no longer requires" if a.drop else "requires") + f" {on['id']}"
           + ("" if c.get("direction") == on.get("direction") else "  (cross-direction: record a relation)"))
+
+
+def cmd_decide(a) -> None:
+    """Record a person's decision on a relation proposal. Applying it is `move` / `direction set`."""
+    if a.status not in ("accepted", "rejected"):
+        raise LabError("--status must be accepted or rejected")
+    rs = load_relations()
+    r = relation_for(rs, a.a, a.b)
+    if not r:
+        raise LabError(f"no relation {a.a} ~ {a.b}")
+    r["status"] = a.status
+    r["decided"] = {"by": a.by, "at": now()}
+    save_relations(rs)
+    print(f"relation {a.a} ~ {a.b}: {a.status} by {a.by}")
+
+
+def cmd_move(a) -> None:
+    """Apply a move or merge a person accepted: change a candidate's direction, with history."""
+    if a.to not in {d["id"] for d in load_directions()}:
+        raise LabError(f"no direction {a.to}")
+    if len((a.reason or "").split()) < 4:
+        raise LabError("--reason must name the accepted relation or decision (≥ 4 words)")
+    cs = load_candidates()
+    c = get(cs, a.cid)
+    old = c.get("direction")
+    c["direction"] = a.to
+    c["history"].append({"at": now(), "stage": c["stage"], "moved": {"from": old, "to": a.to}, "reason": a.reason})
+    start_order(cs, a.to)
+    save_candidates(cs)
+    print(f"{c['id']}: {old} → {a.to}")
 
 
 def cmd_order(a) -> None:
@@ -909,6 +953,12 @@ def main() -> int:
     dsc.add_argument("--confidence", required=True); dsc.add_argument("--plausibility-note", required=True)
     dsc.add_argument("--impact-note", required=True); dsc.add_argument("--by")
     dsub.add_parser("rank")
+    de = dsub.add_parser("edit"); de.add_argument("id"); de.add_argument("--title"); de.add_argument("--thesis")
+    de.add_argument("--reason", required=True)
+    dc = sub.add_parser("decide"); dc.add_argument("a"); dc.add_argument("b")
+    dc.add_argument("--status", required=True); dc.add_argument("--by", required=True)
+    mv = sub.add_parser("move"); mv.add_argument("cid"); mv.add_argument("--to", required=True)
+    mv.add_argument("--reason", required=True)
     rl = sub.add_parser("relate"); rl.add_argument("a"); rl.add_argument("b")
     for f in ("--kind", "--proposal", "--note"):
         rl.add_argument(f, required=True)
@@ -947,7 +997,7 @@ def main() -> int:
     {"direction": cmd_direction, "add": cmd_add, "score": cmd_score, "pending": cmd_pending,
      "queue": cmd_queue, "pick": cmd_pick, "link": cmd_link, "outcome": cmd_outcome,
      "report": cmd_report, "relate": cmd_relate, "independence": cmd_independence,
-     "require": cmd_require, "order": cmd_order, "explain-hash": cmd_explain_hash, "explain-status": cmd_explain_status}[a.cmd](a)
+     "require": cmd_require, "order": cmd_order, "move": cmd_move, "decide": cmd_decide, "explain-hash": cmd_explain_hash, "explain-status": cmd_explain_status}[a.cmd](a)
     return 0
 
 

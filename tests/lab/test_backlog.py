@@ -248,6 +248,29 @@ class BacklogTest(unittest.TestCase):
         rs = json.loads((self.vault / "indexes/backlog/relations.json").read_text())
         self.assertEqual(rs[0]["moves"], [{"id": rff, "to": "rydberg-graph-kernels"}])
 
+    def test_accepted_relation_is_applied_with_move_and_recorded(self):
+        self.direction()
+        self.bl("direction", "add", "--id", "dequant", "--title", "Kills", "--thesis", "x", "--target-rung", "1",
+                "--close-criteria", "Close after four kills in a row already refuted before we finished")
+        rff = self.gated("RFF twin", "Random Fourier features match the detuning kernel within two points on MUTAG", 1, 0.5,
+                         direction="dequant")
+        self.bl("relate", "dequant", "rydberg-graph-kernels", "--kind", "dependent", "--proposal", "merge",
+                "--into", "rydberg-graph-kernels", "--note", "the kill tests test the kernel this direction studies")
+        self.assertIn("accepted or rejected", self.bl("decide", "dequant", "rydberg-graph-kernels",
+                                                      "--status", "maybe", "--by", "tsahi", ok=False))
+        self.bl("decide", "dequant", "rydberg-graph-kernels", "--status", "accepted", "--by", "tsahi")
+        self.bl("move", rff, "--to", "rydberg-graph-kernels", "--reason", "merge accepted by tsahi")
+        self.bl("direction", "set", "dequant", "--status", "closed", "--reason", "merged into rydberg-graph-kernels")
+        self.bl("direction", "edit", "rydberg-graph-kernels", "--title", "Rydberg kernels, kill first",
+                "--reason", "merged with dequant")
+        cs = [json.loads(l) for l in (self.vault / "indexes/backlog/candidates.jsonl").read_text().splitlines()]
+        row = next(c for c in cs if c["id"] == rff)
+        self.assertEqual(row["direction"], "rydberg-graph-kernels")
+        self.assertEqual(row["history"][-1]["moved"], {"from": "dequant", "to": "rydberg-graph-kernels"})
+        rs = json.loads((self.vault / "indexes/backlog/relations.json").read_text())
+        self.assertEqual(rs[0]["status"], "accepted")
+        self.assertIn("backlog OK", self.bl("validate"))
+
     def test_close_direction_records_history(self):
         self.direction()
         out = self.bl("direction", "set", "rydberg-graph-kernels", "--status", "closed",
