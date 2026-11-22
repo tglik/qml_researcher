@@ -131,6 +131,8 @@ Agreement with GPT is barely lower than agreement inside the Claude family:
    any judge whose scores do not predict them.
 
 ## Cost
+Bet sheets (c-…-008, 009, 026), Claude judges only, with `--sheets`: plausibility fell in 8 of 9 answers (the sheets name their risks), upside rose by at most one point, and no median reached 4. Sonnet championed c-…-009. The GPT judge still scored the original claims for these three.
+
 Claude: 420 answers, $7.83 as reported by `claude -p` (about $0.06 per Opus answer, $0.005 per
 Haiku answer). Codex: inside the ChatGPT plan; the GPT advocate hit its usage limit at 64 answers,
 so a GPT judge on a full 80-candidate backlog fits in one plan window, two seats do not. Production

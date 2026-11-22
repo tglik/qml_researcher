@@ -47,6 +47,16 @@ class PromptTest(unittest.TestCase):
         for k in CRIT:
             self.assertIn(f"- {k} (", text)
 
+    def test_sheet_is_shown_without_its_own_scores(self):
+        c = cand(2, sheet={"what": "WHAT-TEXT", "fatal_test": "FATAL-TEXT", "upside": 5,
+                           "insight": "INSIGHT-TEXT", "no_go_check": "NOGO-TEXT", "fatal_test_days": 2})
+        text = P.prompt_for(c, None, RUBRIC, "judge")
+        self.assertIn("WHAT-TEXT", text)
+        self.assertIn("FATAL-TEXT", text)
+        for hidden in ("INSIGHT-TEXT", "NOGO-TEXT"):
+            self.assertNotIn(hidden, text)
+        self.assertNotEqual(P.prompt_hash(text), P.prompt_hash(P.prompt_for(cand(2), None, RUBRIC, "judge")))
+
     def test_roles_change_the_prompt_and_hash(self):
         c = cand(1)
         hs = {P.prompt_hash(P.prompt_for(c, None, RUBRIC, r)) for r in P.ROLES}

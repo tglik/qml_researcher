@@ -54,6 +54,12 @@ ROLES = ("judge", "advocate", "attacker")
 CONTESTED_SPREAD = 0.4      # (max - min) / scale range among judge seats, on a headline criterion
 HEADLINE = ("plausibility", "upside")   # spread here marks a candidate contested
 PROMPT_VERSION = "panel-prompt-v1"
+# Bet sheet fields a judge sees (backlog bet sheets, indexes/backlog/bet_sheets/<id>.json). Left out on
+# purpose: the proposer's own upside, insight, days, cost and time (they are rubric criteria) and its
+# no-go search note (a judge should not inherit the proposer's literature check).
+SHEET_FIELDS = (("what", "What"), ("today", "How it is done today"), ("new", "What is new"),
+                ("who_cares", "Who cares"), ("risks", "Risks"), ("fatal_test", "Cheapest fatal test"),
+                ("exams", "Mid-term and final exams"))
 
 LAB_CONTEXT = (
     "The lab is a three-person quantum machine learning startup. Its goal is a chain of small, "
@@ -144,8 +150,13 @@ def backlog_root(root: Path | None) -> Path:
     return root if root else output_root() / "indexes" / "backlog"
 
 
-def load_items(root: Path, extra: Path | None = None) -> tuple[list[dict], dict]:
+def load_items(root: Path, extra: Path | None = None, sheets: bool = False) -> tuple[list[dict], dict]:
     cands = read_jsonl(root / "candidates.jsonl")
+    if sheets:
+        for c in cands:
+            p = root / "bet_sheets" / f"{c['id']}.json"
+            if p.exists():
+                c["sheet"] = json.loads(p.read_text(encoding="utf-8"))
     if extra:
         cands += read_jsonl(extra)
     ids = [c["id"] for c in cands]
@@ -169,6 +180,10 @@ def prompt_for(c: dict, direction: dict | None, rubric: dict, role: str) -> str:
     lines += [f"Candidate: {c['title']}", f"Claim: {c['claim']}"]
     if c.get("base"):
         lines.append(f"Builds on: {c['base']}")
+    sheet = c.get("sheet")
+    if sheet:   # a bet sheet narrows the claim; its own scores and evidence notes are not shown
+        lines += ["", "The proposer's bet sheet (an argument for the candidate, not evidence):"]
+        lines += [f"- {label}: {sheet[k]}" for k, label in SHEET_FIELDS if sheet.get(k)]
     lines += ["", "Score every criterion on its own scale:"]
     for k in rubric["criteria"]:
         lines.append(f"- {k['id']} ({k['min']} to {k['max']}): {k['question']}")
@@ -524,6 +539,7 @@ def report(rubric: dict, rows: list[dict], cands: list[dict], tags: dict[str, st
                 for c in cands if c.get("expect") and c["id"] in per]
 
     return {"rubric": rubric["name"], "judge_seats": seats, "n_candidates": len(per), "champions_capped": capped,
+            "fixtures": sorted(c["id"] for c in cands if c.get("twin_of") or c.get("expect")),
             "agreement": agree, "contested": sorted(c for c in per if per[c]["contested"]),
             "minority_picks": minority, "vs_gate": vs_gate, "bets": bets, "twins": twins,
             "controls": controls, "candidates": per}
@@ -563,6 +579,8 @@ def export(rep: dict, out: Path, run_id: str) -> Path:
     criterion) with median, spread, contested and every judge's score; plus run.json with n_eff."""
     rows = []
     for cid, e in rep["candidates"].items():
+        if cid in rep.get("fixtures", ()):     # controls and wording twins are not backlog candidates
+            continue
         for k, med in e["median"].items():
             rows.append({"id": cid, "criterion": k, "median": med, "spread": e["spread"][k],
                          "contested": k in e["contested"],
@@ -591,6 +609,9 @@ def main(argv=None) -> None:
         p.add_argument("--rubric", default="backlog_lanes")
         p.add_argument("--root", type=Path, help="backlog folder (default {OUTPUT_ROOT}/indexes/backlog)")
         p.add_argument("--extra", type=Path, help="extra candidates (controls, wording twins), JSONL")
+        p.add_argument("--sheets", action="store_true",
+                       help="show each candidate's bet sheet (bet_sheets/<id>.json) to the judges; "
+                            "the newest answer per candidate and seat wins in report")
         if name != "report":
             p.add_argument("--panel", default="default")
         if name == "prompt":
@@ -610,7 +631,7 @@ def main(argv=None) -> None:
     a = ap.parse_args(argv)
     rubric = load_rubric(a.rubric)
     root = backlog_root(a.root)
-    cands, dirs = load_items(root, a.extra)
+    cands, dirs = load_items(root, a.extra, a.sheets)
     if a.cmd == "prompt":
         panel = load_panel(a.panel)
         seat = next((s for s in panel["seats"] if s["id"] == a.seat), panel["seats"][0]) if a.seat else panel["seats"][0]
