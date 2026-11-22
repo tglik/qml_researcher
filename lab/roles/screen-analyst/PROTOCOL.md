@@ -63,9 +63,17 @@ early work: a triage kill needs the rule *and* the precedent or argument that de
    classical · 3 measured mechanism · 4 small-scale separation on quantum-native data · 5 crossover
    estimate · 6 advantage) and a probability of landing it, with one line of reasoning that cites
    the potential answer that moved the probability most.
+6. Bet sheet, only when the candidate's upside if it works is 4 or 5 on the `IMPACT` scale (our
+   method beats a strong classical baseline, or more): answer the eight Heilmeier questions
+   (`HEILMEIER_Q` in `lab/tools/backlog.py`) concretely, at least 8 words each; "what is new" names the
+   insight we hold that the field underrates, or says there is none; "exams" names the fatal test.
+   Add upside (1–5), insight, fatal_test, fatal_test_days (0.5–60, the cost of the cheapest
+   experiment that could kill it) and no_go_check (what you searched, what would rule it out). Do
+   not lower upside because p is low: the bets lane never multiplies by p (C14). Be as candid as the
+   explainers: if the method is someone else's and a win would not be ours, say so and give upside 3.
 **May not:** write files, pick candidates, or rank across candidates.
 **Return per candidate:** id · verdict · deciding gates · note · potential answers · evidence class ·
-potential note · rung · p · value note.
+potential note · rung · p · value note · bet sheet (JSON, when step 6 applies).
 
 ## Portfolio mode (`/qml-ingest` phase 5)
 Rank directions so a human can fund one at a time, and check that they are really separate.
