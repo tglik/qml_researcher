@@ -83,6 +83,20 @@ agent's rung, p and upside; a champion or a split panel marks a bet contested.
 `narrowed`. Every candidate has a potential record and a value record; every rung 4 or 6 candidate
 has a bet sheet.
 
+## Phase 2b — Multi-model panel (when more than one model family is available)
+The screen analyst is one model. Before the portfolio step, score every gated candidate with the
+cross-family panel (`docs/lab/components/C15_multi_model_panel.md`):
+```
+python -m lab.tools.panel run --panel default          # seats missing on this machine are skipped
+python -m lab.tools.panel report --export <YYYY-MM-DD>  # scores.jsonl + run.json (n_eff) for backlog.py
+# Claude seats run anywhere; the Codex seat runs on the Mac. Run each where it can, same --out.
+```
+The panel is mechanical (no agent spawn): judges see only the lab, the direction and the claim,
+never the gate's notes or another judge's answer. Record in the run log: judge seats that ran,
+n_eff on plausibility and upside, the contested list and the minority picks. The minority picks
+go to the portfolio step as named candidates to argue for or against, not as rank changes.
+**Gate:** at least two judge families ran, or the log says the panel was single-family and why.
+
 ## Phase 3 — Log
 Write `{OUTPUT_ROOT}/indexes/backlog/gate_runs/<YYYY-MM-DD>.md`: one line per candidate —
 id · novelty (score, evidence) · screen (verdict, deciding gate) · potential (total of 14, evidence

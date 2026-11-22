@@ -1,0 +1,11 @@
+{
+  "name": "claude-only",
+  "about": "Same-family control: three Claude tiers. Used by the eval to measure how much a single provider's panel agrees with itself; never the production panel.",
+  "seats": [
+    {"id": "claude-opus",   "harness": "claude-code", "model": "opus",   "family": "anthropic", "role": "judge"},
+    {"id": "claude-sonnet", "harness": "claude-code", "model": "sonnet", "family": "anthropic", "role": "judge"},
+    {"id": "claude-haiku",  "harness": "claude-code", "model": "haiku",  "family": "anthropic", "role": "judge"},
+    {"id": "claude-advocate", "harness": "claude-code", "model": "sonnet", "family": "anthropic", "role": "advocate"},
+    {"id": "claude-attacker", "harness": "claude-code", "model": "sonnet", "family": "anthropic", "role": "attacker"}
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "default",
+  "about": "Production panel: one judge per model family, blind and independent; the median over judges is the panel score. No advocate or attacker seats: on 2026-11-22 they correlated 0.93-0.96 with the neutral judge of the same model (docs/lab/components/C15_multi_model_panel.md). Seats whose CLI, key or server is missing on this machine are skipped and reported: today Claude runs in the cloud, Codex on Tsahi's Mac; Gemini needs GEMINI_API_KEY, the open-weight seat a local Ollama server.",
+  "seats": [
+    {"id": "claude-opus",  "harness": "claude-code",   "model": "opus",           "family": "anthropic", "role": "judge"},
+    {"id": "gpt-sol",      "harness": "codex",         "model": "gpt-6.1-sol",    "family": "openai",    "role": "judge", "effort": "medium"},
+    {"id": "gemini",       "harness": "openai-compat", "model": "gemini-4-argon", "family": "google",    "role": "judge",
+     "base_url": "https://generativelanguage.googleapis.com/v1beta/openai", "key_env": "GEMINI_API_KEY"},
+    {"id": "open-weight",  "harness": "openai-compat", "model": "qwen3.8-27b",    "family": "qwen",      "role": "judge",
+     "base_url": "http://localhost:11434/v1", "key_env": ""},
+    {"id": "advocate",     "harness": "codex",         "model": "gpt-6.1-sol",    "family": "openai",    "role": "advocate", "effort": "medium",
+     "_note": "kept only so the 2026-11-22 answers stay attributable; run it with --seats advocate if you want to retest stances"}
+  ]
+}
