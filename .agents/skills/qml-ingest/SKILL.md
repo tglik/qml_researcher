@@ -70,8 +70,18 @@ python -m lab.tools.backlog score <CID> --gate value --rung N --p P --note "…"
 The potential answers are the seven questions of `criteria/advantage_potential.md`, in its order,
 each 0 / 1 / 2. They are recorded for calibration (`backlog report`); they are not part of the gate
 decision or the rank.
+For each candidate that returns a bet sheet (step 6 of triage mode), save it to
+`{OUTPUT_ROOT}/indexes/backlog/bet_sheets/<CID>.json` and record it:
+```
+python -m lab.tools.backlog bet <CID> --sheet {OUTPUT_ROOT}/indexes/backlog/bet_sheets/<CID>.json --by screen-analyst
+```
+Upside 4–5 puts the candidate in the bets lane; below 4 it goes to the steps lane (C14). If the
+multi-model panel has run (`lab.tools.panel`), import its scores before Phase 5:
+`python -m lab.tools.backlog panel <panel out>/scores.jsonl`. Panel medians replace the single
+agent's rung, p and upside; a champion or a split panel marks a bet contested.
 **Gate:** `killed` only with a 🔴 rule and its mechanism in the note; anything 🟠 is `pass` or
-`narrowed`. Every candidate has a potential record and a value record.
+`narrowed`. Every candidate has a potential record and a value record; every rung 4 or 6 candidate
+has a bet sheet.
 
 ## Phase 3 — Log
 Write `{OUTPUT_ROOT}/indexes/backlog/gate_runs/<YYYY-MM-DD>.md`: one line per candidate —
@@ -118,6 +128,10 @@ python -m lab.tools.backlog direction edit <ID> --summary "what it is, one sente
 python -m lab.tools.backlog path <CID> --off --why "why it is no step toward our own algorithm"   # or --on
 python -m lab.tools.backlog direction rank && python -m lab.tools.backlog order
 ```
+Candidates sit in two lanes (C14, `docs/lab/components/C14_lanes.md`): steps are banded A/B/C by
+rung × p × (0.5 + novelty); bets are ordered by sheet, champion, upside and the cost of their fatal
+test, never by p. `direction rank` shows each score with an error bar from its confidence and marks
+ties; inside a tie the direction with the cheapest decisive bet test goes first.
 Score = plausibility × impact. Plausibility is the chance the direction's thesis holds at its target
 rung before its close criteria fire; impact is the 1–5 scale in `lab/tools/backlog.py` (`IMPACT`),
 which measures progress toward an algorithm we own (Tsahi, 2026-11-20): each direction is a chain of

@@ -93,7 +93,7 @@ into `ESSENCE.md` (how it thinks — for scientific review) and a protocol (how 
 | `/qml-variants` · `/qml-promote` | Variant mining + pivot (paper/IP) · promotion PR: ledger entry, verdict entity, hypothesis status, criteria proposals |
 | `/qml-build-on` | Source A of the candidate backlog: up to 5 publishable next steps on a paper, hypothesis card or verdict |
 | `/qml-open-problems` | Source B: testable claims from open questions and card limitations |
-| `/qml-ingest` | Common ingest gate of the candidate backlog: novelty vs arXiv, triage screen G0–G3, the seven-question advantage-potential profile ([criteria](criteria/advantage_potential.md)), value (rung × p); every idea source writes candidates with `lab.tools.backlog add` ([C13](docs/lab/components/C13_candidate_backlog.md)) |
+| `/qml-ingest` | Common ingest gate of the candidate backlog: novelty vs arXiv, triage screen G0–G3, the seven-question advantage-potential profile ([criteria](criteria/advantage_potential.md)), value (rung × p), bet sheets; picks from two lanes, steps and bets ([C14](docs/lab/components/C14_lanes.md)); every idea source writes candidates with `lab.tools.backlog add` ([C13](docs/lab/components/C13_candidate_backlog.md)) |
 
 Human checkpoints (`config/lab_autonomy.json`): people sign the **spec and the frozen scorer** at
 CP2, and the verdict (CP4) and promotion (CP5). CP3 (phase gate) passes on the verifier when the

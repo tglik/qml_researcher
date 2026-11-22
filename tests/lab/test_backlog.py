@@ -301,6 +301,92 @@ class BacklogTest(unittest.TestCase):
                 "A neutral-atom graph feature map of our own that beats its classical twin on a named task.", "--reason", "own algorithm")
         self.assertIn("backlog OK", self.bl("validate"))
 
+    def sheet(self, cid, upside=4, days=2, **over):
+        long = "a concrete answer with enough words to pass the eight word check"
+        sh = {k: long for k in ("what", "today", "new", "who_cares", "risks", "cost", "time", "exams",
+                                "insight", "fatal_test", "no_go_check")}
+        sh.update(upside=upside, fatal_test_days=days, **over)
+        path = self.vault / f"{cid}.json"
+        path.write_text(json.dumps(sh))
+        return self.bl("bet", cid, "--sheet", str(path))
+
+    def test_bets_lane_is_not_ranked_by_p_and_needs_a_full_sheet(self):
+        self.direction()
+        safe = self.gated("Shot cost", "One thousand shots keep blockade feature accuracy within three points at ten nodes", 3, 0.6)
+        long_ = self.gated("Long shot", "Our blockade feature map beats the Monte Carlo twin on maximum independent set labels", 4, 0.1)
+        cheap = self.gated("Cheap shot", "Our feedforward kernel beats the Monte Carlo twin on independent set count labels", 4, 0.3)
+        q = self.bl("queue")
+        bets, steps = q.split("Steps lane")
+        self.assertIn(long_, bets); self.assertIn(cheap, bets); self.assertIn(safe, steps)
+        self.assertIn("NEEDS SHEET", bets)
+        # an incomplete sheet is refused with the Heilmeier question it misses
+        bad = self.vault / "bad.json"
+        bad.write_text(json.dumps({"what": "too short", "upside": 9}))
+        out = self.bl("bet", long_, "--sheet", str(bad), ok=False)
+        self.assertIn("What is new in our approach", out)
+        self.assertIn("upside must be 1-5", out)
+        # with sheets, the low-p bet with the cheaper fatal test comes first: p is not used
+        self.assertIn("lane bet", self.sheet(long_, days=2))
+        self.sheet(cheap, days=10)
+        bets = self.bl("queue").split("Steps lane")[0]
+        self.assertLess(bets.index(long_), bets.index(cheap))
+        # a sheet with upside below 4 moves the candidate to the steps lane
+        self.assertIn("lane step", self.sheet(cheap, upside=3, days=10))
+        self.assertIn(cheap, self.bl("queue").split("Steps lane")[1])
+        self.assertIn("backlog OK", self.bl("validate"))
+
+    def test_monkey_first_cheap_bet_starts_before_steps(self):
+        self.direction()
+        step = self.gated("Shot cost", "One thousand shots keep blockade feature accuracy within three points at ten nodes", 3, 0.6)
+        bet = self.gated("Long shot", "Our blockade feature map beats the Monte Carlo twin on maximum independent set labels", 4, 0.1)
+        ids = lambda: [next(w for w in l.split() if w.startswith("c-"))
+                       for l in self.bl("order", "--direction", "rydberg-graph-kernels").splitlines()[1:]]
+        self.assertEqual(ids()[0], step)          # no sheet yet: the bet waits
+        self.sheet(bet, days=3)
+        self.assertEqual(ids()[0], bet)           # sheeted and cheap to kill: monkey first
+
+    def test_panel_medians_override_agent_values_and_champion_marks_contested(self):
+        self.direction()
+        c = self.gated("Shot cost", "One thousand shots keep blockade feature accuracy within three points at ten nodes", 3, 0.6)
+        run = self.vault / "run1.jsonl"
+        rows = [{"id": c, "criterion": "upside", "median": 4, "spread": 2, "contested": True,
+                 "scores": {"model-a": 2, "model-b": 5, "model-c": 4}},
+                {"candidate": c, "criterion": "champion", "median": 0, "scores": {"model-a": 0, "model-b": 1}},
+                {"id": "c-nope", "criterion": "upside", "median": 1}]
+        run.write_text("\n".join(json.dumps(r) for r in rows))
+        out = self.bl("panel", str(run))
+        self.assertIn("2 scores imported", out); self.assertIn("skipped 1", out)
+        bets = self.bl("queue").split("Steps lane")[0]
+        self.assertIn(c, bets)                    # panel upside median 4 puts it in the bets lane
+        self.assertIn("contested", bets)
+        # the panel overrides a lane an agent recorded from its own sheet; a person's lane overrides the panel
+        b = self.gated("Long shot", "Our blockade feature map beats the Monte Carlo twin on maximum independent set labels", 4, 0.1)
+        self.sheet(b, upside=4, days=2)
+        run2 = self.vault / "run2.jsonl"
+        run2.write_text(json.dumps({"id": b, "criterion": "upside", "median": 3, "spread": 0.5, "contested": False,
+                                    "scores": {"model-a": 3, "model-b": 3}}))
+        self.bl("panel", str(run2))
+        self.assertIn(b, self.bl("queue").split("Steps lane")[1])
+        self.bl("lane", b, "--lane", "bet", "--why", "we would own the feature map if it beats the twin", "--by", "tsahi")
+        self.assertIn(b, self.bl("queue").split("Steps lane")[0])
+
+    def test_tied_directions_go_to_the_one_with_a_cheap_decisive_test(self):
+        self.direction()
+        self.bl("direction", "add", "--id", "kikuchi", "--title", "Planted inference", "--thesis", "x",
+                "--target-rung", "3", "--close-criteria", "Close if guiding-state enhancement vanishes on every non-Gaussian model")
+        note = "the core candidate is a coin flip against a tuned classical twin"
+        self.bl("direction", "score", "kikuchi", "--plausibility", "0.3", "--impact", "3.5", "--confidence", "medium",
+                "--plausibility-note", note + " (arXiv:2610.32595)", "--impact-note", note)
+        self.bl("direction", "score", "rydberg-graph-kernels", "--plausibility", "0.2", "--impact", "3.5",
+                "--confidence", "medium", "--plausibility-note", note + " experiments/search/rydberg", "--impact-note", note)
+        rank = self.bl("direction", "rank").splitlines()
+        self.assertIn("kikuchi", rank[0])         # 1.05 vs 0.70, tied, no bets: score decides
+        self.assertIn("tie 1", rank[0]); self.assertIn("tie 1", rank[1])
+        bet = self.gated("Long shot", "Our blockade feature map beats the Monte Carlo twin on maximum independent set labels", 4, 0.1)
+        self.sheet(bet, days=3)
+        rank = self.bl("direction", "rank").splitlines()
+        self.assertIn("rydberg-graph-kernels", rank[0])
+
     def test_close_direction_records_history(self):
         self.direction()
         out = self.bl("direction", "set", "rydberg-graph-kernels", "--status", "closed",

@@ -30,6 +30,9 @@ Every source writes candidates with `add`; nothing else writes the files. The in
     python -m lab.tools.backlog add    --title T --claim TEXT --source A|B|C|D|E --base REF
                                        [--direction ID] [--region R] [--by WHO] [--force]
     python -m lab.tools.backlog score  CID --gate novelty|screen|value|potential ...
+    python -m lab.tools.backlog lane   CID --lane step|bet --why TEXT   # override the default lane
+    python -m lab.tools.backlog bet    CID --sheet FILE.json   # Heilmeier bet sheet + fatal test (C14)
+    python -m lab.tools.backlog panel  RUN.jsonl               # import multi-model panel medians and spreads
     python -m lab.tools.backlog pending                      # candidates the gate has not finished
     python -m lab.tools.backlog queue  [--direction ID] [--top N]
     python -m lab.tools.backlog pick   CID --by WHO
@@ -219,6 +222,176 @@ def rank_score(c: dict) -> float:
     return round(val.get("rung", 1) * val.get("p", 0.1) * (0.5 + nov), 4)
 
 
+# --- lanes: steps and bets (C14, 2026-11-22) ------------------------------------------------
+# Strategic buckets first, rank inside a bucket second. Steps keep expected value, shown as bands;
+# bets are never multiplied by p: they are ordered by sheet, champion, upside and the cost of their
+# cheapest fatal test (real-options logic, X's "monkey first"). See docs/lab/components/C14_lanes.md.
+LANES = ("step", "bet")
+LANE_SHARE = {"step": 0.5, "bet": 0.5}      # effort split; Tsahi chose 50% bets on 2026-11-22
+BET_RUNGS = (4, 6)                         # default lane when none is recorded
+BET_P_FLOOR = 0.05                         # below this a bet is treated as ruled out, not as a long shot
+STEP_BANDS = ((1.2, "A"), (0.6, "B"), (0.0, "C"))
+QUICK_FATAL_DAYS = 5                       # a sheeted bet this cheap to kill starts early in its direction
+HEILMEIER = ("what", "today", "new", "who_cares", "risks", "cost", "time", "exams")
+HEILMEIER_Q = {"what": "What are you trying to do, with no jargon?",
+               "today": "How is it done today, and what limits current practice?",
+               "new": "What is new in our approach, and why do we think it will work?",
+               "who_cares": "Who cares? If it works, what difference does it make?",
+               "risks": "What are the risks?",
+               "cost": "How much will it cost?",
+               "time": "How long will it take?",
+               "exams": "What are the mid-term and final exams?"}
+CONFIDENCE_BAND = {"high": 0.15, "medium": 0.30, "low": 0.50}   # relative error bar on a direction score
+PANEL_CRITERIA = ("no_go", "on_path", "rung", "plausibility", "upside", "insight", "fatal_test_days", "champion")
+
+
+def panel(c: dict, criterion: str) -> dict | None:
+    return ((c.get("gate") or {}).get("panel") or {}).get(criterion)
+
+
+def effective(c: dict, key: str):
+    """A number the lanes use: the panel median when the panel scored it, else the single gate agent's."""
+    pv = panel(c, key)
+    if pv is not None and pv.get("median") is not None:
+        return pv["median"]
+    g = c.get("gate") or {}
+    if key == "rung":
+        return (g.get("value") or {}).get("rung")
+    if key == "plausibility":
+        return (g.get("value") or {}).get("p")
+    if key == "upside":
+        return (g.get("bet") or {}).get("upside")
+    if key == "fatal_test_days":
+        return (g.get("bet") or {}).get("fatal_test_days")
+    return None
+
+
+AGENT_AUTHORS = ("agent", "claude", "screen-analyst", "panel")
+
+
+def human_lane(c: dict) -> str | None:
+    rec = c.get("lane") or {}
+    by = str(rec.get("by") or "agent").lower()
+    return rec.get("lane") if rec.get("lane") and not by.startswith(AGENT_AUTHORS) else None
+
+
+def lane(c: dict) -> str:
+    """'off' (not on our path); else a lane a person recorded; else the panel: 'bet' when its upside
+    median is at least 4, or one judge gives 4+ and the panel is split or a judge champions it (the
+    wildcard rule); else a lane an agent recorded (bet sheet); else 'bet' for rungs 4 and 6."""
+    if off_path(c):
+        return "off"
+    if human_lane(c):
+        return human_lane(c)
+    up = panel(c, "upside") or {}
+    if up.get("median") is not None:
+        top = max([v for v in (up.get("scores") or {}).values() if isinstance(v, (int, float))] or [up["median"]])
+        wild = top >= 4 and (up.get("contested") or championed(c))
+        return "bet" if up["median"] >= 4 or wild else "step"
+    rec = (c.get("lane") or {}).get("lane")
+    if rec:
+        return rec
+    return "bet" if effective(c, "rung") in BET_RUNGS else "step"
+
+
+def ev_score(c: dict) -> float:
+    """Expected value of a step: rung × p × (0.5 + novelty), with panel medians where they exist."""
+    g = c.get("gate", {})
+    nov = (g.get("novelty") or {}).get("score", 0.5)
+    rung, p = effective(c, "rung") or 1, effective(c, "plausibility")
+    return round(rung * (0.1 if p is None else p) * (0.5 + nov), 4)
+
+
+def step_band(c: dict) -> str:
+    v = ev_score(c)
+    return next(name for lo, name in STEP_BANDS if v >= lo)
+
+
+def lottery(cid: str, seed: str = "") -> int:
+    """Fixed tie-break inside a band: decimals below the band are noise, so we do not pretend to rank them."""
+    return int(hashlib.sha256((seed + cid).encode()).hexdigest()[:8], 16)
+
+
+def has_sheet(c: dict) -> bool:
+    return bool((c.get("gate") or {}).get("bet"))
+
+
+def championed(c: dict) -> bool:
+    ch = panel(c, "champion") or {}
+    return any((v or 0) >= 1 for v in (ch.get("scores") or {}).values()) or (ch.get("median") or 0) >= 1
+
+
+def contested(c: dict) -> bool:
+    """One champion, or a split panel on upside or plausibility: the wildcard rule (Villum, Volkswagen)."""
+    return championed(c) or any((panel(c, k) or {}).get("contested") for k in ("upside", "plausibility"))
+
+
+def no_go(c: dict) -> bool:
+    return ((panel(c, "no_go") or {}).get("median") or 0) >= 0.5
+
+
+def bet_open(c: dict) -> bool:
+    """A bet stays in the lane unless the gate killed it, a no-go result rules it out, or p is below the floor."""
+    p = effective(c, "plausibility")
+    return gate_state(c) != "killed" and not no_go(c) and (p is None or p >= BET_P_FLOOR)
+
+
+def bet_key(c: dict) -> tuple:
+    days = effective(c, "fatal_test_days")
+    return (not has_sheet(c), not contested(c), -(effective(c, "upside") or effective(c, "rung") or 0),
+            days if days is not None else 999, c["id"])
+
+
+def step_key(c: dict) -> tuple:
+    return (STEP_BANDS.index(next(b for b in STEP_BANDS if b[1] == step_band(c))), lottery(c["id"]))
+
+
+def quick_bet(c: dict) -> bool:
+    days = effective(c, "fatal_test_days")
+    return lane(c) == "bet" and has_sheet(c) and days is not None and days <= QUICK_FATAL_DAYS
+
+
+def lane_rows(cs: list[dict]) -> dict[str, list[dict]]:
+    """Gated, passed, on-path candidates split by lane, each lane in its own order."""
+    live = [c for c in cs if c.get("stage") == "gated" and gate_state(c) == "passed"]
+    bets = sorted((c for c in live if lane(c) == "bet" and bet_open(c)), key=bet_key)
+    steps = sorted((c for c in live if lane(c) == "step"), key=step_key)
+    return {"bet": bets, "step": steps}
+
+
+def direction_interval(d: dict) -> tuple[float, float] | None:
+    s = direction_score(d)
+    if s is None:
+        return None
+    w = CONFIDENCE_BAND.get((d.get("assessment") or {}).get("confidence"), 0.5)
+    return s * (1 - w), s * (1 + w)
+
+
+def cheapest_bet_days(d: dict, cs: list[dict]) -> float | None:
+    days = [effective(c, "fatal_test_days") for c in cs if c.get("direction") == d["id"]
+            and lane(c) == "bet" and has_sheet(c) and bet_open(c)]
+    days = [x for x in days if x is not None]
+    return min(days) if days else None
+
+
+def tie_groups(ds: list[dict], cs: list[dict]) -> list[list[dict]]:
+    """Open, scored directions in groups whose error bars overlap the group leader's. Inside a group the
+    cheapest decisive test goes first (a direction with no sheeted bet loses the tie), then the score."""
+    scored = [d for d in ranked_directions(ds) if d.get("status") == "open" and direction_score(d) is not None]
+    groups: list[list[dict]] = []
+    for d in scored:
+        lo_lead = direction_interval(groups[-1][0])[0] if groups else None
+        if groups and direction_interval(d)[1] >= lo_lead:
+            groups[-1].append(d)
+        else:
+            groups.append([d])
+    out = []
+    for g in groups:
+        out.append(sorted(g, key=lambda d: (cheapest_bet_days(d, cs) is None, cheapest_bet_days(d, cs) or 0,
+                                            -direction_score(d), d["id"])))
+    return out
+
+
 # --- portfolio: direction score, independence, candidate order -----------------------------
 SENTENCE_WORDS = 35        # the table's two lines per direction: what it is, and what success buys
 
@@ -266,14 +439,16 @@ def start_order(cs: list[dict], direction: str | None) -> list[tuple[int, dict]]
       1. one the gate has scored (unscored candidates wait for the gate);
       2. one that more candidates wait on: its result decides whether they are worth running
          (the lab's cheapest-fatal rule);
-      3. the higher rank_score.
+      3. a bet with a sheet whose fatal test costs QUICK_FATAL_DAYS or less ("monkey first");
+      4. the rest by band (A, B, C), a fixed lottery inside a band; a bet with no sheet or a slow
+         fatal test waits like a step.
     Killed and closed candidates are left out. A requires cycle raises.
     """
     mine = {c["id"]: c for c in cs if c.get("direction") == direction and startable(c)}
     reqs = {cid: {r for r in requires_ids(c) if r in mine} for cid, c in mine.items()}
     dependents = Counter(r for rs_ in reqs.values() for r in rs_)
     prio = lambda cid: (not (mine[cid].get("gate") or {}).get("value"), -dependents[cid],
-                        -rank_score(mine[cid]), cid)
+                        not quick_bet(mine[cid]), step_key(mine[cid]), cid)
     placed: list[dict] = []
     done: set[str] = set()
     while len(placed) < len(mine):
@@ -427,7 +602,10 @@ def cmd_direction(a) -> None:
     elif a.dcmd == "rank":
         cs = load_candidates()
         rs = load_relations()
-        for i, d in enumerate(ranked_directions(ds), 1):
+        groups = tie_groups(ds, cs)
+        tied = {d["id"]: gi for gi, g in enumerate(groups, 1) if len(g) > 1 for d in g}
+        order = [d for g in groups for d in g] + [d for d in ranked_directions(ds) if d not in sum(groups, [])]
+        for i, d in enumerate(order, 1):
             s = direction_score(d)
             ass = d.get("assessment") or {}
             mine = [c for c in cs if c.get("direction") == d["id"]]
@@ -435,12 +613,21 @@ def cmd_direction(a) -> None:
             flags = [f"{r['proposal']} with {r['b'] if r['a'] == d['id'] else r['a']}" for r in rs
                      if d["id"] in (r["a"], r["b"]) and r["proposal"] != "keep" and r["status"] == "proposed"]
             score_s = f"{s:>4}" if s is not None else "   -"
-            print(f"{i:>2}. {score_s}  P {ass.get('plausibility', '-'):<4} × I {ass.get('impact', '-'):<3} "
-                  f"conf {ass.get('confidence', '-'):<6} {d['status']:<6} gated {gated}/{len(mine):<3} "
+            iv = direction_interval(d)
+            bets = sum(1 for c in mine if lane(c) == "bet" and bet_open(c) and gate_state(c) == "passed")
+            days = cheapest_bet_days(d, cs)
+            tie = f"tie {tied[d['id']]}" if d["id"] in tied else ""
+            print(f"{i:>2}. {score_s} [{iv[0]:.2f}-{iv[1]:.2f}] " if iv else f"{i:>2}. {score_s} {'':<12} ", end="")
+            print(f"P {ass.get('plausibility', '-'):<4} × I {ass.get('impact', '-'):<3} "
+                  f"conf {ass.get('confidence', '-'):<6} {d['status']:<6} {tie:<6} gated {gated}/{len(mine):<3} "
+                  f"bets {bets} fatal {str(days) + 'd' if days is not None else '-':<5} "
                   f"{d['id']}" + (f"   [{'; '.join(flags)}]" if flags else ""))
             fold = folded(d, rs, cs) if d["status"] == "open" else None
             if fold:
                 print(f"        not an independent direction if the proposals are accepted: {fold}")
+        if tied:
+            print("Tied directions overlap within their confidence bars; inside a tie the cheapest decisive "
+                  "bet test goes first, and a direction with no bet sheet loses the tie.")
         unscored = [d["id"] for d in ds if not d.get("assessment")]
         if unscored:
             print(f"Not scored: {', '.join(unscored)}")
@@ -531,21 +718,99 @@ def cmd_pending(_a) -> None:
 def cmd_queue(a) -> None:
     cs = [c for c in load_candidates() if c["stage"] == "gated"
           and (not a.direction or c.get("direction") == a.direction)]
-    passed = sorted((c for c in cs if gate_state(c) == "passed"), key=rank_score, reverse=True)
-    print(f"Ranked ({len(passed)} passed the gate):")
-    for c in passed[: a.top]:
-        print(f"  {rank_score(c):>6}  {potential_tag(c)}  {c['id']}  "
+    rows = lane_rows(cs)
+    print(f"Bets lane ({len(rows['bet'])}; {LANE_SHARE['bet']:.0%} of effort). Not ranked by p: "
+          "sheet, champion, upside, then cheapest fatal test.")
+    for c in rows["bet"][: a.top]:
+        days = effective(c, "fatal_test_days")
+        tag = ("sheet" if has_sheet(c) else "NEEDS SHEET") + (" contested" if contested(c) else "")
+        print(f"  up {effective(c, 'upside') or '-':<3} fatal {str(days) + 'd' if days is not None else '-':<5} "
+              f"p {effective(c, 'plausibility') or '-':<4} {tag:<18} {c['id']}  "
               f"[{c['source']}/{c.get('direction') or 'unassigned'}]  {c['title']}")
-    explore = [c for c in cs if c.get("explore") and c not in passed[: a.top]]
+    print(f"Steps lane ({len(rows['step'])}; {LANE_SHARE['step']:.0%} of effort). Band by EV = rung × p × "
+          "(0.5 + novelty); order inside a band is a fixed lottery, not a rank.")
+    for c in rows["step"][: a.top]:
+        print(f"  {step_band(c)}  ev {ev_score(c):<6} {potential_tag(c)}  {c['id']}  "
+              f"[{c['source']}/{c.get('direction') or 'unassigned'}]  {c['title']}")
+    shown = {c["id"] for r in rows.values() for c in r[: a.top]}
+    explore = [c for c in cs if c.get("explore") and c["id"] not in shown]
     print(f"Explore sample ({len(explore)}; shown regardless of score, incl. gate kills):")
     for c in explore:
         print(f"  {gate_state(c):>6}  {c['id']}  [{c['source']}/{c.get('direction') or 'unassigned'}]  {c['title']}")
-    unscored = sum(1 for c in cs if potential_total(c) is None)
-    if unscored:
-        print(f"No potential profile: {unscored} gated candidates (the rank does not use it; see `report`).")
+    off = sum(1 for c in cs if lane(c) == "off")
+    if off:
+        print(f"Off path: {off} gated candidates only concern other people's methods (in neither lane).")
     unassigned = sum(1 for c in cs if not c.get("direction"))
     if unassigned:
         print(f"Unassigned: {unassigned} gated candidates fit no direction — review for a new direction.")
+
+
+def cmd_lane(a) -> None:
+    cs = load_candidates()
+    c = get(cs, a.cid)
+    if a.lane not in LANES:
+        raise LabError(f"--lane must be one of {LANES}")
+    if len((a.why or "").split()) < 8:
+        raise LabError("--why must say what we would own if it works (≥ 8 words)")
+    c["lane"] = {"lane": a.lane, "why": a.why, "by": a.by or "agent", "at": now()}
+    c["history"].append({"at": now(), "stage": c["stage"], "lane": a.lane})
+    save_candidates(cs)
+    print(f"{c['id']}: lane {a.lane}")
+
+
+def check_sheet(sheet: dict) -> list[str]:
+    errs = [f"{k}: answer '{HEILMEIER_Q[k]}' in at least 8 words" for k in HEILMEIER
+            if len(str(sheet.get(k) or "").split()) < 8]
+    if not isinstance(sheet.get("upside"), (int, float)) or not 1 <= sheet["upside"] <= 5:
+        errs.append("upside must be 1-5 on the IMPACT scale: " + "; ".join(f"{k} {v}" for k, v in IMPACT.items()))
+    if not isinstance(sheet.get("fatal_test_days"), (int, float)) or not 0.5 <= sheet["fatal_test_days"] <= 60:
+        errs.append("fatal_test_days must be a cost in days, 0.5-60")
+    for k, n in (("insight", 8), ("fatal_test", 8), ("no_go_check", 8)):
+        if len(str(sheet.get(k) or "").split()) < n:
+            errs.append(f"{k} needs at least {n} words")
+    return errs
+
+
+def cmd_bet(a) -> None:
+    cs = load_candidates()
+    c = get(cs, a.cid)
+    sheet = json.loads(Path(a.sheet).read_text(encoding="utf-8"))
+    errs = check_sheet(sheet)
+    if errs:
+        raise LabError("bet sheet incomplete:\n  " + "\n  ".join(errs))
+    keep = HEILMEIER + ("upside", "insight", "fatal_test", "fatal_test_days", "no_go_check")
+    c.setdefault("gate", {})["bet"] = {**{k: sheet[k] for k in keep}, "by": a.by or sheet.get("by") or "agent",
+                                       "status": "draft", "at": now()}
+    new_lane = "bet" if sheet["upside"] >= 4 else "step"
+    c["lane"] = {"lane": new_lane, "by": a.by or "agent", "at": now(),
+                 "why": f"bet sheet: upside {sheet['upside']}" + ("" if new_lane == "bet" else
+                        ", below 4: if it works we own no method that beats a strong baseline")}
+    save_candidates(cs)
+    print(f"{c['id']}: bet sheet recorded (upside {sheet['upside']}, fatal test {sheet['fatal_test_days']} days); "
+          f"lane {new_lane}")
+
+
+def cmd_panel(a) -> None:
+    """Import a multi-model panel run: one JSON record per (candidate, criterion)."""
+    cs = load_candidates()
+    by_id = {c["id"]: c for c in cs}
+    n, skipped = 0, set()
+    run = Path(a.path).stem
+    for line in Path(a.path).read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        r = json.loads(line)
+        cid = r.get("id") or r.get("candidate") or r.get("entity")
+        crit = r.get("criterion")
+        if cid not in by_id or crit not in PANEL_CRITERIA:
+            skipped.add(f"{cid}:{crit}")
+            continue
+        by_id[cid].setdefault("gate", {}).setdefault("panel", {})[crit] = {
+            "median": r.get("median"), "spread": r.get("spread"), "contested": bool(r.get("contested")),
+            "scores": r.get("scores") or {}, "run": r.get("run") or run, "at": now()}
+        n += 1
+    save_candidates(cs)
+    print(f"panel {run}: {n} scores imported" + (f"; skipped {len(skipped)} (unknown id or criterion)" if skipped else ""))
 
 
 def move(cs: list[dict], c: dict, stage: str, **extra) -> None:
@@ -709,7 +974,9 @@ def cmd_order(a) -> None:
         for step, c in start_order(cs, d["id"]):
             reqs = ",".join(requires_ids(c))
             val = (c.get("gate") or {}).get("value")
-            print(f"  {step:>2}. {rank_score(c) if val else '   -':>6}  {c['id']}  {c['title']}"
+            tag = (f"bet {'fatal ' + str(effective(c, 'fatal_test_days')) + 'd' if has_sheet(c) else 'no sheet'}"
+                   if lane(c) == "bet" else (f"step {step_band(c)}" if val else "unscored"))
+            print(f"  {step:>2}. {tag:<16} {c['id']}  {c['title']}"
                   + (f"   after {reqs}" if reqs else ""))
 
 
@@ -775,6 +1042,11 @@ def validate() -> list[str]:
                     or any(v not in (0, 1, 2) for v in pot["answers"].values())
                     or pot.get("evidence_class") not in EVIDENCE):
             errs.append(f"{cid}: bad potential profile")
+        bet = (c.get("gate") or {}).get("bet")
+        if bet:
+            errs.extend(f"{cid}: bet sheet {e}" for e in check_sheet(bet))
+        if (c.get("lane") or {}).get("lane") not in (None, *LANES):
+            errs.append(f"{cid}: bad lane")
         if c.get("stage") == "program" and not c.get("thread"):
             errs.append(f"{cid}: stage program without a thread")
         for r in c.get("requires") or []:
@@ -1021,6 +1293,10 @@ def main() -> int:
     sc.add_argument("--evidence", nargs="*"); sc.add_argument("--verdict"); sc.add_argument("--gates")
     sc.add_argument("--rung", type=int); sc.add_argument("--p", type=float); sc.add_argument("--note")
     sc.add_argument("--answers"); sc.add_argument("--evidence-class")
+    ln = sub.add_parser("lane"); ln.add_argument("cid"); ln.add_argument("--lane", required=True)
+    ln.add_argument("--why", required=True); ln.add_argument("--by")
+    bt = sub.add_parser("bet"); bt.add_argument("cid"); bt.add_argument("--sheet", required=True); bt.add_argument("--by")
+    pn = sub.add_parser("panel"); pn.add_argument("path")
     sub.add_parser("pending")
     q = sub.add_parser("queue"); q.add_argument("--direction"); q.add_argument("--top", type=int, default=10)
     p = sub.add_parser("pick"); p.add_argument("cid"); p.add_argument("--by", required=True)
@@ -1039,7 +1315,8 @@ def main() -> int:
     {"direction": cmd_direction, "add": cmd_add, "score": cmd_score, "pending": cmd_pending,
      "queue": cmd_queue, "pick": cmd_pick, "link": cmd_link, "outcome": cmd_outcome,
      "report": cmd_report, "relate": cmd_relate, "independence": cmd_independence,
-     "require": cmd_require, "order": cmd_order, "move": cmd_move, "decide": cmd_decide, "path": cmd_path, "explain-hash": cmd_explain_hash, "explain-status": cmd_explain_status}[a.cmd](a)
+     "require": cmd_require, "order": cmd_order, "move": cmd_move, "decide": cmd_decide, "path": cmd_path, "lane": cmd_lane, "bet": cmd_bet,
+     "panel": cmd_panel, "explain-hash": cmd_explain_hash, "explain-status": cmd_explain_status}[a.cmd](a)
     return 0
 
 

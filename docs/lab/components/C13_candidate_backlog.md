@@ -107,6 +107,10 @@ First pass: `indexes/backlog/gate_runs/2026-11-20-portfolio.md` in qml_artifacts
   --why`) and leave the start order. The page shows the target in each direction's details and lists
   off-path candidates under the ordered ones.
 
+## Lanes (2026-11-22)
+Picking now uses two lanes, steps and bets, instead of one rank: see `C14_lanes.md`. The gate
+above is unchanged; `rank_score` survives as the steps lane's EV.
+
 ## Not built yet
 - Portfolio director role and its weekly checkpoint: designed after these candidates have run.
 - Semantic dedupe (embedding or LLM) if the word-set check keeps missing near-duplicates.
