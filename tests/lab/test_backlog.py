@@ -359,6 +359,16 @@ class BacklogTest(unittest.TestCase):
         bets = self.bl("queue").split("Steps lane")[0]
         self.assertIn(c, bets)                    # panel upside median 4 puts it in the bets lane
         self.assertIn("contested", bets)
+        # the panel overrides a lane an agent recorded from its own sheet; a person's lane overrides the panel
+        b = self.gated("Long shot", "Our blockade feature map beats the Monte Carlo twin on maximum independent set labels", 4, 0.1)
+        self.sheet(b, upside=4, days=2)
+        run2 = self.vault / "run2.jsonl"
+        run2.write_text(json.dumps({"id": b, "criterion": "upside", "median": 3, "spread": 0.5, "contested": False,
+                                    "scores": {"model-a": 3, "model-b": 3}}))
+        self.bl("panel", str(run2))
+        self.assertIn(b, self.bl("queue").split("Steps lane")[1])
+        self.bl("lane", b, "--lane", "bet", "--why", "we would own the feature map if it beats the twin", "--by", "tsahi")
+        self.assertIn(b, self.bl("queue").split("Steps lane")[0])
 
     def test_tied_directions_go_to_the_one_with_a_cheap_decisive_test(self):
         self.direction()

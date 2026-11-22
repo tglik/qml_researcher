@@ -17,8 +17,8 @@ options for buying cheap information on large upside, and lotteries only for rea
 | | Steps lane | Bets lane |
 |---|---|---|
 | Belongs | a publishable step on our path | if it works, our method beats a strong classical baseline (upside 4–5) |
-| Default | rungs 1–3, 5 | rungs 4, 6; or panel upside median ≥ 4; or a sheet with upside ≥ 4 |
-| Effort share | `LANE_SHARE["step"]` 0.7 | `LANE_SHARE["bet"]` 0.3 (Tsahi's call) |
+| Lane source (first that applies) | a person's `lane` | then the panel: upside median ≥ 4, or one judge ≥ 4 with a split panel or a champion; then an agent's sheet; then rungs 4 and 6 |
+| Effort share | `LANE_SHARE["step"]` 0.5 | `LANE_SHARE["bet"]` 0.5 (Tsahi, 2026-11-22) |
 | Order | band A (EV ≥ 1.2) · B (≥ 0.6) · C, fixed lottery inside a band | sheet · contested · upside · cheapest fatal test |
 | p | inside EV | only the floor `BET_P_FLOOR` 0.05 |
 
@@ -37,6 +37,13 @@ options for buying cheap information on large upside, and lotteries only for rea
   gate agent's numbers. A champion from any judge, or a contested upside or plausibility, marks a bet
   contested (the wildcard rule of Villum Fonden and Volkswagen Stiftung) and moves it up its lane.
   A panel `no_go` median ≥ 0.5 removes a bet.
+
+## First panel run (2026-11-22)
+Two model families (Claude Opus, GPT) scored all 77 candidates (qml_artifacts PR #13, n_eff about
+1.2 of 2 on upside and plausibility). Imported into a copy of the backlog: no candidate on an open
+direction reaches the bets lane. The three sheeted bets get upside medians of 2.5–3; the panel
+scored the original claims, not the narrowed sheets. With a 50% bet share, that half of the effort
+has nothing to fund until sources produce bets or the panel rescores the narrowed claims.
 
 ## What would prove this wrong
 Record, per lane, how far closed candidates got (`outcome --rung`). After 10 closed bets: if sheeted

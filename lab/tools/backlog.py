@@ -227,7 +227,7 @@ def rank_score(c: dict) -> float:
 # bets are never multiplied by p: they are ordered by sheet, champion, upside and the cost of their
 # cheapest fatal test (real-options logic, X's "monkey first"). See docs/lab/components/C14_lanes.md.
 LANES = ("step", "bet")
-LANE_SHARE = {"step": 0.7, "bet": 0.3}      # default effort split; Tsahi's call
+LANE_SHARE = {"step": 0.5, "bet": 0.5}      # effort split; Tsahi chose 50% bets on 2026-11-22
 BET_RUNGS = (4, 6)                         # default lane when none is recorded
 BET_P_FLOOR = 0.05                         # below this a bet is treated as ruled out, not as a long shot
 STEP_BANDS = ((1.2, "A"), (0.6, "B"), (0.0, "C"))
@@ -266,17 +266,31 @@ def effective(c: dict, key: str):
     return None
 
 
+AGENT_AUTHORS = ("agent", "claude", "screen-analyst", "panel")
+
+
+def human_lane(c: dict) -> str | None:
+    rec = c.get("lane") or {}
+    by = str(rec.get("by") or "agent").lower()
+    return rec.get("lane") if rec.get("lane") and not by.startswith(AGENT_AUTHORS) else None
+
+
 def lane(c: dict) -> str:
-    """'off' (not on our path), else the recorded lane, else 'bet' when the panel's upside median is
-    at least 4 or the rung is 4 or 6, else 'step'."""
+    """'off' (not on our path); else a lane a person recorded; else the panel: 'bet' when its upside
+    median is at least 4, or one judge gives 4+ and the panel is split or a judge champions it (the
+    wildcard rule); else a lane an agent recorded (bet sheet); else 'bet' for rungs 4 and 6."""
     if off_path(c):
         return "off"
+    if human_lane(c):
+        return human_lane(c)
+    up = panel(c, "upside") or {}
+    if up.get("median") is not None:
+        top = max([v for v in (up.get("scores") or {}).values() if isinstance(v, (int, float))] or [up["median"]])
+        wild = top >= 4 and (up.get("contested") or championed(c))
+        return "bet" if up["median"] >= 4 or wild else "step"
     rec = (c.get("lane") or {}).get("lane")
     if rec:
         return rec
-    up = (panel(c, "upside") or {}).get("median")
-    if up is not None:
-        return "bet" if up >= 4 else "step"
     return "bet" if effective(c, "rung") in BET_RUNGS else "step"
 
 
