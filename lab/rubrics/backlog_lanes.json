@@ -1,0 +1,24 @@
+{
+  "name": "backlog_lanes",
+  "about": "Default panel rubric, criteria ids and scales set by the scoring redesign (lanes). Each judge scores one candidate blind. The panel writes medians, spreads and disagreement; `python -m lab.tools.backlog panel` turns them into lanes. Gates are probabilities a judge assigns, not kills: the lane logic decides what a gate does.",
+  "composite": ["rung", "plausibility"],
+  "champion_cap": 3,
+  "criteria": [
+    {"id": "no_go", "kind": "gate", "min": 0, "max": 1,
+     "question": "Probability that a known theorem, a published result or one of the lab's own verdicts already rules this claim out. Name it in strongest_objection if above 0.3."},
+    {"id": "on_path", "kind": "gate", "min": 0, "max": 1,
+     "question": "Probability that the result is a step toward an algorithm the lab itself owns (1), rather than only refuting or reproducing other people's work (0)."},
+    {"id": "rung", "kind": "score", "min": 1, "max": 6,
+     "question": "Highest result rung reached if the claim holds: 1 sharp negative / dequantization, 2 quantum-inspired classical method, 3 measured mechanism, 4 small-scale separation on quantum-native data, 5 crossover resource estimate, 6 advantage on real data and hardware."},
+    {"id": "plausibility", "kind": "score", "min": 0, "max": 1,
+     "question": "Probability that the claim holds at its own operating point when tested (not the probability that it is publishable)."},
+    {"id": "upside", "kind": "score", "min": 1, "max": 5,
+     "question": "If it works, what does the lab own? 1 nothing: it refutes or reproduces other people's work; 2 a measured property, baseline or tool the lab's own method needs; 3 a working small-scale version of the lab's own method, or its cheapest fatal check passed; 4 the lab's method beats a strong classical baseline in a named regime; 5 an advantage on a path to real data or hardware. Ignore plausibility here."},
+    {"id": "insight", "kind": "score", "min": 0, "max": 2,
+     "question": "0 no reason beyond 'try it'; 1 a vague reason; 2 a named, non-consensus reason why it should work that most of the field would not already assume. Put the reason in strongest_case."},
+    {"id": "fatal_test_days", "kind": "score", "min": 0.5, "max": 60, "log": true,
+     "question": "Cost in days of agent and simulator time of the cheapest experiment that could kill this claim."},
+    {"id": "champion", "kind": "score", "min": 0, "max": 1, "integer": true,
+     "question": "1 if you would spend a week of the team's time on this now, else 0. Be selective: across a whole backlog you may champion at most 3 candidates."}
+  ]
+}

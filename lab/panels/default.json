@@ -1,0 +1,14 @@
+{
+  "name": "default",
+  "about": "Cross-family panel. Judges score blind and independently; median over role=judge seats is the panel score. The advocate and attacker seats give the honest upper and lower bounds and are not in the median. Seats whose harness is not installed on this machine are skipped and reported. Evidence (arXiv:2609.22512, NeurIPS 2026 'Nine Judges, Two Effective Votes') says frontier judges from different providers still share most errors, so read n_eff in the report before trusting the panel more than one judge.",
+  "seats": [
+    {"id": "claude-opus",  "harness": "claude-code", "model": "opus",          "family": "anthropic", "role": "judge"},
+    {"id": "gpt-sol",      "harness": "codex",       "model": "gpt-6.1-sol",   "family": "openai",    "role": "judge", "effort": "medium"},
+    {"id": "gemini",       "harness": "openai-compat", "model": "gemini-4-argon", "family": "google", "role": "judge",
+     "base_url": "https://generativelanguage.googleapis.com/v1beta/openai", "key_env": "GEMINI_API_KEY"},
+    {"id": "open-weight",  "harness": "openai-compat", "model": "qwen3.8-27b",  "family": "qwen",      "role": "judge",
+     "base_url": "http://localhost:11434/v1", "key_env": ""},
+    {"id": "advocate",     "harness": "codex",       "model": "gpt-6.1-sol",   "family": "openai",    "role": "advocate", "effort": "medium"},
+    {"id": "attacker",     "harness": "claude-code", "model": "opus",          "family": "anthropic", "role": "attacker"}
+  ]
+}
