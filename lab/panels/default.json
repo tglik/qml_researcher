@@ -1,14 +1,14 @@
 {
   "name": "default",
-  "about": "Cross-family panel. Judges score blind and independently; median over role=judge seats is the panel score. The advocate and attacker seats give the honest upper and lower bounds and are not in the median. Seats whose harness is not installed on this machine are skipped and reported. Evidence (arXiv:2609.22512, NeurIPS 2026 'Nine Judges, Two Effective Votes') says frontier judges from different providers still share most errors, so read n_eff in the report before trusting the panel more than one judge.",
+  "about": "Production panel: one judge per model family, blind and independent; the median over judges is the panel score. No advocate or attacker seats: on 2026-11-22 they correlated 0.93-0.96 with the neutral judge of the same model (docs/lab/components/C15_multi_model_panel.md). Seats whose CLI, key or server is missing on this machine are skipped and reported: today Claude runs in the cloud, Codex on Tsahi's Mac; Gemini needs GEMINI_API_KEY, the open-weight seat a local Ollama server.",
   "seats": [
-    {"id": "claude-opus",  "harness": "claude-code", "model": "opus",          "family": "anthropic", "role": "judge"},
-    {"id": "gpt-sol",      "harness": "codex",       "model": "gpt-6.1-sol",   "family": "openai",    "role": "judge", "effort": "medium"},
-    {"id": "gemini",       "harness": "openai-compat", "model": "gemini-4-argon", "family": "google", "role": "judge",
+    {"id": "claude-opus",  "harness": "claude-code",   "model": "opus",           "family": "anthropic", "role": "judge"},
+    {"id": "gpt-sol",      "harness": "codex",         "model": "gpt-6.1-sol",    "family": "openai",    "role": "judge", "effort": "medium"},
+    {"id": "gemini",       "harness": "openai-compat", "model": "gemini-4-argon", "family": "google",    "role": "judge",
      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai", "key_env": "GEMINI_API_KEY"},
-    {"id": "open-weight",  "harness": "openai-compat", "model": "qwen3.8-27b",  "family": "qwen",      "role": "judge",
+    {"id": "open-weight",  "harness": "openai-compat", "model": "qwen3.8-27b",    "family": "qwen",      "role": "judge",
      "base_url": "http://localhost:11434/v1", "key_env": ""},
-    {"id": "advocate",     "harness": "codex",       "model": "gpt-6.1-sol",   "family": "openai",    "role": "advocate", "effort": "medium"},
-    {"id": "attacker",     "harness": "claude-code", "model": "opus",          "family": "anthropic", "role": "attacker"}
+    {"id": "advocate",     "harness": "codex",         "model": "gpt-6.1-sol",    "family": "openai",    "role": "advocate", "effort": "medium",
+     "_note": "kept only so the 2026-11-22 answers stay attributable; run it with --seats advocate if you want to retest stances"}
   ]
 }

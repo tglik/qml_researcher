@@ -20,6 +20,7 @@ scoring method consumes the medians. The rubric (lab/rubrics/*.json) names the c
         # score every candidate (backlog candidates.jsonl plus --extra) with every available seat;
         # appends to <out>/judgments.jsonl, skips (candidate, seat, prompt) triples already done
     python -m lab.tools.panel report   [--rubric R] [--out DIR] [--json] [--export RUN_ID]
+        # reads every <out>/judgments*.jsonl (one per machine: the cloud has Claude, the Mac has Codex);
         # medians, spreads, contested candidates, minority picks, judge agreement and n_eff,
         # comparison with the single-judge gate scores, where tagged bets land, twin (wording) deltas;
         # --export writes scores.jsonl (one record per candidate × criterion) and run.json (n_eff)
@@ -122,7 +123,7 @@ def load_panel(name: str = "default") -> dict:
 
 
 def answer_schema(rubric: dict) -> dict:
-    crit = {c["id"]: {"type": "number"} for c in rubric["criteria"]}
+    crit = {c["id"]: {"type": "integer" if c.get("integer") else "number"} for c in rubric["criteria"]}
     return {"type": "object", "additionalProperties": False,
             "required": ["scores", "strongest_case", "strongest_objection"],
             "properties": {
@@ -270,7 +271,9 @@ def run(panel: dict, rubric: dict, cands: list[dict], dirs: dict, out: Path, wor
             skipped[s["id"]] = why
         else:
             seats.append(s)
-    if not any(s["role"] == "judge" for s in seats):
+    if not seats:
+        raise LabError(f"no seat can run here; skipped: {skipped}")
+    if not seats_filter and not any(s["role"] == "judge" for s in seats):
         raise LabError(f"no judge seat can run here; skipped: {skipped}")
     schema = answer_schema(rubric)
     tasks = []
@@ -603,6 +606,7 @@ def main(argv=None) -> None:
         if name == "report":
             p.add_argument("--json", action="store_true")
             p.add_argument("--export", metavar="RUN_ID", help="also write scores.jsonl + run.json for backlog.py")
+            p.add_argument("--seats", default="", help="only these seats (e.g. the production judges)")
     a = ap.parse_args(argv)
     rubric = load_rubric(a.rubric)
     root = backlog_root(a.root)
@@ -626,7 +630,10 @@ def main(argv=None) -> None:
         if res["failed"]:
             sys.exit(1)
         return
-    rep = report(rubric, read_jsonl(out / "judgments.jsonl"), cands, read_tags(root))
+    rows = [r for p in sorted(out.glob("judgments*.jsonl")) for r in read_jsonl(p)]   # one file per machine
+    keep = {x for x in a.seats.split(",") if x}
+    rows = [r for r in rows if not keep or r["seat"] in keep]
+    rep = report(rubric, rows, cands, read_tags(root))
     if a.export:
         print(f"wrote {export(rep, out, a.export)} and run.json", file=sys.stderr)
     if a.json:

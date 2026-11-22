@@ -75,10 +75,11 @@ decision or the rank.
 
 ## Phase 2b — Multi-model panel (when more than one model family is available)
 The screen analyst is one model. Before the portfolio step, score every gated candidate with the
-cross-family panel (`docs/lab/components/C14_multi_model_panel.md`):
+cross-family panel (`docs/lab/components/C15_multi_model_panel.md`):
 ```
 python -m lab.tools.panel run --panel default          # seats missing on this machine are skipped
 python -m lab.tools.panel report --export <YYYY-MM-DD>  # scores.jsonl + run.json (n_eff) for backlog.py
+# Claude seats run anywhere; the Codex seat runs on the Mac. Run each where it can, same --out.
 ```
 The panel is mechanical (no agent spawn): judges see only the lab, the direction and the claim,
 never the gate's notes or another judge's answer. Record in the run log: judge seats that ran,
