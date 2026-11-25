@@ -55,7 +55,7 @@ from pathlib import Path
 from .common import LabError, main_wrapper, now, output_root, today
 
 SOURCES = {"A": "build-on-base", "B": "open-problem", "C": "combination-grid",
-           "D": "programmatic-search", "E": "scout/algorithm/variants"}
+           "D": "programmatic-search", "E": "scout/algorithm/variants", "S": "lab-study"}
 REGIONS = ("classical-data", "quantum-native", "other")
 DIRECTION_STATUS = ("open", "paused", "closed")
 SCREEN = ("pass", "narrowed", "killed")
