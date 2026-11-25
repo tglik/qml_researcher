@@ -18,6 +18,16 @@ Rules, for any path inside a program thread (a folder that holds STATE.json):
   Denied while stage is `run`:
       VERDICT.md · AUDIT.md (writes) · scorer/heldout/** (reads too: held-out labels)
 
+For the study workspace ({output_root}/workspace/, C16), a study is a folder under studies/ that
+holds state.json, and the log is workspace/log/:
+
+  Always denied to Edit/Write and shell writes (only `python -m lab.tools.workspace` writes these):
+      studies/*/state.json · ledger.jsonl · objections.jsonl · bundle.lock.json · log/*
+  Denied once the study is locked, unless the author posted a correction after the last lock or
+  amendment and no number is in the ledger yet (then `workspace amend` records the change):
+      studies/*/STUDY.md
+  Denied once the study is released: every file in the study folder.
+
 Shell commands are checked by the paths they mention; a command that mentions a protected path and
 looks like a write (redirect, tee, sed -i, mv, cp, rm, touch, truncate, open(...,'w'), write_text)
 is treated as a write. This is a tripwire against casual tampering, not a sandbox.
@@ -99,6 +109,66 @@ def judge(rel: str, info: dict, write: bool) -> tuple[str, str] | None:
     return None
 
 
+STUDY_TOOL_FILES = {"state.json", "ledger.jsonl", "objections.jsonl", "bundle.lock.json"}
+
+
+def find_study(path: Path) -> Path | None:
+    for parent in [path, *path.parents][:6]:
+        if (parent / "state.json").is_file() and parent.parent.name == "studies" \
+                and parent.parent.parent.name == "workspace":
+            return parent
+    return None
+
+
+def find_log(path: Path) -> bool:
+    return any(p.name == "log" and p.parent.name == "workspace" for p in [path, *path.parents][:3])
+
+
+def _read_fm(path: Path) -> dict:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+    out = {}
+    for line in (m.group(1).splitlines() if m else []):
+        if ":" in line:
+            k, v = line.split(":", 1)
+            out[k.strip()] = v.strip()
+    return out
+
+
+def judge_study(study: Path, rel: str, write: bool) -> tuple[str, str] | None:
+    if not write:
+        return None
+    try:
+        st = json.loads((study / "state.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        st = {}
+    status = st.get("status")
+    if rel in STUDY_TOOL_FILES:
+        return "deny", f"{rel} is written only by `python -m lab.tools.workspace`, never by hand."
+    if status == "released":
+        return "deny", (f"study {study.name} is released and frozen. Post a correction with "
+                        "`lab.tools.workspace post correction`, or start a new study.")
+    if status == "locked" and rel == "STUDY.md":
+        try:
+            lock = json.loads((study / "bundle.lock.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            lock = {}
+        last = max([lock.get("locked_at", "")] + [a.get("at", "") for a in lock.get("amendments", [])])
+        log = study.parent.parent / "log"
+        corrected = any(_read_fm(p).get("at", "") > last
+                        for p in log.glob(f"*__{study.name}__correction__*.md")) if log.is_dir() else False
+        ledger = study / "ledger.jsonl"
+        if ledger.is_file() and ledger.read_text(encoding="utf-8").strip():
+            return "deny", "the ledger already holds numbers; a plan change now is a new study, not an amendment."
+        if not corrected:
+            return "deny", ("STUDY.md is locked. Post a correction first (`lab.tools.workspace post correction`), "
+                            "edit, then record it with `lab.tools.workspace amend`.")
+    return None
+
+
 def candidate_paths(tool: str, tin: dict, cwd: Path) -> list[Path]:
     raw: list[str] = []
     if tool in WRITE_TOOLS or tool == "Read":
@@ -147,7 +217,24 @@ def decide(event: dict) -> tuple[str, str] | None:
             resolved = path.resolve()
         except OSError:
             continue
-        thread = find_thread(resolved if resolved.is_dir() else resolved.parent)
+        base = resolved if resolved.is_dir() else resolved.parent
+        if write and find_log(base):
+            verdict = ("deny", "the workspace log is append-only and written only by "
+                       "`python -m lab.tools.workspace post`.")
+            worst = verdict
+            break
+        study = find_study(base)
+        if study is not None:
+            try:
+                verdict = judge_study(study, resolved.relative_to(study).as_posix(), write)
+            except ValueError:
+                verdict = None
+            if verdict and (worst is None or verdict[0] == "deny"):
+                worst = verdict
+                if verdict[0] == "deny":
+                    break
+            continue
+        thread = find_thread(base)
         if thread is None:
             continue
         try:
