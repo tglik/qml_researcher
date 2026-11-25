@@ -86,6 +86,9 @@ class WorkspaceTest(unittest.TestCase):
         self.ws("release", sid, "--by", "author-a", ok=False)                 # no audit yet
         (d / "AUDIT.md").write_text("---\nstudy: x\nauditor: auditor-d\nverdict: PASS\n---\nok\n")
         self.ws("release", sid, "--by", "author-a", "--outcome", "refuted", "--cost-usd", "3.5")
+        self.ws("post", "learning", "--study", sid, "--by", "author-a", "--body", "The bound is local.")
+        self.ws("post", "idea", "--study", sid, "--by", "author-a", "--body", "Try control.")
+        self.ws("post", "announce", "--study", sid, "--by", "author-a", "--body", "x", ok=False)
         rep = json.loads(self.ws("report"))
         self.assertEqual(rep["summary"]["released"], 1)
         self.assertEqual(rep["summary"]["design_changed_by_critique"], 1)

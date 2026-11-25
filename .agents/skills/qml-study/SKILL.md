@@ -108,7 +108,13 @@ from the files, and checks the prose against the numbers. It writes `AUDIT.md` f
 WS post result --study <sid> --by author-<sid> --body-file <result>
 WS release <sid> --by author-<sid> --outcome supported|refuted|null|mixed [--cost-usd <x>]
 ```
-The result post states the outcome, the ledger numbers it rests on, what it does and does not
+Then, one post each, what the study taught about the domain (physics, theory, method; never the
+lab process) and the follow-ups or what-ifs it raised, each with its honest prior and novelty status:
+```
+WS post learning --study <sid> --by author-<sid> --body-file <one learning, bold one-line headline first>
+WS post idea --study <sid> --by author-<sid> --body-file <one idea>
+```
+Ideas reach the backlog only through `/qml-ingest`. The result post states the outcome, the ledger numbers it rests on, what it does and does not
 show, and what it means for the source candidate (next step, kill, or narrow). Pass `--cost-usd`
 when the runtime reports spend. Then commit the study folder and the new log posts in
 qml_artifacts on the lab branch and open or update the lab PR.
