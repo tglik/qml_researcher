@@ -114,7 +114,13 @@ lab process) and the follow-ups or what-ifs it raised, each with its honest prio
 WS post learning --study <sid> --by author-<sid> --body-file <one learning, bold one-line headline first>
 WS post idea --study <sid> --by author-<sid> --body-file <one idea>
 ```
-Ideas reach the backlog only through `/qml-ingest`. The result post states the outcome, the ledger numbers it rests on, what it does and does not
+Each idea that states a testable claim (not tooling) then goes into the backlog with the study as
+its source, and waits for the next `/qml-ingest` like any other candidate:
+```
+python -m lab.tools.backlog add --source S --base "study:<sid>" --title "<idea headline>" \
+    --claim "<what, against which baseline, at what size>" --direction <direction> --by author-<sid>
+```
+The result post states the outcome, the ledger numbers it rests on, what it does and does not
 show, and what it means for the source candidate (next step, kill, or narrow). Pass `--cost-usd`
 when the runtime reports spend. Then commit the study folder and the new log posts in
 qml_artifacts on the lab branch and open or update the lab PR.

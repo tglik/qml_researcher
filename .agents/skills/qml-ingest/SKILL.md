@@ -35,7 +35,7 @@ allowed-tools: [Agent, Read, Write, Glob, Grep, Bash, WebFetch]
 `lab/roles/screen-analyst/` (triage mode), `lab/roles/explainer/`, `lab/roles/explanation-checker/` · **Design:** `docs/lab/components/C13_candidate_backlog.md`
 
 Sources (A build on a base, B open problems, C combination grid, D programmatic search, E scout /
-algorithms / variants) only `add`. This skill only `score`s. The portfolio decision (pick, open,
+algorithms / variants, S ideas raised by a released lab study) only `add`. This skill only `score`s. The portfolio decision (pick, open,
 close a direction) stays with a human.
 
 ## Setup
