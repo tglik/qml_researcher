@@ -32,6 +32,49 @@ eval 5 must pass before the pilot's CP1.
 | **4** | Scoping refusal | intake | "QML for fraud", "use MIS on tabular data", "quantum features for materials" | Refuses 3/3; specific question on ≥ 2 after interrogation |
 | **5** | Algorithm-path known answers (**new**) | intake (algorithm) + screen | (a) a dequantizable QML linear-algebra algorithm (Tang-style recommendation), (b) an algorithm needing full N-vector readout, (c) a Clifford-only circuit | (a) twin flagged → G3 red; (b) readout warning → G1 red; (c) simulability warning → ASK-HUMAN or KILLED |
 
+### Eval 5 at scale: planted flaws (`lab/tools/flaweval.py`)
+Hand-written known answers do not scale, so eval 5 is also generated (pattern from arXiv:2604.18936:
+a model writes the items, a script proves the answer). Each item is a one-paragraph candidate plus
+a machine-readable spec of its quantum core; a deterministic checker proves from the spec whether
+the planted flaw is there. Items come in pairs: a **flawed** item and a **twin** with the smallest
+edit that removes the flaw, same title, same confidence.
+
+| Flaw | Gate | Checker |
+|---|---|---|
+| `clifford_only` | G3 | circuit family (layer template, claimed at ≥ 50 qubits) instantiated at widths 4, 6, 8; on the gates that can change the output, every X_i, Z_i must conjugate to a Pauli |
+| `product_state_kernel` | G3 | the feature-map family simulated at widths 4, 6, 8 on random inputs; every one-qubit marginal pure ⇒ the kernel factorizes |
+| `full_readout` | G1 | tomography lower bound (N/ε² amplitudes, log N/ε² probabilities, 1/ε² scalar) ≥ classical cost |
+| `data_loading` | G1 | N·d gates per arbitrary-data load (QRAM: once) ≥ classical cost |
+| `dequantizable_lowrank` | G3 | sample-and-query access, rank ≤ log²N, sample or scalar output (Tang 2019, Chia et al. 2020) |
+
+An item is kept only if the checker agrees on both halves, the claim states the spec's facts
+(gate names, qubit count, sizes), never names the flaw, and both halves share a title. Items must
+also pass the gates their flaw does not decide, or the screen kills both for the same other reason:
+classical cost at least 1e20 operations (the best known method, not brute-force simulation), N ≥ 1e9 for matrices, circuits pitched at ≥ 50 qubits.
+Circuit twins are also tested for being easy another way (middle-cut Schmidt rank below the
+maximum at some check width, so a low-bond MPS simulates them); such a twin is flagged
+`twin_easy` and left out of the false-kill rate and discrimination, because killing it is right.
+That test is necessary, not sufficient: it cannot certify that a twin is hard.
+
+The screen sees the title and claim only, through the triage protocol and the criteria files.
+Headline numbers per seat: **discrimination** = P(killed | flawed) − P(killed | twin) (narrowed is not killed) with a pair
+bootstrap 95% interval, catch rate (strict: killed with the expected gate red), false-kill rate on
+twins, run-to-run agreement, `kill_without_red` (the protocol allows `killed` only on a red gate),
+and the share of notes that name the mechanism. Every twin kill is listed with its note: read them
+before trusting the false-kill rate. Results are split by the item author's model family.
+
+The generator must be a different family than the screen under test where possible (GPT via Codex
+on the Mac for Claude screens). Limits: it tests known failure types only, not whether the screen
+spots a real advantage; a twin is "this flaw absent", not "advantage present"; the arithmetic
+checkers apply textbook bounds to the stated numbers and are only as good as those bounds.
+
+```
+python -m lab.tools.flaweval generate --panel default --seat gpt-sol --n 5       # Mac
+python -m lab.tools.flaweval check                                              # no model
+python -m lab.tools.flaweval run --panel claude-only --seat claude-opus --runs 2
+python -m lab.tools.flaweval report
+```
+
 Plus structural checks on every eval run (cheap, deterministic): required template sections
 present, G0 engaged, every number has provenance, STATE read-first/write-last, author ≠ signer.
 
@@ -74,7 +117,7 @@ This is the eval component; the harness itself is validated by a deliberately br
 version that must score below baseline.
 
 ## Build tasks
-- [ ] Eval 4 + 5 fixtures (S, 1 day — W1)
+- [ ] Eval 4 + 5 fixtures (S, 1 day — W1). Eval 5 at scale: `lab/tools/flaweval.py`, items in `tests/fixtures/lab/eval5/items.jsonl`
 - [ ] Eval 1 fixtures: 13 time-sliced framings (M, 2 days — W1; needs Adi/Tsahi to write the "then-current framing" for each)
 - [ ] Eval 2 fixture from materials M01 (S — W2; blocked on locating materials repo)
 - [ ] Eval 3 fixture (S — W2)
