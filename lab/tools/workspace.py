@@ -56,7 +56,9 @@ from pathlib import Path
 from .common import (LabError, main_wrapper, output_root, read_frontmatter, read_json,
                      sha256_file, write_json)
 
-KINDS = ("announce", "critique", "response", "correction", "result", "note")
+KINDS = ("announce", "critique", "response", "correction", "result", "note", "learning", "idea")
+# learning: what the study taught about the domain (physics, theory, method), not the lab process.
+# idea: a follow-up or what-if the study raised; it enters the backlog only through /qml-ingest.
 STATUSES = ("draft", "locked", "released")
 OUTCOMES = ("supported", "refuted", "null", "mixed")
 FROZEN_AT_LOCK = ("STUDY.md",)
@@ -259,8 +261,8 @@ def cmd_post(kind: str, sid: str, by: str, body: str, changed: str | None) -> Pa
         extra["changed"] = changed
     if kind == "correction" and by != st["author"]:
         raise LabError("a correction is the author's own retraction or revision of a claim")
-    if st["status"] == "released" and kind not in ("note", "correction"):
-        raise LabError(f"{sid} is released; only notes and corrections can follow")
+    if st["status"] == "released" and kind not in ("note", "correction", "learning", "idea"):
+        raise LabError(f"{sid} is released; only notes, corrections, learnings and ideas can follow")
     return write_post(kind, sid, by, body, extra)
 
 
