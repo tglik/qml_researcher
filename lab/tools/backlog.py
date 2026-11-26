@@ -42,6 +42,15 @@ Every source writes candidates with `add`; nothing else writes the files. The in
     python -m lab.tools.backlog validate [--explainers]   # --explainers also lints explainer pages
     python -m lab.tools.backlog explain-hash ID            # claim hash an explainer records
     python -m lab.tools.backlog explain-status             # missing / stale / draft / signed explainers
+
+Learning from released lab studies (C17): explicit rules, not a score formula.
+    python -m lab.tools.backlog line add --id ID --direction D --title T --mechanism TEXT
+    python -m lab.tools.backlog line tag ID CID [CID ...]        # candidates that share the mechanism
+    python -m lab.tools.backlog line set ID --status open|paused --reason TEXT --by WHO
+    python -m lab.tools.backlog line last-test ID --cid CID --kill TEXT --by WHO   # one reprieve
+    python -m lab.tools.backlog line list
+    python -m lab.tools.backlog learn SID                         # a released study's verdict → backlog
+    python -m lab.tools.backlog review CID --study SID --effect kills|weakens|strengthens|none --why TEXT
 """
 from __future__ import annotations
 
@@ -87,7 +96,7 @@ SCORE_CONFIDENCE = ("low", "medium", "high")
 RELATION_KINDS = ("dependent", "overlap", "shared-tooling", "independent")
 PROPOSALS = ("merge", "move", "keep")
 RELATION_STATUS = ("proposed", "accepted", "rejected")
-EVIDENCE_REF = re.compile(r"\b(c-\d{8}-\d{3}|arXiv:\s?\d{4}\.\d{4,5}|experiments/\S+|exp \d+)")
+EVIDENCE_REF = re.compile(r"\b(c-\d{8}-\d{3}|s-\d{8}-\d{3}|arXiv:\s?\d{4}\.\d{4,5}|experiments/\S+|exp \d+)")
 MISFILE_MARGIN = 0.05
 SURVEY_SPREAD = 2          # a base shared by more directions than this is a survey, not a dependency signal      # a candidate this much closer to another direction's text is flagged
 STOP = set("a an the of on in for to and or with by at from is are be does do can vs versus than "
@@ -331,9 +340,11 @@ def no_go(c: dict) -> bool:
 
 
 def bet_open(c: dict) -> bool:
-    """A bet stays in the lane unless the gate killed it, a no-go result rules it out, or p is below the floor."""
+    """A bet stays in the lane unless it is closed (tested), the gate killed it, a no-go result rules it
+    out, or p is below the floor."""
     p = effective(c, "plausibility")
-    return gate_state(c) != "killed" and not no_go(c) and (p is None or p >= BET_P_FLOOR)
+    return (c.get("stage") != "closed" and gate_state(c) != "killed" and not no_go(c)
+            and (p is None or p >= BET_P_FLOOR))
 
 
 def bet_key(c: dict) -> tuple:
@@ -430,7 +441,7 @@ def startable(c: dict) -> bool:
     return gate_state(c) != "killed" and c.get("stage") != "closed" and not off_path(c)
 
 
-def start_order(cs: list[dict], direction: str | None) -> list[tuple[int, dict]]:
+def start_order(cs: list[dict], direction: str | None, ls: list[dict] | None = None) -> list[tuple[int, dict]]:
     """Recommended start order inside one direction, as (step, candidate).
 
     A candidate becomes available once every prerequisite inside the direction is placed (a
@@ -442,12 +453,15 @@ def start_order(cs: list[dict], direction: str | None) -> list[tuple[int, dict]]
       3. a bet with a sheet whose fatal test costs QUICK_FATAL_DAYS or less ("monkey first");
       4. the rest by band (A, B, C), a fixed lottery inside a band; a bet with no sheet or a slow
          fatal test waits like a step.
-    Killed and closed candidates are left out. A requires cycle raises.
+    Blocked candidates (a paused line that did not name them its last test, or a study review due,
+    C17) go after every unblocked one. Killed and closed candidates are left out. A requires cycle raises.
     """
+    ls = load_lines() if ls is None else ls
     mine = {c["id"]: c for c in cs if c.get("direction") == direction and startable(c)}
     reqs = {cid: {r for r in requires_ids(c) if r in mine} for cid, c in mine.items()}
     dependents = Counter(r for rs_ in reqs.values() for r in rs_)
-    prio = lambda cid: (not (mine[cid].get("gate") or {}).get("value"), -dependents[cid],
+    prio = lambda cid: (blocked_reason(mine[cid], ls) is not None,
+                        not (mine[cid].get("gate") or {}).get("value"), -dependents[cid],
                         not quick_bet(mine[cid]), step_key(mine[cid]), cid)
     placed: list[dict] = []
     done: set[str] = set()
@@ -459,6 +473,215 @@ def start_order(cs: list[dict], direction: str | None) -> list[tuple[int, dict]]
         done.add(nxt)
         placed.append(mine[nxt])
     return [(i + 1, c) for i, c in enumerate(placed)]
+
+
+# --- learning from studies: lines, two strikes, evidence review (C17, 2026-11-26) ----------
+# A released study changes the backlog through explicit rules, never through a score formula:
+#   1. the tested candidate closes with the study's verdict;
+#   2. a refuted verdict is a strike on the candidate's line (a group of candidates that share one
+#      mechanism); STRIKES_TO_PAUSE strikes pause the line, and at most one named last test, with its
+#      kill threshold written down beforehand, may still run; a person reopens a paused line;
+#   3. every open candidate in the same line, and the direction's assessment, become "review due":
+#      a candidate records kills | weakens | strengthens | none with a reason (weakens and
+#      strengthens need a value rescore after the study); the direction clears it by being rescored.
+# No multiplier on p: refuting one mechanism says nothing about a sibling built to avoid it, and
+# direction scores move inside their own error bars. Pausing a direction stays a person's call.
+LINE_STATUS = ("open", "paused")
+STRIKES_TO_PAUSE = 2
+REVIEW_EFFECTS = ("kills", "weakens", "strengthens", "none")
+STUDY_VERDICTS = ("supported", "refuted", "null", "mixed")
+
+
+def load_lines() -> list[dict]:
+    p = root() / "lines.json"
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else []
+
+
+def save_lines(ls: list[dict]) -> None:
+    root().mkdir(parents=True, exist_ok=True)
+    (root() / "lines.json").write_text(json.dumps(ls, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def get_line(ls: list[dict], lid: str) -> dict:
+    for ln in ls:
+        if ln["id"] == lid:
+            return ln
+    raise LabError(f"no line {lid}")
+
+
+def blocked_reason(c: dict, ls: list[dict]) -> str | None:
+    """Why a candidate may not start now: a study review is due on it, or its line is paused and it
+    is not that line's named last test."""
+    if c.get("review_due"):
+        return f"review due after {', '.join(c['review_due'])}"
+    ln = next((x for x in ls if x["id"] == c.get("line")), None)
+    if ln and ln["status"] == "paused" and (ln.get("last_test") or {}).get("cid") != c["id"]:
+        return f"line {ln['id']} paused"
+    return None
+
+
+def _ts(s: str | None) -> float:
+    import datetime as _dt
+    return _dt.datetime.fromisoformat(s).timestamp() if s else 0.0
+
+
+def study_state(sid: str) -> dict:
+    p = output_root() / "workspace" / "studies" / sid / "state.json"
+    if not p.exists():
+        raise LabError(f"no study {sid} at {p}")
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+def cmd_line(a) -> None:
+    ls, cs, ds = load_lines(), load_candidates(), load_directions()
+    if a.lcmd == "add":
+        if any(x["id"] == a.id for x in ls):
+            raise LabError(f"line {a.id} exists")
+        if a.direction not in {d["id"] for d in ds}:
+            raise LabError(f"no direction {a.direction}")
+        if len(a.mechanism.split()) < 8:
+            raise LabError("--mechanism must state the shared assumption a refutation would hit (≥ 8 words)")
+        ls.append({"id": a.id, "direction": a.direction, "title": a.title, "mechanism": a.mechanism,
+                   "status": "open", "strikes": [], "last_test": None,
+                   "history": [{"at": now(), "status": "open", "reason": "created", "by": a.by or "agent"}]})
+        save_lines(ls)
+        print(f"line {a.id} open in {a.direction}")
+    elif a.lcmd == "tag":
+        ln = get_line(ls, a.id)
+        for cid in a.cids:
+            c = get(cs, cid)
+            if c.get("direction") != ln["direction"]:
+                raise LabError(f"{cid} is in {c.get('direction')}, line {a.id} is in {ln['direction']}")
+            c["line"] = ln["id"]
+        save_candidates(cs)
+        print(f"line {a.id}: tagged {', '.join(a.cids)}")
+    elif a.lcmd == "set":
+        ln = get_line(ls, a.id)
+        if a.status not in LINE_STATUS:
+            raise LabError(f"--status must be one of {LINE_STATUS}")
+        ln["status"] = a.status
+        if a.status == "open":
+            ln["last_test"] = None
+        ln["history"].append({"at": now(), "status": a.status, "reason": a.reason, "by": a.by})
+        save_lines(ls)
+        print(f"line {a.id} → {a.status}" + (f" ({len(ln['strikes'])} strikes stay on record; "
+                                             "the next refutation pauses it again)"
+                                             if a.status == "open" and len(ln["strikes"]) >= STRIKES_TO_PAUSE else ""))
+    elif a.lcmd == "last-test":
+        ln = get_line(ls, a.id)
+        c = get(cs, a.cid)
+        if c.get("line") != ln["id"] or c.get("stage") == "closed":
+            raise LabError(f"{a.cid} is not an open candidate of line {a.id}")
+        if ln.get("last_test"):
+            raise LabError(f"line {a.id} already names {ln['last_test']['cid']} as its last test")
+        if len((a.kill or "").split()) < 6:
+            raise LabError("--kill must state the pre-registered number that ends the line (≥ 6 words)")
+        ln["last_test"] = {"cid": a.cid, "kill": a.kill, "by": a.by, "at": now()}
+        ln["history"].append({"at": now(), "status": ln["status"], "reason": f"last test {a.cid}: {a.kill}",
+                              "by": a.by})
+        save_lines(ls)
+        print(f"line {a.id}: {a.cid} is the last test; if it fails ({a.kill}) the line stays paused")
+    else:
+        for ln in ls:
+            mem = [c for c in cs if c.get("line") == ln["id"]]
+            lt = (ln.get("last_test") or {}).get("cid") or "-"
+            print(f"{ln['id']:<32} {ln['status']:<6} strikes {len(ln['strikes'])}/{STRIKES_TO_PAUSE}  "
+                  f"last test {lt:<15} open {sum(c.get('stage') != 'closed' for c in mem)}/{len(mem)}  "
+                  f"{ln['direction']}")
+
+
+def cmd_learn(a) -> None:
+    st = study_state(a.sid)
+    if st.get("status") != "released":
+        raise LabError(f"{a.sid} is {st.get('status')}; learn from released studies only")
+    verdict = st.get("outcome")
+    if verdict not in STUDY_VERDICTS:
+        raise LabError(f"{a.sid} was released without an outcome; learn needs one of {STUDY_VERDICTS}")
+    cs, ds, ls = load_candidates(), load_directions(), load_lines()
+    c = get(cs, st["from"])
+    if any(e.get("study") == a.sid for e in c.get("evidence") or []):
+        raise LabError(f"{a.sid} was already learned into {c['id']}")
+    released = st.get("released") or now()
+    out = [f"{a.sid} ({verdict}) → {c['id']}"]
+    c.setdefault("evidence", []).append({"study": a.sid, "verdict": verdict, "role": "tested", "at": now()})
+    if c.get("stage") != "closed":
+        rung = ((c.get("gate") or {}).get("value") or {}).get("rung") if verdict == "supported" else None
+        c["outcome"] = {"furthest": "verdict", "rung": rung, "study": a.sid, "at": now()}
+        c["stage"] = "closed"
+        c["history"].append({"at": now(), "stage": "closed", "study": a.sid, "verdict": verdict})
+        out.append(f"  {c['id']} closed ({verdict})")
+    ln = next((x for x in ls if x["id"] == c.get("line")), None)
+    if ln:
+        if verdict == "refuted" and not any(s["study"] == a.sid for s in ln["strikes"]):
+            ln["strikes"].append({"study": a.sid, "cid": c["id"], "at": released})
+        n = len(ln["strikes"])
+        if (ln.get("last_test") or {}).get("cid") == c["id"]:
+            ln["last_test"] = None
+            if verdict == "supported":
+                ln["status"] = "open"
+                reason = f"last test {c['id']} supported by {a.sid}: line reopens"
+            else:
+                ln["status"] = "paused"
+                reason = f"last test {c['id']} {verdict} in {a.sid}: line stays paused; only a person reopens it"
+            ln["history"].append({"at": now(), "status": ln["status"], "reason": reason, "by": "learn"})
+            out.append(f"  line {ln['id']}: {reason}")
+        elif verdict == "refuted" and n >= STRIKES_TO_PAUSE and ln["status"] == "open":
+            ln["status"] = "paused"
+            reason = f"{n} strikes ({', '.join(s['cid'] for s in ln['strikes'])}): paused"
+            ln["history"].append({"at": now(), "status": "paused", "reason": reason, "by": "learn"})
+            out.append(f"  line {ln['id']}: {reason}; name at most one last test with `line last-test`")
+        else:
+            out.append(f"  line {ln['id']}: {n}/{STRIKES_TO_PAUSE} strikes, {ln['status']}")
+        sib = [x for x in cs if x.get("line") == ln["id"] and x["id"] != c["id"] and startable(x)
+               and _ts(((x.get("gate") or {}).get("value") or {}).get("at") or x.get("added")) < _ts(released)]
+        # a sibling added or value-scored after the release already saw the result
+        for x in sib:
+            if a.sid not in (x.get("review_due") or []):
+                x.setdefault("review_due", []).append(a.sid)
+        if sib:
+            out.append(f"  review due on {len(sib)} sibling(s): {', '.join(x['id'] for x in sib)}")
+    else:
+        out.append(f"  {c['id']} has no line: no sibling is reviewed (tag one with `line tag`)")
+    d = next((x for x in ds if x["id"] == c.get("direction")), None)
+    if d and d.get("assessment") and _ts(d["assessment"].get("at")) < _ts(released):
+        if a.sid not in (d.get("review_due") or []):
+            d.setdefault("review_due", []).append(a.sid)
+        out.append(f"  direction {d['id']}: review due (rescore with `direction score`, citing {a.sid})")
+    elif d:
+        out.append(f"  direction {d['id']}: already rescored after {a.sid}")
+    save_candidates(cs)
+    save_lines(ls)
+    save_directions(ds)
+    print("\n".join(out))
+
+
+def cmd_review(a) -> None:
+    cs = load_candidates()
+    c = get(cs, a.cid)
+    if a.study not in (c.get("review_due") or []):
+        raise LabError(f"{c['id']} has no review due for {a.study}")
+    if a.effect not in REVIEW_EFFECTS:
+        raise LabError(f"--effect must be one of {REVIEW_EFFECTS}")
+    if len((a.why or "").split()) < 8:
+        raise LabError("--why must say how the study's result bears on this claim (≥ 8 words); "
+                       "for `none`, say why the claim survives it")
+    released = study_state(a.study).get("released")
+    if a.effect in ("weakens", "strengthens"):
+        val = (c.get("gate") or {}).get("value") or {}
+        if _ts(val.get("at")) <= _ts(released):
+            raise LabError(f"{a.effect} needs a value rescore after {a.study} first: "
+                           f"`backlog score {c['id']} --gate value --rung N --p P --note '... {a.study} ...'`")
+    c["review_due"] = [s for s in c["review_due"] if s != a.study]
+    if not c["review_due"]:
+        del c["review_due"]
+    c.setdefault("evidence", []).append({"study": a.study, "effect": a.effect, "why": a.why, "role": "sibling",
+                                          "by": a.by or "agent", "at": now()})
+    if a.effect == "kills":
+        c["outcome"] = {"furthest": "gate", "rung": None, "study": a.study, "at": now()}
+        c["stage"] = "closed"
+        c["history"].append({"at": now(), "stage": "closed", "study": a.study, "effect": "kills"})
+    save_candidates(cs)
+    print(f"{c['id']}: {a.study} {a.effect}" + (" (closed)" if a.effect == "kills" else ""))
 
 
 def direction_text(d: dict, cs: list[dict]) -> set[str]:
@@ -597,7 +820,10 @@ def cmd_direction(a) -> None:
         d["assessment"] = {"plausibility": a.plausibility, "impact": a.impact, "confidence": a.confidence,
                            "plausibility_note": a.plausibility_note, "impact_note": a.impact_note,
                            "by": a.by or "agent", "at": now()}
+        cleared = d.pop("review_due", None)
         save_directions(ds)
+        if cleared:
+            print(f"direction {a.id}: study review cleared ({', '.join(cleared)})")
         print(f"direction {a.id}: score {direction_score(d)} = plausibility {a.plausibility} × impact {a.impact}")
     elif a.dcmd == "rank":
         cs = load_candidates()
@@ -622,6 +848,11 @@ def cmd_direction(a) -> None:
                   f"conf {ass.get('confidence', '-'):<6} {d['status']:<6} {tie:<6} gated {gated}/{len(mine):<3} "
                   f"bets {bets} fatal {str(days) + 'd' if days is not None else '-':<5} "
                   f"{d['id']}" + (f"   [{'; '.join(flags)}]" if flags else ""))
+            if d.get("review_due"):
+                print(f"        review due: rescore after {', '.join(d['review_due'])} (`direction score`)")
+            paused = [ln["id"] for ln in load_lines() if ln.get("direction") == d["id"] and ln["status"] == "paused"]
+            if paused:
+                print(f"        paused lines: {', '.join(paused)}")
             fold = folded(d, rs, cs) if d["status"] == "open" else None
             if fold:
                 print(f"        not an independent direction if the proposals are accepted: {fold}")
@@ -971,13 +1202,15 @@ def cmd_order(a) -> None:
     targets = [d for d in ranked_directions(ds) if not a.direction or d["id"] == a.direction]
     for d in targets:
         print(f"{d['id']}  (score {direction_score(d) if d.get('assessment') else '-'})")
-        for step, c in start_order(cs, d["id"]):
+        ls = load_lines()
+        for step, c in start_order(cs, d["id"], ls):
             reqs = ",".join(requires_ids(c))
+            why = blocked_reason(c, ls)
             val = (c.get("gate") or {}).get("value")
             tag = (f"bet {'fatal ' + str(effective(c, 'fatal_test_days')) + 'd' if has_sheet(c) else 'no sheet'}"
                    if lane(c) == "bet" else (f"step {step_band(c)}" if val else "unscored"))
             print(f"  {step:>2}. {tag:<16} {c['id']}  {c['title']}"
-                  + (f"   after {reqs}" if reqs else ""))
+                  + (f"   after {reqs}" if reqs else "") + (f"   [waits: {why}]" if why else ""))
 
 
 def tally(cs: list[dict], key) -> dict:
@@ -1067,6 +1300,19 @@ def validate() -> list[str]:
         if a and not (0 <= a.get("plausibility", -1) <= 1 and 1 <= a.get("impact", 0) <= 5
                       and a.get("confidence") in SCORE_CONFIDENCE):
             errs.append(f"direction {d['id']}: bad assessment")
+    lids = set()
+    for ln in load_lines():
+        if ln.get("id") in lids:
+            errs.append(f"line {ln.get('id')}: duplicate id")
+        lids.add(ln.get("id"))
+        if ln.get("direction") not in dids or ln.get("status") not in LINE_STATUS:
+            errs.append(f"line {ln.get('id')}: unknown direction or bad status")
+        lt = ln.get("last_test")
+        if lt and next((c for c in cs if c["id"] == lt.get("cid")), {}).get("line") != ln.get("id"):
+            errs.append(f"line {ln.get('id')}: last test {lt.get('cid')} is not in the line")
+    for c in cs:
+        if c.get("line") and c["line"] not in lids:
+            errs.append(f"{c['id']}: unknown line {c['line']}")
     rs = load_relations()
     for r in rs:
         if r.get("a") not in dids or r.get("b") not in dids:
@@ -1305,6 +1551,20 @@ def main() -> int:
     o.add_argument("--rung", type=int)
     sub.add_parser("report"); v = sub.add_parser("validate"); v.add_argument("--explainers", action="store_true")
     eh = sub.add_parser("explain-hash"); eh.add_argument("id"); sub.add_parser("explain-status")
+    li = sub.add_parser("line"); lsub = li.add_subparsers(dest="lcmd", required=True)
+    la = lsub.add_parser("add")
+    for f in ("--id", "--direction", "--title", "--mechanism"):
+        la.add_argument(f, required=True)
+    la.add_argument("--by")
+    lt_ = lsub.add_parser("tag"); lt_.add_argument("id"); lt_.add_argument("cids", nargs="+")
+    lst = lsub.add_parser("set"); lst.add_argument("id"); lst.add_argument("--status", required=True)
+    lst.add_argument("--reason", required=True); lst.add_argument("--by", required=True)
+    llt = lsub.add_parser("last-test"); llt.add_argument("id"); llt.add_argument("--cid", required=True)
+    llt.add_argument("--kill", required=True); llt.add_argument("--by", required=True)
+    lsub.add_parser("list")
+    le = sub.add_parser("learn"); le.add_argument("sid")
+    rv = sub.add_parser("review"); rv.add_argument("cid"); rv.add_argument("--study", required=True)
+    rv.add_argument("--effect", required=True); rv.add_argument("--why", required=True); rv.add_argument("--by")
     a = ap.parse_args()
     if a.cmd == "validate":
         errs = validate() + (validate_explainers() if a.explainers else [])
@@ -1316,7 +1576,8 @@ def main() -> int:
      "queue": cmd_queue, "pick": cmd_pick, "link": cmd_link, "outcome": cmd_outcome,
      "report": cmd_report, "relate": cmd_relate, "independence": cmd_independence,
      "require": cmd_require, "order": cmd_order, "move": cmd_move, "decide": cmd_decide, "path": cmd_path, "lane": cmd_lane, "bet": cmd_bet,
-     "panel": cmd_panel, "explain-hash": cmd_explain_hash, "explain-status": cmd_explain_status}[a.cmd](a)
+     "panel": cmd_panel, "explain-hash": cmd_explain_hash, "explain-status": cmd_explain_status,
+     "line": cmd_line, "learn": cmd_learn, "review": cmd_review}[a.cmd](a)
     return 0
 
 

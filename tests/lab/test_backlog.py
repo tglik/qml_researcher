@@ -310,6 +310,102 @@ class BacklogTest(unittest.TestCase):
         path.write_text(json.dumps(sh))
         return self.bl("bet", cid, "--sheet", str(path))
 
+    def study(self, sid, cid, outcome, released="2099-01-01T00:00:00+00:00"):
+        d = self.vault / "workspace" / "studies" / sid
+        d.mkdir(parents=True)
+        (d / "state.json").write_text(json.dumps({"sid": sid, "from": cid, "status": "released",
+                                                  "outcome": outcome, "released": released}))
+
+    def test_study_verdicts_move_the_backlog_by_rules_not_scores(self):
+        self.direction()
+        note = "the line rests on blockade features carrying information WL misses (c-20261105-001)"
+        self.bl("direction", "score", "rydberg-graph-kernels", "--plausibility", "0.3", "--impact", "3",
+                "--confidence", "medium", "--plausibility-note", note, "--impact-note", note)
+        a = self.gated("Probe A", "Entangled probes beat product probes by two times on blockade graph features", 4, 0.3)
+        b = self.gated("Probe B", "Global control beats product probes by two times on blockade graph features", 4, 0.3)
+        c = self.gated("Probe C", "Shot-level identifiability with global control halves shots on blockade features", 3, 0.3)
+        e = self.gated("Probe E", "Global readout keeps ninety percent of per-site Fisher on blockade features", 3, 0.4)
+        free = self.gated("Free", "Detuning kernel accuracy drops under three points at one percent SPAM noise", 3, 0.4)
+        self.bl("line", "add", "--id", "probes", "--direction", "rydberg-graph-kernels", "--title", "Probes",
+                "--mechanism", "quantum probes make blockade features cheaper to learn than product designs")
+        self.bl("line", "tag", "probes", a, b, c, e)
+        self.study("s-1", a, "refuted")
+        out = self.bl("learn", "s-1")
+        self.assertIn("1/2 strikes", out)
+        self.assertIn("review due on 3", out)
+        self.assertIn("direction rydberg-graph-kernels: review due", out)
+        self.assertIn("already learned", self.bl("learn", "s-1", ok=False))
+        # siblings wait for a recorded review; the unrelated candidate does not
+        order = self.bl("order", "--direction", "rydberg-graph-kernels")
+        self.assertIn("waits: review due", order)
+        self.assertNotIn(a, order)                                  # tested: closed
+        first = next(w for w in order.splitlines()[1].split() if w.startswith("c-"))
+        self.assertEqual(first, free)
+        # 'weakens' needs a rescore after the study; 'none' needs a reason
+        self.assertIn("rescore", self.bl("review", b, "--study", "s-1", "--effect", "weakens", "--why",
+                                         "control is a subset of the probes that already failed here", ok=False))
+        self.bl("review", b, "--study", "s-1", "--effect", "none",
+                "--why", "global control is a different resource from the entangled probe that failed")
+        self.bl("review", c, "--study", "s-1", "--effect", "none",
+                "--why", "identifiability with finite shots is invisible to the Fisher test that failed")
+        self.bl("review", e, "--study", "s-1", "--effect", "kills",
+                "--why", "the readout claim assumed the entangled probe state that the study refuted")
+        self.assertNotIn(e, self.bl("order", "--direction", "rydberg-graph-kernels"))   # killed by review
+        # the direction clears its review by being rescored, citing the study
+        self.bl("direction", "score", "rydberg-graph-kernels", "--plausibility", "0.28", "--impact", "3",
+                "--confidence", "medium", "--plausibility-note", "probe line took one strike in s-20261201-001 so far",
+                "--impact-note", note)
+        self.assertNotIn("review due", self.bl("direction", "rank"))
+        # second strike pauses the line; one named last test may still run
+        self.study("s-2", b, "refuted")
+        self.assertIn("paused", self.bl("learn", "s-2"))
+        self.bl("review", c, "--study", "s-2", "--effect", "none",
+                "--why", "identifiability with finite shots is invisible to the Fisher test that failed")
+        self.assertIn("line probes paused", self.bl("order", "--direction", "rydberg-graph-kernels"))
+        self.assertIn("paused lines: probes", self.bl("direction", "rank"))
+        self.bl("line", "last-test", "probes", "--cid", c, "--kill", "shot ratio under 1.3x at five sites",
+                "--by", "Tsahi")
+        cline = next(l for l in self.bl("order", "--direction", "rydberg-graph-kernels").splitlines() if c in l)
+        self.assertNotIn("waits", cline)
+        # a refuted last test leaves the line paused; only a person reopens it
+        self.study("s-3", c, "refuted")
+        self.assertIn("stays paused", self.bl("learn", "s-3"))
+        self.assertIn("paused", self.bl("line", "list"))
+        self.assertIn("next refutation pauses it again",
+                      self.bl("line", "set", "probes", "--status", "open", "--reason", "new evidence", "--by", "Tsahi"))
+        self.assertIn("backlog OK", self.bl("validate"))
+
+    def test_rank_does_not_count_tested_bets(self):
+        self.direction()
+        bet = self.gated("Long shot", "Our blockade feature map beats the Monte Carlo twin on maximum independent set labels", 4, 0.3)
+        self.sheet(bet, days=2)
+        note = "the core candidate is a coin flip against a tuned classical twin (c-20261105-001)"
+        self.bl("direction", "score", "rydberg-graph-kernels", "--plausibility", "0.3", "--impact", "3",
+                "--confidence", "medium", "--plausibility-note", note, "--impact-note", note)
+        self.assertIn("bets 1 fatal 2d", self.bl("direction", "rank"))
+        self.study("s-1", bet, "refuted")
+        self.bl("learn", "s-1")
+        self.assertIn("bets 0 fatal -", self.bl("direction", "rank"))
+
+    def test_agenda_is_derived_from_the_start_order(self):
+        self.direction()
+        twin = self.gated("Monte Carlo twin", "Glauber Monte Carlo matches blockade features within two points at sixteen nodes", 1, 0.3)
+        app = self.gated("Protein variant", "Blockade features beat WL subtree features on PROTEINS residue contact graphs", 3, 0.6)
+        self.bl("require", app, "--on", twin, "--why", "an applied variant is moot if the twin matches")
+        (self.vault / "workspace").mkdir(exist_ok=True)
+        lab = self.vault / "workspace" / "lab.json"
+        lab.write_text(json.dumps({"direction": "rydberg-graph-kernels", "agenda": [app, twin]}))
+        run = lambda *a, ok=True: subprocess.run([sys.executable, "-m", "lab.tools.workspace", *a], cwd=REPO,
+                                                 env=self.env, capture_output=True, text=True)
+        out = run("agenda").stdout
+        self.assertIn(f"derived from the backlog:      {twin}, {app}", out)
+        self.assertNotEqual(run("agenda", "--apply").returncode, 0)      # needs --by and --reason
+        self.assertEqual(run("agenda", "--apply", "--by", "Tsahi", "--reason", "derived").returncode, 0)
+        cfg = json.loads(lab.read_text())
+        self.assertEqual(cfg["agenda"], [twin, app])
+        self.assertEqual(cfg["agenda_change"]["by"], "Tsahi")
+        self.assertIn("matches", run("agenda").stdout)
+
     def test_bets_lane_is_not_ranked_by_p_and_needs_a_full_sheet(self):
         self.direction()
         safe = self.gated("Shot cost", "One thousand shots keep blockade feature accuracy within three points at ten nodes", 3, 0.6)
