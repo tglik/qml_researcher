@@ -153,6 +153,19 @@ small publishable steps toward a method that becomes our IP. Refuting or reprodu
 work can be publishable, but it is impact 1. A direction with no target algorithm caps at impact 2.
 A candidate whose only result is about someone else's method (a refutation, a crossover estimate for
 an algorithm we would not own) is marked off path: it stays in the backlog, but leaves the start order.
+**After a released study (C17, `docs/lab/components/C17_learning_updates.md`).** First clear the
+reviews that `backlog learn` left. Give each new candidate a line when it shares a mechanism with
+others (`line add`, `line tag`). For each sibling that has a review due, record what the study means
+for its claim. For `weakens` or `strengthens`, rescore its value first. `none` must say why the
+claim survives:
+```
+python -m lab.tools.backlog review <CID> --study <SID> --effect kills|weakens|strengthens|none --why "…" --by screen-analyst
+python -m lab.tools.backlog line last-test <LINE> --cid <CID> --kill "pre-registered number that ends the line" --by …
+```
+Record a last test only for a line that `learn` paused (two strikes), and only for a candidate whose
+fatal test is cheap and could still reopen the line. Flip prerequisites when a cheaper fatal test
+should run first. Rescore every direction marked "review due", citing the study id. Never pause a
+direction because its score fell: propose it to the person against its close criteria.
 A `dependent` pair is not two directions: it gets `merge` or `move`, never `keep`. Relations are
 always recorded `proposed`; merging or moving candidates is a human decision, applied by editing the
 backlog in a PR. Append a section to the run log.

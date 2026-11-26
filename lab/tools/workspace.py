@@ -18,6 +18,7 @@ Files (under {output_root}/workspace/):
     studies/<sid>/bundle.lock.json   plan hash at lock; whole-bundle hashes at release
 
     python -m lab.tools.workspace next                         # first agenda candidate not yet studied
+    python -m lab.tools.workspace agenda [--apply --by WHO --reason TEXT]   # agenda derived from the backlog (C17)
     python -m lab.tools.workspace new    --from CID --by AGENT [--title T]
     python -m lab.tools.workspace post   KIND --study SID --by AGENT (--body TEXT | --body-file F)
                                           [--changed yes|no]   # on a response: did the critique change the design
@@ -210,6 +211,48 @@ def cmd_next() -> str | None:
         if cid not in studied:
             return cid
     return None
+
+
+def derived_agenda() -> tuple[list[str], list[str], list[tuple[str, str]]]:
+    """(studied, next, held): the lab direction's backlog start order with studied candidates removed,
+    and candidates held back because they are blocked (paused line, review due), unscored, or wait on
+    one that is held. lab.json stays the record; `agenda --apply` writes this order into it (C17)."""
+    from . import backlog as bl
+    cfg = lab_config()
+    cs, ls = bl.load_candidates(), bl.load_lines()
+    studied_ids = {s["from"] for s in all_states()}
+    studied = [cid for cid in cfg.get("agenda", []) if cid in studied_ids]
+    nxt, held, skip = [], [], set()
+    for _, c in bl.start_order(cs, cfg["direction"], ls):
+        cid = c["id"]
+        if cid in studied_ids:
+            continue
+        why = (bl.blocked_reason(c, ls) or ("unscored" if not (c.get("gate") or {}).get("value") else None)
+               or next((f"after {r} (held)" for r in bl.requires_ids(c) if r in skip), None))
+        if why:
+            skip.add(cid)
+            held.append((cid, why))
+        else:
+            nxt.append(cid)
+    return studied, nxt, held
+
+
+def cmd_agenda(apply: bool, by: str | None, reason: str | None) -> dict:
+    cfg = lab_config()
+    studied, nxt, held = derived_agenda()
+    current = [cid for cid in cfg.get("agenda", []) if cid not in studied]
+    res = {"current": current, "derived": nxt, "held": held, "changed": current != nxt}
+    if apply and res["changed"]:
+        if not by or not reason:
+            raise LabError("--apply needs --by (the person who sets the order) and --reason")
+        hist = cfg.get("agenda_history", [])
+        if cfg.get("agenda_change"):
+            hist.append(cfg["agenda_change"])
+        cfg.update(agenda=studied + nxt, agenda_history=hist,
+                   agenda_change={"at": now(), "by": by, "what": reason,
+                                  "from": current, "to": nxt})
+        write_json(ws() / "lab.json", cfg)
+    return res
 
 
 def new_sid() -> str:
@@ -438,6 +481,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("next")
+    ag = sub.add_parser("agenda"); ag.add_argument("--apply", action="store_true")
+    ag.add_argument("--by"); ag.add_argument("--reason")
     n = sub.add_parser("new"); n.add_argument("--from", dest="cid", required=True)
     n.add_argument("--by", required=True); n.add_argument("--title")
     p = sub.add_parser("post"); p.add_argument("kind", choices=KINDS); p.add_argument("--study", required=True)
@@ -463,6 +508,14 @@ def main() -> int:
     if a.cmd == "next":
         cid = cmd_next()
         print(cid or "agenda done: every candidate on lab.json has a study")
+    elif a.cmd == "agenda":
+        r = cmd_agenda(a.apply, a.by, a.reason)
+        print("lab.json agenda (not studied): " + (", ".join(r["current"]) or "-"))
+        print("derived from the backlog:      " + (", ".join(r["derived"]) or "-"))
+        for cid, why in r["held"]:
+            print(f"  held  {cid}  {why}")
+        print(("applied to lab.json" if a.apply else "differs: `agenda --apply --by WHO --reason TEXT` writes it")
+              if r["changed"] else "lab.json matches the backlog")
     elif a.cmd == "new":
         print(cmd_new(a.cid, a.by, a.title))
     elif a.cmd == "post":

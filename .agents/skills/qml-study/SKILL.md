@@ -122,8 +122,19 @@ python -m lab.tools.backlog add --source S --base "study:<sid>" --title "<idea h
 ```
 The result post states the outcome, the ledger numbers it rests on, what it does and does not
 show, and what it means for the source candidate (next step, kill, or narrow). Pass `--cost-usd`
-when the runtime reports spend. Then commit the study folder and the new log posts in
-qml_artifacts on the lab branch and open or update the lab PR.
+when the runtime reports spend. Then feed the verdict into the backlog (C17,
+`docs/lab/components/C17_learning_updates.md`): rules, not a score formula.
+```
+python -m lab.tools.backlog learn <sid>        # closes the candidate; a refutation is a strike on its line
+```
+`learn` prints the siblings and the direction that now have a review due. The next `/qml-ingest`
+portfolio step records them (`backlog review`, `direction score`). Then the lab's agenda is
+re-derived, and a person applies it:
+```
+python -m lab.tools.workspace agenda           # derived order vs lab.json; --apply --by <person> --reason …
+```
+Then commit the study folder, the new log posts and the backlog changes in qml_artifacts on the lab
+branch, and open or update the lab PR.
 
 ## Debrief (person + agent, after each batch the lab sets)
 ```

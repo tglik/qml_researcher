@@ -94,7 +94,7 @@ into `ESSENCE.md` (how it thinks — for scientific review) and a protocol (how 
 | `/qml-build-on` | Source A of the candidate backlog: up to 5 publishable next steps on a paper, hypothesis card or verdict |
 | `/qml-open-problems` | Source B: testable claims from open questions and card limitations |
 | `/qml-ingest` | Common ingest gate of the candidate backlog: novelty vs arXiv, triage screen G0–G3, the seven-question advantage-potential profile ([criteria](criteria/advantage_potential.md)), value (rung × p), bet sheets; picks from two lanes, steps and bets ([C14](docs/lab/components/C14_lanes.md)); every idea source writes candidates with `lab.tools.backlog add` ([C13](docs/lab/components/C13_candidate_backlog.md)) |
-| `/qml-study` | Small study in the shared workspace: one backlog claim run in hours; announce and peer critique before running, numbers bound to files, objections run as code, clean-context code audit, frozen release; debrief metrics with `lab.tools.workspace report` ([C16](docs/lab/components/C16_study_workspace.md)) |
+| `/qml-study` | Small study in the shared workspace: one backlog claim run in hours; announce and peer critique before running, numbers bound to files, objections run as code, clean-context code audit, frozen release; debrief metrics with `lab.tools.workspace report` ([C16](docs/lab/components/C16_study_workspace.md)); verdicts feed the backlog by rule (`backlog learn`, lines and two strikes, sibling review, derived agenda: [C17](docs/lab/components/C17_learning_updates.md)) |
 
 Human checkpoints (`config/lab_autonomy.json`): people sign the **spec and the frozen scorer** at
 CP2, and the verdict (CP4) and promotion (CP5). CP3 (phase gate) passes on the verifier when the
